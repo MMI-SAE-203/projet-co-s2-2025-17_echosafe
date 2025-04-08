@@ -1,0 +1,123 @@
+---
+
+---
+<header
+  class="px-6 py-4 fixed z-10 w-full flex items-stretch justify-between transition-all duration-300 ease-in-out bg-black border-b-2 border-red-700"
+>
+  <div class="flex items-center gap-2">
+    <a href="/" aria-label="Accueil">logo
+    </a>
+    <a href="/" aria-label="Accueil">
+      <h2 class="text-white">Ça va trai'ler</h2>
+    </a>
+  </div>
+
+  <nav class="hidden lg:flex items-center">
+    <ul class="flex space-x-6 text-white font-anton">
+      <li>
+        <a
+          class="block py-4 hover:text-red-500 transition-colors duration-200"
+          href="/">Le festival</a
+        >
+      </li>
+      <li>
+        <a
+          class="block py-4 hover:text-red-500 transition-colors duration-200"
+          href="/invite">Invités</a
+        >
+      </li>
+      <li>
+        <a
+          class="block py-4 hover:text-red-500 transition-colors duration-200"
+          href="/programmes">Programme</a
+        >
+      </li>
+      <li>
+        <a
+          class="block py-4 hover:text-red-500 transition-colors duration-200"
+          href="/films">Les films</a
+        >
+      </li>
+      <li>
+        <a
+          class="block py-4 hover:text-red-500 transition-colors duration-200"
+          href="/a-propos">À propos</a
+        >
+      </li>
+      <li>
+        <a
+          class="block py-4 hover:text-red-500 transition-colors duration-200"
+          href="/infos-pratiques">Infos pratiques</a
+        >
+      </li>
+      <li>
+        <a
+          class="block py-4 hover:text-red-500 transition-colors duration-200"
+          href="/contact">Contact</a
+        >
+      </li>
+    </ul>
+  </nav>
+
+  <button
+    class="group relative z-20 flex h-6 w-8 flex-col justify-between self-center *:h-[2px] *:w-full *:bg-white *:transition-all *:duration-300 *:ease lg:hidden"
+    id="menu-btn"
+    aria-label="Menu"
+    aria-controls="menu"
+    aria-expanded="false"
+  >
+    <span
+      class="group-aria-expanded:translate-y-[10.5px] group-aria-expanded:rotate-45 group-aria-expanded:bg-black"
+    ></span>
+    <span class="group-aria-expanded:opacity-0"></span>
+    <span
+      class="group-aria-expanded:-translate-y-[10.5px] group-aria-expanded:-rotate-45 group-aria-expanded:bg-black"
+    ></span>
+  </button>
+
+  <nav
+    class="visible fixed z-10 inset-0 text-2xl text-black opacity-100 transition-all duration-300 ease-in-out aria-hidden:invisible aria-hidden:opacity-0 bg-white"
+    id="menu"
+    aria-hidden="true"
+  >
+    <ul class="mt-30 mx-16 text-center">
+      <li>
+        <a class="block px-5 py-4" href="/">Le festival</a>
+      </li>
+      <li>
+        <a class="block px-5 py-4" href="/invite">Invités</a>
+      </li>
+      <li>
+        <a class="block px-5 py-4" href="/programmes">Programme</a>
+      </li>
+      <li>
+        <a class="block px-5 py-4" href="/films">Les films</a>
+      </li>
+      <li>
+        <a class="block px-5 py-4" href="/a-propos">À propos</a>
+      </li>
+      <li>
+        <a class="block px-5 py-4" href="/infos-pratiques">Infos pratiques</a>
+      </li>
+      <li>
+        <a class="block px-5 py-4" href="/contact">Contact</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<script>
+  const toggle = document.querySelector("#menu-btn");
+  const nav = document.querySelector("#menu");
+  const page = document.body;
+
+  if (toggle && nav) {
+    toggle.addEventListener("click", () => {
+      const isOpen = toggle.ariaExpanded === "true";
+      const isClosed = !isOpen;
+      toggle.ariaExpanded = String(isClosed);
+      nav.ariaHidden = String(isOpen);
+      page.classList.toggle("noscroll", isClosed);
+    });
+  }
+</script>
