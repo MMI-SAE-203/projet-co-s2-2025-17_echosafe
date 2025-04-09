@@ -1,27 +1,68 @@
 ---
 import Logo from "../assets/logo_echosafe.svg";
+import Facebook_icon from "../assets/facebook_icon.svg";
+import Instagram_icon from "../assets/instagram_icon.svg";
+import Linkedin_icon from "../assets/linkedin_icon.svg";
+import Youtube_icon from "../assets/youtube_icon.svg";
 ---
 
-<footer>
-  <div>
-    <h5>Menu</h5>
-    <p class="text-center text-gray-500">Accueil</p>
-    <p class="text-center text-gray-500">Nos offres</p>
-    <p class="text-center text-gray-500">Accéder à Echosafe</p>
+<footer class="bg-[#323F92] text-white text-sm">
+  <div class="max-w-6xl mx-auto px-6 py-10">
+    <div class="mb-8">
+      <Logo class=" w-24 lg:w-32 h-auto" />
+    </div>
+
+    <div class="grid grid-cols-2 gap-8 sm:grid-cols-4">
+      <div>
+        <h5 class="font-bold mb-2 uppercase">Menu</h5>
+        <ul class="space-y-1">
+          <li><a href="#">Accueil</a></li>
+          <li><a href="#">Nos offres</a></li>
+          <li><a href="#">Accéder à Echo Safe</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h5 class="font-bold mb-2 uppercase">Légal</h5>
+        <ul class="space-y-1">
+          <li><a href="#">Mentions légales</a></li>
+          <li><a href="#">Politique de confidentialité</a></li>
+          <li><a href="#">CGU</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h5 class="font-bold mb-2 uppercase">À propos d'Echo Safe</h5>
+        <ul class="space-y-1">
+          <li><a href="#">À propos</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5 class="font-bold mb-2 uppercase">Contact</h5>
+        <ul class="space-y-1">
+          <li><a href="#">Nous contacter</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="my-6 border-white/20" />
+
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>Copyright ©2025 Echo Safe, Tous droits réservés</p>
+      <div class="flex gap-4 mt-4 sm:mt-0">
+        <a href="#">
+          <Facebook_icon class="w-6 h-6" />
+
+          </a>
+        <a href="#">
+          <Instagram_icon class="w-6 h-6"/>
+        </a>
+        <a href="#">
+          <Linkedin_icon class="w-6 h-6"/>
+        </a>
+        <a href="#">
+          <Youtube_icon class="w-6 h-6"/>
+        </a>
+      </div>
+    </div>
   </div>
-  <div>
-    <h5>Légal</h5>
-    <p class="text-center text-gray-500">Mentions légales</p>
-    <p class="text-center text-gray-500">Politiques de confidentialités</p>
-    <p class="text-center text-gray-500">CGU</p>
-  </div>
-  <div>
-    <h5>A propos d'Echo Safe</h5>
-    <p class="text-center text-gray-500">A propos</p>
-  </div>
-  <div>
-    <h5>Contacte</h5>
-    <p class="text-center text-gray-500">Nous contacter</p>
-  </div>
-  
 </footer>
