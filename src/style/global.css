@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+:root {
+    --color-primary: #323F92;
+}
+
+@layer base {
+    body {
+        @apply font-sans text-base leading-normal;
+    }
+
+    h1 {
+        @apply text-indigo-800 text-4xl leading-tight lg:text-4xl;
+    }
+
+    h2 {
+        @apply text-xl leading-tight lg:text-2xl;
+    }
+
+    h3 {
+        @apply text-lg leading-tight;
+    }
+
+    main a {
+        @apply text-indigo-800;
+    }
+}
