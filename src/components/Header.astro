@@ -1,15 +1,15 @@
 ---
 import Button from "./Button.astro";
+import Logo from "../assets/logo_echosafe.svg";
 ---
 
 <header
-  class="px-6 py-4 fixed z-10 w-full flex items-stretch justify-between transition-all duration-300 ease-in-out bg-white"
+  class="px-6 py-4 z-10 w-full flex items-stretch justify-between transition-all duration-300 ease-in-out bg-white"
 >
   <div class="flex items-center gap-2">
-    <a href="/" aria-label="Accueil">logo </a>
-    <a href="/" aria-label="Accueil">
-      <h2 class="text-black">ECHO SAFE</h2>
-    </a>
+    <a href="/" >
+      <Logo class="w-20 lg:w-32 h-auto" />
+    </div>
   </div>
 
   <nav class="hidden lg:flex items-center">

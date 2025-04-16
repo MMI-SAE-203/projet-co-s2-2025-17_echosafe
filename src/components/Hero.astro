@@ -1,0 +1,28 @@
+---
+import "../style/global.css";
+import Button from "./Button.astro";
+---
+
+<hero class="">
+  <div class="content-center">
+    <h1 class="text-center font-secondary ">
+      Un espace d'écoute et de soutien, en toute sécurité.
+    </h1>
+
+    <h3 class="text-center">
+      Vous n'êtes pas seul(e). Echo Safe offre un espace sécurisé pour les
+      victimes de harcèlement, avec écoute, soutien, et accès à des
+      professionnels.
+    </h3>
+    <div class="lg-flex-column-2">
+    <div
+      class="flex flex-col items-center justify-center text-center mb-5 "
+    >
+      <div class="mt-5 mb-5"><Button variant="dark" url={``} text={`Accéder à Echo Safe`} /></div>
+      <div>
+      <Button url={``} text={`S'inscrire`} /></div> 
+    </div>
+    <img src="/src/assets/femme_hero" alt="femme discute" />
+</div>
+  </div>
+</hero>
