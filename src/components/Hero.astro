@@ -5,11 +5,11 @@ import Button from "./Button.astro";
 
 <hero class="">
   <div class="content-center">
-    <h1 class="text-center font-secondary ">
+    <h1 class="text-center font-secondary text-[#323f92] text-3xl m-4 ">
       Un espace d'écoute et de soutien, en toute sécurité.
     </h1>
 
-    <h3 class="text-center">
+    <h3 class="text-center text-[#323f92] font-bold text-sm">
       Vous n'êtes pas seul(e). Echo Safe offre un espace sécurisé pour les
       victimes de harcèlement, avec écoute, soutien, et accès à des
       professionnels.
@@ -21,8 +21,28 @@ import Button from "./Button.astro";
       <div class="mt-5 mb-5"><Button variant="dark" url={``} text={`Accéder à Echo Safe`} /></div>
       <div>
       <Button url={``} text={`S'inscrire`} /></div> 
-    </div>
-    <img src="/src/assets/femme_hero" alt="femme discute" />
+    <div class="relative w-full h-[500px] sm:h-[600px]">
+
+  <img src="/src/assets/onde.webp" alt="fond en forme d'onde"
+       class="absolute inset-0 w-full h-full object-cover z-0" />
+
+  <img src="/src/assets/femme_hero.webp" alt="femme discute"
+       class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 max-w-[300px] sm:max-w-[400px]" />
+
+  <img src="/src/assets/humeurs.webp" alt="cadrant d'humeurs"
+       class="absolute bottom-5 right-5 z-20 w-[100px] sm:w-[150px]" />
+
 </div>
+<div class="w-full bg-[#323F92] overflow-hidden py-4">
+  <div class="animate-marquee whitespace-nowrap flex gap-12">
+    <img src="/src/assets/partenaire1.svg" alt="Logo Partenaire 1" class="h-12 inline-block" />
+    <img src="/src/assets/partenaire2.svg" alt="Logo Partenaire 2" class="h-12 inline-block" />
+    <img src="/src/assets/partenaire3.svg" alt="Logo Partenaire 3" class="h-12 inline-block" />
+    <img src="/src/assets/partenaire4.svg" alt="Logo Partenaire 4" class="h-12 inline-block" />
+    <img src="/src/assets/partenaire1.svg" alt="Logo Partenaire 1 duplicate" class="h-12 inline-block" />
+    <img src="/src/assets/partenaire2.svg" alt="Logo Partenaire 2 duplicate" class="h-12 inline-block" />
+  </div>
+</div>
+
   </div>
 </hero>
