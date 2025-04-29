@@ -1,0 +1,84 @@
+---
+import Layoutapp from "../layouts/Layoutapp.astro";
+import "../style/global.css";
+import Cardsecour from "../components/Cardsecour.astro";
+---
+
+<Layoutapp>
+  <div class="container">
+    <h1 class="font-bold">Kit de secours</h1>
+    <p class="font-bold">Numéros d'urgence</p>
+  </div>
+  <Cardsecour
+    url={`tel:112`}
+    text={`Si urgence vitale, appeler le 112`}
+    imgSrc="src/assets/icone112.svg"
+    alt="girophare pour le 112"
+  />
+  <Cardsecour
+    url={`tel:17`}
+    text={`Police secours, appeler le 17`}
+    imgSrc="src/assets/iconepolice.svg"
+    alt="voiture de police"
+  />
+  <Cardsecour
+    url={`tel:15`}
+    text={`SAMU, appeler le 15`}
+    imgSrc="src/assets/iconeambulance.svg"
+    alt="véhicule de secours et d'assistance aux victimes"
+  />
+  <Cardsecour
+    url={`tel:18`}
+    text={`Pompier, appeler le 18`}
+    imgSrc="src/assets/iconepompier.svg"
+    alt="camion de pompier"
+  />
+
+  <p class="font-bold">Numéros d'urgence</p>
+
+  <Cardsecour
+    url={`tel:18`}
+    text={`SOS Amitié : 09 72 39 40 50`}
+    imgSrc="src/assets/iconephone.svg"
+    alt="icone de téléphone"
+  />
+  <Cardsecour
+    url={`tel:18`}
+    text={`Fil Santé Jeunes : 0800 235 236`}
+    imgSrc="src/assets/iconephone.svg"
+    alt="icone de téléphone"
+  />
+  <Cardsecour
+    url={`tel:3919`}
+    text={`Violences Femmes Info : 3919`}
+    imgSrc="src/assets/iconephone.svg"
+    alt="icone de téléphone"
+  />
+  <Cardsecour
+    url={`tel:119`}
+    text={`Enfance en Danger : 119`}
+    imgSrc="src/assets/iconephone.svg"
+    alt="icone de téléphone"
+  />
+  <Cardsecour
+    url={`tel:31140`}
+    text={`Prévention suicide : 31140`}
+    imgSrc="src/assets/iconephone.svg"
+    alt="icone de téléphone"
+  />
+  <h2>Conseils Pratiques</h2>
+  <ul>
+    <li>
+      <strong>En cas de harcèlement : </strong>Notez les incidents et contactez
+      un adulte de confiance.
+    </li>
+    <li>
+      <strong>Pour aider quelqu'un : </strong>Écoutez sans juger et encouragez à
+      chercher de l'aide.
+    </li>
+    <li>
+      <strong>Sécurité en ligne :</strong> Utilisez des mots de passe forts et signalez
+      tout comportement inapproprié.
+    </li>
+  </ul>
+</Layoutapp>
