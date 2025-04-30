@@ -1,15 +1,12 @@
 ---
 import Button from "./Button.astro";
-import Logo from "../assets/logo_echosafe.svg";
 ---
 
 <header
-  class="px-6 py-4 z-10 w-full flex items-stretch justify-between transition-all duration-300 ease-in-out bg-white"
+  class="px-6 py-4 w-full z-50 flex items-stretch justify-between transition-all duration-300 ease-in-out bg-white"
 >
   <div class="flex items-center gap-2">
-    <a href="/">
-      <Logo class="w-20 lg:w-32 h-auto" />
-    </a>
+    <h1 id="page-title" class="text-lg font-semibold"></h1>
   </div>
 
   <button
@@ -151,3 +148,4 @@ import Logo from "../assets/logo_echosafe.svg";
     });
   }
 </script>
+
