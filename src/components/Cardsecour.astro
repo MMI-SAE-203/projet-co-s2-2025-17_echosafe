@@ -6,6 +6,8 @@ export interface Props {
   text?: string;
   imgSrc?: string;
   alt?: string;
+  bgColor?: string;
+  borderClass?: string;
 }
 
 const {
@@ -14,6 +16,8 @@ const {
   text = "",
   imgSrc = "",
   alt = "",
+  bgColor = "transparent",
+  borderClass = "border-1 border-[var(--color-primary)]",
 } = Astro.props;
 
 const sizeClass = {
@@ -25,7 +29,8 @@ const sizeClass = {
 
 <a
   href={url}
-  class={` flex justify-between items-center h-[60px] px-4 py-2 text-[var(--color-primary)] border border-[var(--color-primary)] font-normal rounded-xl shadow-md transition duration-300 ease-in-out m-5`}
+  class={`flex justify-between items-center h-[60px] px-4 py-2 text-[var(--color-primary)] ${borderClass} font-normal rounded-xl shadow-md transition duration-300 ease-in-out mb-5`}
+  style={`background-color: ${bgColor};`}
 >
   <span class="text-left">
     {text}

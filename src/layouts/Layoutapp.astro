@@ -1,7 +1,8 @@
 ---
 import Headerapp from "../components/Headerapp.astro";
-import "./src/style/global.css";
 import Menuapp from "../components/Menuapp.astro";
+
+import "./src/style/global.css";
 ---
 
 <!doctype html>
@@ -13,9 +14,9 @@ import Menuapp from "../components/Menuapp.astro";
     <meta name="generator" content={Astro.generator} />
     <title>Astro Basics</title>
   </head>
-  <body>
+  <body class="m-5">
     <Headerapp />
     <slot />
-<Menuapp />
+    <Menuapp />
   </body>
 </html>
