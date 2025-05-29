@@ -117,37 +117,52 @@ const totalQuestions = questions.length;
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <button
           id="restartBtn"
-          class="hover:cursor-pointer bg-primary text-white px-8 py-3 rounded-full text-base font-semibold hover:bg-white hover:text-primary hover:border transition-all duration-300 hover:-translate-y-0.5"
+          class="hover:cursor-pointer bg-primary text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-white hover:text-primary hover:border transition-all duration-300 hover:-translate-y-0.5"
         >
           Recommencer
         </button>
         <button
           id="viewResultsBtn"
-          class="hover:cursor-pointer bg-gray-100 text-gray-700 px-8 py-3 rounded-full text-base font-semibold hover:bg-gray-200 transition-all duration-300"
+          class="hover:cursor-pointer bg-gray-100 text-gray-700 px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-all duration-300"
         >
           Voir les résultats
         </button>
+        <a
+          href="/accueil-app"
+          class="hover:cursor-pointer bg-green-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-green-600 transition-all duration-300 flex items-center justify-center"
+        >
+          Continuer vers l'application
+        </a>
       </div>
     </div>
 
+    <!-- Résultats -->
     <!-- Résultats -->
     <div id="resultsView" class="hidden">
       <h2 class="text-primary text-2xl md:text-3xl font-semibold mb-6">
         Vos réponses
       </h2>
       <div id="resultsList" class="text-left space-y-4 mb-8"></div>
-      <button
-        id="backToCompletionBtn"
-        class="hover:cursor-pointer bg-gray-100 text-gray-700 px-8 py-3 rounded-full text-base font-semibold hover:bg-gray-200 transition-all duration-300 mr-4"
-      >
-        Retour
-      </button>
-      <button
-        id="restartFromResultsBtn"
-        class="hover:cursor-pointer bg-primary text-white px-8 py-3 rounded-full text-base font-semibold hover:bg-white hover:text-primary hover:border transition-all duration-300"
-      >
-        Recommencer
-      </button>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <button
+          id="backToCompletionBtn"
+          class="hover:cursor-pointer bg-gray-100 text-gray-700 px-6 py-2.5 rounded-full text-sm font-medium hover:bg-gray-200 transition-all duration-300 mb-2 sm:mb-0"
+        >
+          Retour
+        </button>
+        <button
+          id="restartFromResultsBtn"
+          class="hover:cursor-pointer bg-primary text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-white hover:text-primary border border-primary transition-all duration-300 mb-2 sm:mb-0"
+        >
+          Recommencer
+        </button>
+        <a
+          href="/accueil-app"
+          class="hover:cursor-pointer inline-flex items-center justify-center bg-green-500 text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-green-600 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <span>Continuer vers l'application</span>
+        </a>
+      </div>
     </div>
   </div>
 </div>
