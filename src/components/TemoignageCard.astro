@@ -1,0 +1,37 @@
+---
+// TestimonialCard.astro
+import starSvg from "../assets/etoile.svg";
+import starEmptySvg from "../assets/etoile-vide.svg"; // Si vous avez une version vide
+
+export interface Props {
+  name: string;
+  rating: number;
+  content: string;
+}
+
+const { name, rating, content } = Astro.props;
+
+// Générer les étoiles en fonction du rating
+const stars = Array.from({ length: 5 }, (_, i) => i < rating);
+---
+
+<div class="bg-white rounded-xl p-6 shadow-md">
+  <!-- En-tête avec nom et étoiles -->
+  <div class="flex justify-between items-center mb-4">
+    <h4 class="font-medium">{name}</h4>
+    <div class="flex">
+      {
+        stars.map((isFilled: boolean) => (
+          <img
+            src={isFilled ? starSvg.src : starEmptySvg.src}
+            alt={isFilled ? "Étoile pleine" : "Étoile vide"}
+            class="w-4 h-4"
+          />
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- Contenu du témoignage -->
+  <p class="text-gray-700">{content}</p>
+</div>

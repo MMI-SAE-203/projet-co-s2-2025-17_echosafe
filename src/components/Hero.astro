@@ -1,55 +1,49 @@
 ---
 import "../style/global.css";
 import Button from "./Button.astro";
+import Partenaire from "./Partenaire.astro";
 ---
 
-<hero class="">
-  <div class="content-center">
-    <h1 class="text-center font-secondary text-[#323f92] text-3xl m-4 ">
-      Un espace d'écoute et de soutien, en toute sécurité.
-    </h1>
-
-    <h3 class="text-center text-[#323f92] font-bold text-sm">
-      Vous n'êtes pas seul(e). Echo Safe offre un espace sécurisé pour les
-      victimes de harcèlement, avec écoute, soutien, et accès à des
-      professionnels.
-    </h3>
-    <div class="lg-flex-column-2">
+<section class="min-h-screen flex items-center -mt-18">
+  <div
+    class="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 items-center px-6 w-full"
+  >
+    <!-- Texte -->
     <div
-      class="flex flex-col items-center justify-center text-center mb-5 "
+      class="flex flex-col justify-center items-center text-center space-y-30 md:space-y-6 w-full md:items-start md:text-left md:w-1/2 min-h-screen md:min-h-0"
     >
-      <div class="mt-5 mb-5"><Button variant="dark" url={``} text={`Accéder à Echo Safe`} /></div>
-      <div>
-      <Button url={``} text={`S'inscrire`} /></div> 
-    <div class="relative w-full h-[500px] sm:h-[600px]">
+      <h1 class="font-secondary text-3xl md:text-5xl font-bold mt-30">
+        Un espace d'écoute et de soutien, en toute sécurité.
+      </h1>
+      <h3 class="font-bold text-xl">
+        Vous n'êtes pas seul(e). Echo Safe offre un espace sécurisé pour les
+        victimes de harcèlement, avec écoute, soutien, et accès à des
+        professionnels.
+      </h3>
+      <div class="flex flex-col md:flex-row gap-4 items-center md:items-start">
+        <Button variant="dark" url={``} text={`Accéder à Echo Safe`} />
+        <Button url={``} text={`S'inscrire`} />
+      </div>
+    </div>
 
-  <img src="/src/assets/onde.webp" alt="fond en forme d'onde"
-       class="absolute inset-0 w-full h-full object-cover z-0" />
-
-  <img src="/src/assets/femme_hero.webp" alt="femme discute"
-       class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-1 max-w-[300px] sm:max-w-[400px]" />
-
-  <img src="/src/assets/humeurs.webp" alt="cadrant d'humeurs"
-       class="absolute bottom-5 right-5 z-2 w-3xs lg:w-auto sm:w-[150px]" />
-</div>
-<div class="w-full bg-[#323F92] overflow-hidden py-4 ">
-  <div class="animate-marquee whitespace-nowrap flex gap-12">
-    <img src="/src/assets/logo-avf.webp" alt="Logo Partenaire 1" class="h-8 lg:h-12 inline-block m-5" />
-    <img src="/src/assets/logo-france.webp" alt="Logo Partenaire 2" class="h-8 lg:h-12 inline-block" />
-    <img src="/src/assets/logo-3.webp" alt="Logo Partenaire 3" class="h-8 lg:h-12 inline-block m-5" />
-    <img src="/src/assets/logo4.webp" alt="Logo Partenaire 4" class="h-8 lg:h-12 inline-block" />
-    <img src="/src/assets/logo_unicef.webp" alt="Logo Partenaire 3" class="h-8 lg:h-12 inline-block m-5" />
-    <img src="/src/assets/logo_tf1.webp" alt="Logo Partenaire 4" class="h-8 lg:h-12 inline-block" />
-    <img src="/src/assets/logo_radiofrance.webp" alt="Logo Partenaire 4" class="h-8 lg:h-12 inline-block" />
-    <img src="/src/assets/logo-avf.webp" alt="Logo Partenaire 1" class="h-8 lg:h-12 inline-block m-5" />
-    <img src="/src/assets/logo-france.webp" alt="Logo Partenaire 2" class="h-8 lg:h-12 inline-block" />
-    <img src="/src/assets/logo-3.webp" alt="Logo Partenaire 3" class="h-8 lg:h-12 inline-block m-5" />
-    <img src="/src/assets/logo4.webp" alt="Logo Partenaire 4" class="h-8 lg:h-12 inline-block" />
-    <img src="/src/assets/logo_unicef.webp" alt="Logo Partenaire 3" class="h-8 lg:h-12 inline-block m-5" />
-    <img src="/src/assets/logo_tf1.webp" alt="Logo Partenaire 4" class="h-8 lg:h-12 inline-block" />
-    <img src="/src/assets/logo_radiofrance.webp" alt="Logo Partenaire 4" class="h-8 lg:h-12 inline-block" />
+    <!-- Images (cachées sur mobile) -->
+    <div class="relative hidden md:block md:w-1/2">
+      <img
+        class="w-120 absolute -translate-y-45 z-0 translate-x-10"
+        src="/src/assets/onde.webp"
+        alt="fond en forme d'onde"
+      />
+      <img
+        src="/src/assets/femme_hero.webp"
+        alt="femme discute"
+        class="absolute top-1/2 left-1/2 transform -translate-x-55 -translate-y-50 w-80"
+      />
+      <img
+        src="/src/assets/humeurs.webp"
+        alt="cadrant d'humeurs"
+        class="absolute transform left-1/2 -top-10 w-65"
+      />
+    </div>
   </div>
-</div>
-
-  </div>
-</hero>
+</section>
+<Partenaire />

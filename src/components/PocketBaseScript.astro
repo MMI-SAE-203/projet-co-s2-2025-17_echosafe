@@ -1,0 +1,14 @@
+---
+// Ce composant charge PocketBase et l'expose globalement pour l'utiliser dans des scripts client
+---
+
+<script>
+  import PocketBase from "pocketbase";
+
+  // Initialiser PocketBase avec l'URL de votre backend (à configurer dans .env)
+  const PB_URL =
+    import.meta.env.PUBLIC_POCKETBASE_URL || "https://echosafe.eloishenry.fr/";
+
+  // Exposer PocketBase globalement pour une utilisation dans des scripts client
+  window.pocketBase = new PocketBase(PB_URL);
+</script>

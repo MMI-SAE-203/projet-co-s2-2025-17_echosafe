@@ -1,0 +1,121 @@
+---
+
+---
+
+<script is:inline>
+  // Fonction pour créer un cookie
+  function setCookie(name, value, days) {
+    const d = new Date();
+    d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+    const expires = "expires=" + d.toUTCString();
+    document.cookie = name + "=" + value + ";" + expires + ";path=/";
+  }
+
+  // Fonction pour obtenir un cookie par son nom
+  function getCookie(name) {
+    const nameEq = name + "=";
+    const ca = document.cookie.split(";");
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === " ") {
+        c = c.substring(1);
+      }
+      if (c.indexOf(nameEq) === 0) {
+        return c.substring(nameEq.length, c.length);
+      }
+    }
+    return "";
+  }
+
+  // Fonction pour enregistrer les préférences de cookies
+  function saveCookiePreferences(essential, functional, analytics) {
+  // On enregistre toujours les cookies essentiels
+  setCookie("essential-cookies", "true", 365);
+
+  // On enregistre les autres selon les choix utilisateur
+  setCookie("functional-cookies", functional.toString(), 365);
+  setCookie("analytics-cookies", analytics.toString(), 365);
+
+  // Si l'utilisateur accepte au moins un type de cookie optionnel,
+  // on enregistre le choix pour 365 jours, sinon pour 0 jours 
+  // (ce qui le fera expirer à la fermeture du navigateur)
+  if (functional || analytics) {
+    setCookie("cookies-preferences-set", "true", 365);
+  } else {
+    // Soit on utilise une session cookie (pas de durée)
+    document.cookie = "cookies-preferences-set=true; path=/";
+    
+    // Soit on le supprime complètement pour forcer la réapparition immédiate
+    // document.cookie = "cookies-preferences-set=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  }
+
+    // Déclencher un événement personnalisé pour informer toutes les pages
+    const event = new CustomEvent("cookiePreferencesUpdated", {
+      detail: {
+        essential: essential,
+        functional: functional,
+        analytics: analytics,
+      },
+    });
+    document.dispatchEvent(event);
+
+    // Si les cookies sont refusés, les désactiver réellement
+    if (!functional) {
+      // Supprimer les cookies fonctionnels existants
+      document.cookie =
+        "mood-tracker=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "user-goals=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    }
+
+    if (!analytics) {
+      // Supprimer les cookies analytiques existants
+      document.cookie = "_ga=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "_gid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    }
+  }
+
+  // Fonction pour synchroniser l'état des toggles selon les cookies existants
+  function updateToggleStates() {
+    // Rechercher tous les checkboxes des cookies fonctionnels
+    const functionalToggles = document.querySelectorAll(
+      '[id$="functional-cookies"]'
+    );
+    functionalToggles.forEach((toggle) => {
+      toggle.checked = getCookie("functional-cookies") !== "false"; // Par défaut activé
+    });
+
+    // Rechercher tous les checkboxes des cookies analytiques
+    const analyticsToggles = document.querySelectorAll(
+      '[id$="analytics-cookies"]'
+    );
+    analyticsToggles.forEach((toggle) => {
+      toggle.checked = getCookie("analytics-cookies") === "true"; // Par défaut désactivé
+    });
+  }
+
+  // Écouter l'événement cookiePreferencesUpdated
+  document.addEventListener("cookiePreferencesUpdated", function (e) {
+    // Mettre à jour les toggles sur la page actuelle
+    updateToggleStates();
+  });
+
+  // Au chargement de la page, initialiser les toggles selon les cookies existants
+  document.addEventListener("DOMContentLoaded", function () {
+    updateToggleStates();
+
+    // Gérer la bannière de cookie
+    const cookieBanner = document.getElementById("cookie-banner");
+    if (cookieBanner && getCookie("cookies-preferences-set") !== "true") {
+      cookieBanner.style.display = "block";
+    }
+  });
+
+  // Exposer globalement les fonctions utilitaires pour les cookies
+  window.CookieUtils = {
+    set: setCookie,
+    get: getCookie,
+    savePreferences: saveCookiePreferences,
+    updateToggles: updateToggleStates,
+  };
+</script>

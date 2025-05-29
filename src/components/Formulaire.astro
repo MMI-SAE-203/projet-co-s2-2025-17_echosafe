@@ -1,0 +1,494 @@
+---
+// Questionnaire.astro
+export interface Question {
+  id: number;
+  title: string;
+  options: string[];
+}
+
+interface Props {
+  questions?: Question[];
+  userId?: string; // Ajout de l'ID utilisateur comme prop
+}
+
+const {
+  userId = "",
+  questions = [
+    {
+      id: 1,
+      title: "Avez-vous déjà été victime de harcèlement ?",
+      options: ["Oui", "Non", "Préfère ne pas répondre"],
+    },
+    {
+      id: 2,
+      title: "Dans quel environnement cela s'est-il produit ?",
+      options: ["Au travail", "À l'école", "En ligne", "Dans l'espace public"],
+    },
+    {
+      id: 3,
+      title: "Avez-vous signalé cet incident ?",
+      options: ["Oui", "Non", "J'ai hésité mais ne l'ai pas fait"],
+    },
+  ],
+} = Astro.props;
+
+const totalQuestions = questions.length;
+---
+
+<div class="min-h-screen bg-white flex items-center justify-center p-5">
+  <div
+    class="bg-white rounded-3xl shadow-2xl p-8 md:p-10 max-w-lg w-full text-center relative"
+  >
+    <!-- Bouton retour -->
+    <button
+      id="backBtn"
+      class="absolute top-6 left-6 md:top-8 md:left-8 text-2xl text-primary hover:scale-110 transition-transform duration-200 hidden"
+      aria-label="Question précédente"
+    >
+      ‹
+    </button>
+
+    <!-- Contenu principal du questionnaire -->
+    <div id="questionContent">
+      <!-- Compteur de questions -->
+      <div id="questionCounter" class="text-gray-500 text-sm mb-3">
+        Question 1 sur {totalQuestions}
+      </div>
+
+      <!-- Barre de progression -->
+      <div class="w-full h-1 bg-gray-200 rounded-full mb-8">
+        <div
+          id="progressBar"
+          class="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+          style={`width: ${(1 / totalQuestions) * 100}%`}
+        >
+        </div>
+      </div>
+
+      <!-- Titre de la question -->
+      <h2
+        id="questionTitle"
+        class="text-primary text-2xl md:text-3xl font-semibold mb-8 md:mb-10 leading-tight px-2"
+      >
+        {questions[0].title}
+      </h2>
+
+      <!-- Options -->
+      <div id="optionsContainer" class="flex flex-col gap-4 mb-8 md:mb-10">
+        {
+          questions[0].options.map((option) => (
+            <div
+              class="option group flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5 text-left"
+              data-value={option}
+              role="radio"
+              tabindex="0"
+              aria-checked="false"
+            >
+              <div class="radio-button w-5 h-5 border-2 border-gray-300 rounded-full mr-4 relative transition-all duration-300 group-hover:border-primary">
+                <div class="radio-dot w-2 h-2 bg-primary rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-0 transition-all duration-300" />
+              </div>
+              <span class="text-base font-medium select-none">{option}</span>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Bouton suivant - FIX: Ajout de !important pour forcer l'affichage -->
+      <button
+        id="nextBtn"
+        class="bg-primary text-white px-8 md:px-10 py-3 md:py-4 rounded-full text-base font-semibold hover:bg-white hover:text-primary border border-primary transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg opacity-50 cursor-default"
+        style="pointer-events: none;"
+        disabled
+      >
+        Suivant
+      </button>
+    </div>
+
+    <!-- Message de fin -->
+    <div id="completionMessage" class="hidden animate-fade-in">
+      <div class="text-6xl mb-6">🎉</div>
+      <h2 class="text-primary text-2xl md:text-3xl font-semibold mb-6">
+        Merci pour vos réponses !
+      </h2>
+      <p class="text-gray-600 mb-8 px-4">
+        Vos réponses ont été enregistrées avec succès.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button
+          id="restartBtn"
+          class="bg-primary text-white px-8 py-3 rounded-full text-base font-semibold hover:bg-primary/90 transition-all duration-300 hover:-translate-y-0.5"
+        >
+          Recommencer
+        </button>
+        <button
+          id="viewResultsBtn"
+          class="bg-gray-100 text-gray-700 px-8 py-3 rounded-full text-base font-semibold hover:bg-gray-200 transition-all duration-300"
+        >
+          Voir les résultats
+        </button>
+      </div>
+    </div>
+
+    <!-- Résultats -->
+    <div id="resultsView" class="hidden">
+      <h2 class="text-primary text-2xl md:text-3xl font-semibold mb-6">
+        Vos réponses
+      </h2>
+      <div id="resultsList" class="text-left space-y-4 mb-8"></div>
+      <button
+        id="backToCompletionBtn"
+        class="bg-gray-100 text-gray-700 px-8 py-3 rounded-full text-base font-semibold hover:bg-gray-200 transition-all duration-300 mr-4"
+      >
+        Retour
+      </button>
+      <button
+        id="restartFromResultsBtn"
+        class="bg-primary text-white px-8 py-3 rounded-full text-base font-semibold hover:bg-primary/90 transition-all duration-300"
+      >
+        Recommencer
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .option:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Correction pour le bouton suivant */
+  #nextBtn:not([disabled]) {
+    opacity: 1 !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+  }
+
+  /* Correction pour les options sélectionnées */
+  .option.selected {
+    border-color: var(--color-primary) !important;
+    background-color: rgba(var(--color-primary-rgb), 0.05) !important;
+  }
+</style>
+<script src="../components/PocketBaseScript.astro"></script>
+<script define:vars={{ questions, totalQuestions }}>
+  class Questionnaire {
+    constructor() {
+      this.questions = questions;
+      this.currentQuestion = 0;
+      this.answers = [];
+      this.totalQuestions = totalQuestions;
+      this.selectedOption = null;
+
+      this.init();
+    }
+
+    init() {
+      this.bindEvents();
+      this.updateDisplay();
+    }
+
+    bindEvents() {
+      // Événements pour les options (clic et clavier)
+      document.addEventListener("click", (e) => {
+        const option = e.target.closest(".option");
+        if (option) {
+          this.selectOption(option);
+        }
+      });
+
+      // Support clavier pour les options
+      document.addEventListener("keydown", (e) => {
+        const option = e.target.closest(".option");
+        if (option && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          this.selectOption(option);
+        }
+      });
+
+      // Bouton suivant
+      const nextBtn = document.getElementById("nextBtn");
+      if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+          if (!nextBtn.disabled) {
+            this.nextQuestion();
+          }
+        });
+      }
+
+      // Bouton retour
+      const backBtn = document.getElementById("backBtn");
+      if (backBtn) {
+        backBtn.addEventListener("click", () => {
+          this.previousQuestion();
+        });
+      }
+
+      // Boutons de fin
+      this.bindCompletionEvents();
+    }
+
+    bindCompletionEvents() {
+      const restartBtn = document.getElementById("restartBtn");
+      const restartFromResultsBtn = document.getElementById(
+        "restartFromResultsBtn"
+      );
+      const viewResultsBtn = document.getElementById("viewResultsBtn");
+      const backToCompletionBtn = document.getElementById(
+        "backToCompletionBtn"
+      );
+
+      if (restartBtn) {
+        restartBtn.addEventListener("click", () => this.restart());
+      }
+
+      if (restartFromResultsBtn) {
+        restartFromResultsBtn.addEventListener("click", () => this.restart());
+      }
+
+      if (viewResultsBtn) {
+        viewResultsBtn.addEventListener("click", () => this.showResults());
+      }
+
+      if (backToCompletionBtn) {
+        backToCompletionBtn.addEventListener("click", () =>
+          this.showCompletion()
+        );
+      }
+    }
+
+    selectOption(optionElement) {
+      // CORRECTION: Sauvegarder la valeur avant de modifier les classes
+      const selectedValue = optionElement.dataset.value;
+
+      // Désélectionner toutes les options
+      document.querySelectorAll(".option").forEach((opt) => {
+        opt.classList.remove(
+          "selected",
+          "border-primary",
+          "bg-primary/5",
+          "text-primary"
+        );
+        opt.classList.add("border-gray-200");
+        opt.setAttribute("aria-checked", "false");
+
+        const radioDot = opt.querySelector(".radio-dot");
+        if (radioDot) {
+          radioDot.classList.remove("opacity-100", "scale-100");
+          radioDot.classList.add("opacity-0", "scale-0");
+        }
+      });
+
+      // Sélectionner l'option cliquée
+      optionElement.classList.add("selected", "border-primary", "bg-primary/5");
+      optionElement.classList.remove("border-gray-200");
+      optionElement.setAttribute("aria-checked", "true");
+
+      const radioDot = optionElement.querySelector(".radio-dot");
+      if (radioDot) {
+        radioDot.classList.remove("opacity-0", "scale-0");
+        radioDot.classList.add("opacity-100", "scale-100");
+      }
+
+      // Activer le bouton suivant
+      const nextBtn = document.getElementById("nextBtn");
+      if (nextBtn) {
+        nextBtn.classList.remove("opacity-50");
+        nextBtn.style.pointerEvents = "auto";
+        nextBtn.classList.add(
+          "hover:bg-primary/90",
+          "hover:-translate-y-0.5",
+          "hover:shadow-lg"
+        );
+        nextBtn.disabled = false;
+        nextBtn.style.cursor = "pointer";
+      }
+
+      // Sauvegarder la réponse
+      this.answers[this.currentQuestion] = selectedValue;
+      this.selectedOption = optionElement;
+    }
+
+    nextQuestion() {
+      if (this.answers[this.currentQuestion] === undefined) return;
+
+      if (this.currentQuestion < this.totalQuestions - 1) {
+        this.currentQuestion++;
+        this.updateDisplay();
+      } else {
+        this.showCompletion();
+      }
+    }
+
+    previousQuestion() {
+      if (this.currentQuestion > 0) {
+        this.currentQuestion--;
+        this.updateDisplay();
+      }
+    }
+
+    updateDisplay() {
+      const question = this.questions[this.currentQuestion];
+
+      // Mettre à jour le compteur
+      const questionCounter = document.getElementById("questionCounter");
+      if (questionCounter) {
+        questionCounter.textContent = `Question ${this.currentQuestion + 1} sur ${this.totalQuestions}`;
+      }
+
+      // Mettre à jour la barre de progression
+      const progressBar = document.getElementById("progressBar");
+      if (progressBar) {
+        const progress =
+          ((this.currentQuestion + 1) / this.totalQuestions) * 100;
+        progressBar.style.width = `${progress}%`;
+      }
+
+      // Mettre à jour le titre
+      const questionTitle = document.getElementById("questionTitle");
+      if (questionTitle) {
+        questionTitle.textContent = question.title;
+      }
+
+      // Mettre à jour les options
+      this.updateOptions(question.options);
+
+      // Réinitialiser le bouton suivant
+      this.resetNextButton();
+
+      // Restaurer la réponse précédente si elle existe
+      setTimeout(() => {
+        if (this.answers[this.currentQuestion]) {
+          const savedOption = document.querySelector(
+            `.option[data-value="${this.answers[this.currentQuestion]}"]`
+          );
+          if (savedOption) {
+            this.selectOption(savedOption);
+          }
+        }
+      }, 0);
+
+      // Gérer la visibilité du bouton retour
+      const backBtn = document.getElementById("backBtn");
+      if (backBtn) {
+        if (this.currentQuestion === 0) {
+          backBtn.classList.add("hidden");
+        } else {
+          backBtn.classList.remove("hidden");
+        }
+      }
+    }
+
+    updateOptions(options) {
+      const container = document.getElementById("optionsContainer");
+      if (!container) return;
+
+      container.innerHTML = "";
+
+      options.forEach((option) => {
+        const optionElement = document.createElement("div");
+        optionElement.className =
+          "option group flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5 text-left";
+        optionElement.dataset.value = option;
+        optionElement.setAttribute("role", "radio");
+        optionElement.setAttribute("tabindex", "0");
+        optionElement.setAttribute("aria-checked", "false");
+
+        optionElement.innerHTML = `
+          <div class="radio-button w-5 h-5 border-2 border-gray-300 rounded-full mr-4 relative transition-all duration-300 group-hover:border-primary">
+            <div class="radio-dot w-2 h-2 bg-primary rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-0 transition-all duration-300"></div>
+          </div>
+          <span class="text-base font-medium select-none">${option}</span>
+        `;
+
+        container.appendChild(optionElement);
+      });
+    }
+
+    resetNextButton() {
+      const nextBtn = document.getElementById("nextBtn");
+      if (nextBtn) {
+        nextBtn.classList.add("opacity-50");
+        nextBtn.style.pointerEvents = "none";
+        nextBtn.style.cursor = "default";
+        nextBtn.classList.remove(
+          "hover:bg-primary/90",
+          "hover:-translate-y-0.5",
+          "hover:shadow-lg"
+        );
+        nextBtn.disabled = true;
+      }
+    }
+
+    showCompletion() {
+      const questionContent = document.getElementById("questionContent");
+      const completionMessage = document.getElementById("completionMessage");
+      const resultsView = document.getElementById("resultsView");
+
+      if (questionContent) questionContent.classList.add("hidden");
+      if (resultsView) resultsView.classList.add("hidden");
+      if (completionMessage) completionMessage.classList.remove("hidden");
+
+      console.log("Réponses du questionnaire:", this.answers);
+    }
+
+    showResults() {
+      const completionMessage = document.getElementById("completionMessage");
+      const resultsView = document.getElementById("resultsView");
+      const resultsList = document.getElementById("resultsList");
+
+      if (completionMessage) completionMessage.classList.add("hidden");
+      if (resultsView) resultsView.classList.remove("hidden");
+
+      if (resultsList) {
+        resultsList.innerHTML = "";
+        this.questions.forEach((question, index) => {
+          const resultItem = document.createElement("div");
+          resultItem.className = "bg-gray-50 p-4 rounded-lg";
+          resultItem.innerHTML = `
+            <div class="font-semibold text-gray-800 mb-2">${question.title}</div>
+            <div class="text-primary font-medium">${this.answers[index] || "Non répondu"}</div>
+          `;
+          resultsList.appendChild(resultItem);
+        });
+      }
+    }
+
+    restart() {
+      this.currentQuestion = 0;
+      this.answers = [];
+      this.selectedOption = null;
+
+      // Réafficher le contenu principal
+      const questionContent = document.getElementById("questionContent");
+      const completionMessage = document.getElementById("completionMessage");
+      const resultsView = document.getElementById("resultsView");
+
+      if (questionContent) questionContent.classList.remove("hidden");
+      if (completionMessage) completionMessage.classList.add("hidden");
+      if (resultsView) resultsView.classList.add("hidden");
+
+      this.updateDisplay();
+    }
+  }
+
+  // Initialiser le questionnaire quand le DOM est prêt
+  document.addEventListener("DOMContentLoaded", () => {
+    new Questionnaire();
+  });
+</script>

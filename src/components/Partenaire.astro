@@ -1,0 +1,28 @@
+---
+import "../style/global.css";
+const logos = [
+  "/src/assets/logo-avf.webp",
+  "/src/assets/logo-france.webp",
+  "/src/assets/logo-3.webp",
+  "/src/assets/logo4.webp",
+  "/src/assets/logo_unicef.webp",
+  "/src/assets/logo_tf1.webp",
+  "/src/assets/logo_radiofrance.webp",
+];
+---
+
+<div class="w-full relative bg-[#323F92] overflow-hidden py-4">
+  <div class="w-max animate-[scroll_30s_linear_infinite] flex gap-12">
+    {
+      logos
+        .concat(logos)
+        .map((logo, index) => (
+          <img
+            src={logo}
+            alt={`Logo Partenaire ${index + 1}`}
+            class="h-8 lg:h-12 inline-block"
+          />
+        ))
+    }
+  </div>
+</div>

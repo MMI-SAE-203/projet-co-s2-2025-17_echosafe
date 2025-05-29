@@ -1,0 +1,105 @@
+---
+const faqItems = [
+  {
+    question: "Qu'est-ce qu'Echo Safe ?",
+    answer:
+      "Echo Safe est une plateforme sécurisée dédiée aux victimes de harcèlement, offrant un espace pour échanger, recevoir du soutien, et accéder à des ressources adaptées.",
+  },
+  {
+    question: "Comment fonctionne l'anonymat sur Echo Safe ?",
+    answer:
+      "L'anonymat est garanti sur Echo Safe pour protéger votre identité. Vous pouvez participer aux discussions publiques et privées sans révéler votre identité. Les messages sont chiffrés de bout en bout pour assurer la confidentialité de vos échanges.",
+  },
+  {
+    question: "Comment puis-je accéder au soutien professionnel ?",
+    answer:
+      "Vous pouvez accéder à un soutien professionnel en utilisant nos canaux de discussion privés. Des professionnels qualifiés sont disponibles pour vous offrir des conseils et un soutien personnalisé.",
+  },
+  {
+    question: "Comment fonctionne le système de récompenses ?",
+    answer:
+      "Notre système de récompenses vous permet de gagner des badges en accomplissant des défis quotidiens et en participant activement à la communauté.",
+  },
+  {
+    question: "Quelles mesures de sécurité sont en place sur Echo Safe ?",
+    answer:
+      "Nous utilisons des API de filtrage et de modération, un chiffrement de bout en bout, une infra sécurisée, et des audits réguliers pour garantir la sécurité.",
+  },
+  {
+    question:
+      "Comment puis-je signaler un problème ou un comportement inapproprié ?",
+    answer:
+      "Utilisez notre système de signalement intégré. Notre équipe de modération examinera chaque signalement avec attention.",
+  },
+  {
+    question: "Comment puis-je contribuer à la communauté Echo Safe ?",
+    answer:
+      "Participez aux discussions, partagez vos expériences, soutenez les autres, ou faites un don pour aider au financement.",
+  },
+  {
+    question: "Comment puis-je supprimer mon compte ?",
+    answer:
+      "Dans les paramètres de votre compte, vous trouverez une option pour supprimer votre compte. Le support peut aussi vous aider.",
+  },
+  {
+    question: "Comment puis-je obtenir de l'aide supplémentaire ?",
+    answer:
+      "Consultez notre Kit de Secours ou contactez notre support utilisateur pour toute aide complémentaire.",
+  },
+];
+---
+
+<div class="faq-container max-w-5xl mx-auto p-6 space-y-4">
+  {
+    faqItems.map((item, i) => (
+      <div class="faq-item border border-gray-200 rounded-lg shadow-sm">
+        <button class="faq-question w-full bg-[#E2EEFF] p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition">
+          <span class="font-medium text-left">{item.question}</span>
+          <span class="faq-icon text-2xl font-bold">+</span>
+        </button>
+        <div class="faq-answer bg-white max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+          <p class="p-4">{item.answer}</p>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<script is:client>
+  document.addEventListener("DOMContentLoaded", () => {
+    const questions = document.querySelectorAll(".faq-question");
+
+    questions.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const answer = btn.nextElementSibling;
+        const icon = btn.querySelector(".faq-icon");
+        const isOpen = answer.classList.contains("active");
+
+        document.querySelectorAll(".faq-answer").forEach((el) => {
+          el.classList.remove("active");
+          el.style.maxHeight = "0px";
+          el.previousElementSibling.querySelector(".faq-icon").textContent =
+            "+";
+        });
+
+        if (!isOpen) {
+          answer.classList.add("active");
+          answer.style.maxHeight = answer.scrollHeight + "px";
+          icon.textContent = "-";
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .faq-answer.active {
+    /* L'ajout se fait en JS, mais la classe est ici */
+  }
+</style>

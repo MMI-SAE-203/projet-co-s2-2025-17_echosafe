@@ -1,10 +1,463 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 import "../style/global.css";
-import Hero from '../components/Hero.astro';
+import Hero from "../components/Hero.astro";
+import Card_accueil from "../components/Card_accueil.astro";
+import TemoignageCard from "../components/TemoignageCard.astro";
+import FAQItem from "../components/FAQItem.astro";
+
+const testimonials = [
+  {
+    name: "Marie D.",
+    rating: 5,
+    content:
+      "Echo Safe a changé ma vie. Grâce aux canaux de discussion anonymes, j'ai pu partager mes expériences et recevoir un soutien immédiat incroyable. La part personnalisée m'a aidée à passer sur une bonne voie. Merci infiniment!",
+  },
+  {
+    name: "Alexandre M.",
+    rating: 5,
+    content:
+      "J'ai été impressionné par la modération active et la sécurité des communications sur Echo Safe. Cela m'a permis de discuter librement avec des professionnels et d'autres utilisateurs sans me soucier de la confidentialité de mes informations.",
+  },
+  {
+    name: "Sophie L.",
+    rating: 5,
+    content:
+      "Le Kit de Secours est une fonctionnalité essentielle. Savoir que j'ai accès à des numéros d'urgence et à des conseils pratiques en cas de besoin me rassure énormément. L'application est facile à utiliser et vraiment efficace.",
+  },
+  {
+    name: "Julien C.",
+    rating: 5,
+    content:
+      "Echo Safe est bien plus qu'une application, c'est une communauté. J'ai trouvé un soutien incroyable grâce aux discussions anonymes et personnalisé. Je me sens enfin compris.",
+  },
+  {
+    name: "Émilie T.",
+    rating: 5,
+    content:
+      "Je ne me sentais pas à l'aise pour partager mes problèmes avant de découvrir Echo Safe. L'anonymat et la bienveillance de la communauté m'ont permis de m'ouvrir et de trouver des solutions.",
+  },
+  {
+    name: "Thomas B.",
+    rating: 5,
+    content:
+      "La fonctionnalité de suivi d'humeur est incroyablement utile. Elle m'aide à identifier mes déclencheurs et à mieux gérer mon anxiété au quotidien. Une application qui change vraiment la vie.",
+  },
+  {
+    name: "Laura M.",
+    rating: 5,
+    content:
+      "J'apprécie particulièrement les ressources et les conseils personnalisés. Ils sont vraiment adaptés à ma situation et m'ont aidée à progresser rapidement dans mon parcours.",
+  },
+  {
+    name: "Nicolas P.",
+    rating: 5,
+    content:
+      "Echo Safe offre un excellent équilibre entre soutien professionnel et communautaire. C'est rassurant de savoir qu'on peut obtenir de l'aide de qualité à tout moment, où que l'on soit.",
+  },
+];
+
+// Diviser les témoignages en deux rangées
+const topRowTestimonials = testimonials.slice(0, 4);
+const bottomRowTestimonials = testimonials.slice(4, 8);
 ---
 
 <Layout>
-<Hero>
+  <Hero />
+  <section class="container mx-auto px-4 py-8">
+    <div class="flex flex-col justify-center items-center px-4">
+      <h2
+        class="font-secondary text-3xl md:text-5xl font-bold text-center mb-12"
+      >
+        Des outils concrets pour surmonter le harcèlement
+      </h2>
+    </div>
 
+    <!-- Section 1: Espaces de soutien et de partage (fond rose) -->
+    <Card_accueil
+      title="Espaces de soutien et de partage"
+      description="Rejoignez notre communauté bienveillante pour échanger anonymement dans des canaux publics ou privés avec des professionnels et des membres. Un environnement sécurisé et respectueux garanti."
+      buttonText="Découvrir l'outil"
+      buttonLink="#"
+      imageUrl="/src/assets/maquette_accueil/maquette_message.webp"
+      bgColor="bg-pink-100"
+      imagePosition="right"
+      layout="horizontal"
+      bgGradient="bg-gradient-to-r from-[#FFE3FA] to-[#FF9CED]"
+    />
+
+    <!-- Section 2: Suivi de ton humeur (fond saumon) -->
+    <Card_accueil
+      title="Suivi votre humeur"
+      description="Suivez votre bien-être avec le Moodtracker en enregistrant vos humeurs et en recevant des conseils personnalisés pour améliorer votre état d'esprit."
+      buttonText="Suivre votre humeur"
+      buttonLink="#"
+      imageUrl="/src/assets/maquette_accueil/maquette_humeur.webp"
+      bgColor="bg-orange-200"
+      bgGradient="bg-gradient-to-r from-[#FFDEDE] to-[#EDA8A8]"
+      imagePosition="left"
+      layout="horizontal"
+    />
+
+    <!-- Section 3: Kit de secours contre le harcèlement (fond bleu clair) -->
+    <Card_accueil
+      title="Kit de secours contre le harcèlement"
+      description="Accédez rapidement aux ressources essentielles avec notre Kit de Secours : numéros d'urgence, conseils pratiques et soutien immédiat pour faire face au harcèlement."
+      buttonText="Découvrir le kit"
+      buttonLink="#"
+      imageUrl="/src/assets/maquette_accueil/maquette_kit-de-secours.webp"
+      bgColor="bg-blue-100"
+      bgGradient="bg-gradient-to-r from-[#E2EEFF] to-[#7CA7E5]"
+      imagePosition="right"
+      layout="horizontal"
+    />
+  </section>
+  <section class="w-full bg-gradient-to-b from-[#323F92] to-[#121D64] py-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <!-- TITRE -->
+      <h2
+        class="font-secondary text-white text-3xl md:text-5xl font-bold text-center mb-12"
+      >
+        Un accompagnement motivant<br />et adapté à votre rythme
+      </h2>
+
+      <!-- CARDS -->
+      <div class="flex flex-col md:flex-row justify-center gap-8">
+        <Card_accueil
+          title="Plan de suivi personnalisé pour victimes"
+          description="Accédez rapidement aux ressources essentielles avec notre Kit de Secours : numéros d'urgence, conseils pratiques et soutien immédiat pour faire face au harcèlement."
+          buttonText="Découvrir le kit"
+          buttonLink="#"
+          bgColor="bg-white"
+          layout="horizontal"
+        />
+        <Card_accueil
+          title="Défis et récompenses"
+          description="Restez motivé grâce à notre système de récompenses ! Gagnez des badges et participez à des défis quotidiens pour célébrer chaque étape franchie."
+          buttonText="Défis & récompenses"
+          buttonLink="#"
+          bgColor="bg-white"
+          layout="horizontal"
+        />
+      </div>
+    </div>
+  </section>
+  <section class="relative py-10 px-4">
+    <!-- Titre -->
+    <div class="relative flex flex-col items-center mb-10 z-10">
+      <h2
+        class="relative text-3xl md:text-4xl font-bold font-secondary text-center z-10 bg-white/70 px-4 py-2 rounded-lg"
+      >
+        Une application pensée pour <br /> votre sécurité
+      </h2>
+    </div>
+
+    <!-- Image de l'homme DERRIÈRE LES CARDS -->
+    <div class="absolute right-0 md:right-30 -top-15 w-40 z-0">
+      <img
+        src="/src/assets/homme-securite.webp"
+        alt="Homme sécurité"
+        class="w-full h-auto object-cover"
+      />
+    </div>
+
+    <!-- Les cartes (au-dessus de l'image) -->
+    <div class="relative z-10 mx-auto max-w-7xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Tes cartes -->
+        <Card_accueil
+          title="Protection des communications personnelles"
+          description="Votre sécurité est notre priorité. Grâce à des outils comme Google Perspective API et Socket.io, nous filtrons et modérons les contenus pour garantir un environnement sûr et respectueux."
+          buttonText="Découvrez vos protections"
+          buttonLink="#"
+          bgColor="bg-[#cfe1ff]"
+          bgGradient="bg-gradient-to-r from-[#E2EEFF] to-[#B1D2FF]"
+          layout="vertical"
+        />
+
+        <Card_accueil
+          title="Infrastructure Sécurisée pour vos données"
+          description="Nous utilisons Infomaniak pour garantir une infrastructure sécurisée. Grâce à un chiffrement de bout en bout et des outils de surveillance, vos messages restent protégés et confidentiels."
+          buttonText="Découvrez nos infrastructures"
+          buttonLink="#"
+          bgColor="bg-[#cfe1ff]"
+          bgGradient="bg-gradient-to-r from-[#E2EEFF] to-[#B1D2FF]"
+          layout="vertical"
+        />
+
+        <div class="md:col-span-2">
+          <Card_accueil
+            title="Mesures de Sécurité Supplémentaires"
+            description="Nous avons mis en place des politiques de sécurité strictes, avec des audits réguliers et des tests de pénétration pour détecter les vulnérabilités. L'authentification à deux facteurs renforce également la sécurité des comptes utilisateurs."
+            buttonText="Nos protections avancées"
+            buttonLink="#"
+            bgColor="bg-[#cfe1ff]"
+            bgGradient="bg-gradient-to-r from-[#E2EEFF] to-[#B1D2FF]"
+            layout="vertical"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="">
+    <div class="flex justify-center items-center gap-2 mb-4">
+      <img src="src/assets/etoile.svg" alt="Étoile" class="w-5 h-5" />
+      <span class="text-sm font-medium">4.8/5 sur 10k avis</span>
+    </div>
+
+    <div class="relative flex flex-col items-center mb-10">
+      <!-- Image de la femme -->
+      <div
+        class="absolute left-0 md:left-30 top-1/2 transform -translate-y-1/2 w-40 z-0"
+      >
+        <img
+          src="/src/assets/femme-temoignage.webp"
+          alt="Femme témoignage"
+          class="w-full h-full object-cover"
+        />
+      </div>
+
+      <!-- Titre -->
+      <h2
+        class="relative text-3xl md:text-4xl font-bold font-secondary text-center z-10 bg-white/70 px-4 py-2 rounded-lg"
+      >
+        Témoignages d'utilisateurs,<br />voici ce qu'ils en pensent
+      </h2>
+    </div>
+
+    <div
+      class="relative bg-gradient-to-b from-[#FFDEDE] to-[#FFB3B3] py-16 overflow-hidden"
+    >
+      <div
+        class="flex w-full gap-x-4 [animation-name:scrollLeft] [animation-duration:30s] [animation-timing-function:linear] [animation-iteration-count:infinite] top-row"
+      >
+        {
+          topRowTestimonials.map((testimonial) => (
+            <div class="min-w-[280px] md:min-w-[320px] flex-shrink-0 w-full md:w-[calc(50%-12px)]">
+              <TemoignageCard
+                name={testimonial.name}
+                rating={testimonial.rating}
+                content={testimonial.content}
+              />
+            </div>
+          ))
+        }
+      </div>
+
+      <div
+        class="flex w-full gap-x-4 mt-8 [animation-name:scrollRight] [animation-duration:30s] [animation-timing-function:linear] [animation-iteration-count:infinite] bottom-row"
+      >
+        {
+          bottomRowTestimonials.map((testimonial) => (
+            <div class="min-w-[280px] md:min-w-[320px] flex-shrink-0 w-full md:w-[calc(50%-12px)]">
+              <TemoignageCard
+                name={testimonial.name}
+                rating={testimonial.rating}
+                content={testimonial.content}
+              />
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+  <section class="relative py-10 px-4">
+    <!-- AJOUT DE relative ICI -->
+    <div class="flex flex-col items-center z-10">
+      <h2
+        class="relative text-3xl md:text-4xl font-bold font-secondary text-center z-10 bg-white/70 px-4 py-2 rounded-lg"
+      >
+        FAQ
+      </h2>
+    </div>
+
+    <!-- Image de l'homme DERRIÈRE LES CARDS -->
+    <div class="absolute right-0 md:right-30 -top-15 w-40 z-0">
+      <!-- -top-15 remplacé par top-10 -->
+      <img
+        src="/src/assets/homme-FAQ.webp"
+        alt="Homme sécurité"
+        class="w-full h-auto object-cover"
+      />
+    </div>
+
+    <div class="relative z-10 mx-auto max-w-6xl">
+      <FAQItem />
+    </div>
+  </section>
+  <div
+    id="cookie-banner"
+    class="fixed bottom-0 left-0 right-0 bg-white p-6 md:p-10 shadow-2xl max-h-[90vh] overflow-y-auto z-50 w-full md:max-w-4xl md:mx-auto md:left-1/2 md:transform md:-translate-x-1/2 md:rounded-t-2xl"
+    style=""
+  >
+    <h2 class="text-2xl font-semibold mb-4">Paramètres de confidentialité</h2>
+
+    <p class="mb-4 text-sm">
+      Nous respectons votre vie privée. Cette application utilise des cookies et
+      technologies similaires pour différentes finalités.
+    </p>
+
+    <!-- Cookies essentiels - toujours activés -->
+    <div class="mb-4 p-3 border border-gray-200 rounded-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-semibold">Cookies strictement nécessaires</h3>
+          <p class="text-sm text-gray-600">
+            Ces cookies sont indispensables au fonctionnement du site et ne
+            peuvent pas être désactivés.
+          </p>
+        </div>
+        <div class="ml-4">
+          <span class="px-2 py-1 bg-gray-200 text-gray-800 text-xs rounded-full"
+            >Obligatoires</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Cookies fonctionnels - peuvent être activés/désactivés -->
+    <div class="mb-4 p-3 border border-gray-200 rounded-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-semibold">Cookies fonctionnels</h3>
+          <p class="text-sm text-gray-600">
+            Permettent les fonctionnalités personnalisées comme le Moodtracker,
+            les Streaks et le système de récompenses.
+          </p>
+        </div>
+        <div class="ml-4">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              id="functional-cookies"
+              class="sr-only peer"
+              checked
+            />
+            <div
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+            >
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cookies analytiques - peuvent être activés/désactivés -->
+    <div class="mb-4 p-3 border border-gray-200 rounded-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-semibold">Cookies analytiques</h3>
+          <p class="text-sm text-gray-600">
+            Nous aident à comprendre comment vous utilisez l'application pour
+            l'améliorer.
+          </p>
+        </div>
+        <div class="ml-4">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              id="analytics-cookies"
+              class="sr-only peer"
+            />
+            <div
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+            >
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <p class="mb-6 text-sm">
+      En savoir plus sur notre utilisation des cookies dans notre
+      <a href="/politique-cookies" class="text-blue-600 underline"
+        >Politique de confidentialité</a
+      >.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <button
+        id="reject-all-cookies"
+        class="order-2 sm:order-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-3xl hover:bg-gray-100 transition duration-300"
+      >
+        Tout refuser
+      </button>
+      <button
+        id="accept-selected-cookies"
+        class="order-1 sm:order-2 px-6 py-3 bg-[var(--color-primary)] text-white rounded-3xl hover:bg-blue-700 transition duration-300"
+      >
+        Accepter la sélection
+      </button>
+      <button
+        id="accept-all-cookies"
+        class="order-3 px-6 py-3 bg-green-600 text-white rounded-3xl hover:bg-green-700 transition duration-300"
+      >
+        Tout accepter
+      </button>
+    </div>
+  </div>
+
+  <script is:inline>
+    document.addEventListener("DOMContentLoaded", function () {
+      const cookieBanner = document.getElementById("cookie-banner");
+      const acceptAllButton = document.getElementById("accept-all-cookies");
+      const acceptSelectedButton = document.getElementById(
+        "accept-selected-cookies"
+      );
+      const rejectAllButton = document.getElementById("reject-all-cookies");
+      const functionalCheckbox = document.getElementById("functional-cookies");
+      const analyticsCheckbox = document.getElementById("analytics-cookies");
+
+      // Vérifier si l'utilisateur a déjà fait son choix
+      if (document.cookie.includes("cookies-preferences-set=true")) {
+        cookieBanner.style.display = "none";
+      } else {
+        cookieBanner.style.display = "block";
+      }
+
+      // Gérer le clic sur "Tout accepter"
+      if (acceptAllButton) {
+        acceptAllButton.addEventListener("click", function () {
+          window.CookieUtils.savePreferences(true, true, true);
+          cookieBanner.style.display = "none";
+        });
+      }
+
+      // Gérer le clic sur "Accepter la sélection"
+      if (acceptSelectedButton) {
+        acceptSelectedButton.addEventListener("click", function () {
+          window.CookieUtils.savePreferences(
+            true,
+            functionalCheckbox.checked,
+            analyticsCheckbox.checked
+          );
+          cookieBanner.style.display = "none";
+        });
+      }
+
+      // Gérer le clic sur "Tout refuser"
+      if (rejectAllButton) {
+        rejectAllButton.addEventListener("click", function () {
+          window.CookieUtils.savePreferences(true, false, false);
+          cookieBanner.style.display = "none";
+        });
+      }
+    });
+
+    // Script pour dupliquer les témoignages pour l'effet de boucle continue
+    document.addEventListener("DOMContentLoaded", () => {
+      const topRow = document.querySelector(".top-row");
+      const bottomRow = document.querySelector(".bottom-row");
+
+      if (topRow && bottomRow) {
+        // Dupliquer les cartes pour créer l'effet de boucle continue
+        const topCards = topRow.innerHTML;
+        const bottomCards = bottomRow.innerHTML;
+
+        topRow.innerHTML = topCards + topCards;
+        bottomRow.innerHTML = bottomCards + bottomCards;
+      }
+    });
+  </script>
 </Layout>

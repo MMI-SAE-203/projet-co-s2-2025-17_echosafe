@@ -1,0 +1,68 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Formulaire from "../../components/Formulaire.astro";
+
+// Définir les questions pour le formulaire de harcèlement
+const questions = [
+  {
+    id: 1,
+    title: "Avez-vous déjà été victime de harcèlement ?",
+    options: ["Oui", "Non", "Préfère ne pas répondre"],
+  },
+  {
+    id: 2,
+    title: "Quelle forme de harcèlement avez-vous subie ?",
+    options: [
+      "Harcèlement verbal",
+      "Harcèlement physique",
+      "Cyberharcèlement",
+      "Harcèlement sexuel",
+      "Autre",
+      "Préfère ne pas répondre",
+    ],
+  },
+  {
+    id: 3,
+    title: "Où cela s'est-il produit ?",
+    options: [
+      "À l'école/université",
+      "Au travail",
+      "Sur internet",
+      "Dans un lieu public",
+      "Autre",
+      "Préfère ne pas répondre",
+    ],
+  },
+  {
+    id: 4,
+    title: "Avez-vous cherché de l'aide ?",
+    options: [
+      "Oui, auprès d'un professionnel",
+      "Oui, auprès de proches",
+      "Oui, auprès des autorités",
+      "Non",
+      "Préfère ne pas répondre",
+    ],
+  },
+  {
+    id: 5,
+    title:
+      "Comment vous sentez-vous aujourd'hui par rapport à cette expérience ?",
+    options: [
+      "Encore traumatisé(e)",
+      "En voie de guérison",
+      "Résilient(e)",
+      "Indifférent(e)",
+      "Préfère ne pas répondre",
+    ],
+  },
+];
+---
+
+<Layout>
+  <div class="min-h-screenpy-8">
+    <div class="max-w-4xl mx-auto">
+      <Formulaire questions={questions} />
+    </div>
+  </div>
+</Layout>

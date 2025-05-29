@@ -1,0 +1,225 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <div class="flex justify-center items-center min-h-screen py-8">
+    <div
+      class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-100"
+    >
+      <h1
+        class="text-3xl font-bold mb-6 text-center text-primary font-secondary"
+      >
+        Mot de passe oublié
+      </h1>
+
+      <div id="step-email" class="block">
+        <p class="text-gray-600 mb-6 text-center">
+          Entrez votre adresse email et nous vous enverrons un lien pour
+          réinitialiser votre mot de passe.
+        </p>
+
+        <form id="forgot-password-form" class="space-y-4">
+          <div class="form-group">
+            <label
+              for="email"
+              class="block text-sm font-medium text-gray-700 mb-1">Email</label
+            >
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:outline-none transition"
+              placeholder="votre@email.com"
+            />
+            <span
+              class="error-message text-sm text-red-500 hidden"
+              data-for="email"></span>
+          </div>
+
+          <button
+            type="submit"
+            id="submit-button"
+            class="hover:cursor-pointer w-full bg-primary text-white py-3 px-4 rounded-3xl hover:bg-white hover:text-primary border border-primary transition-colors duration-300 mt-2"
+          >
+            <span id="button-text">Envoyer le lien</span>
+            <span id="button-loader" class="hidden">
+              <svg
+                class="animate-spin h-5 w-5 text-white mx-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            </span>
+          </button>
+
+          <div id="message" class="mt-4 text-center hidden p-3 rounded-md">
+          </div>
+        </form>
+      </div>
+
+      <div id="step-success" class="hidden text-center">
+        <div class="text-5xl mb-6 text-green-500">✓</div>
+        <h2 class="text-2xl font-bold mb-4">Email envoyé</h2>
+        <p class="text-gray-600 mb-6">
+          Si un compte existe avec cette adresse email, vous recevrez un lien
+          pour réinitialiser votre mot de passe. Vérifiez votre boîte de
+          réception et vos spams.
+        </p>
+        <div id="email-sent-to" class="font-medium text-gray-800 mb-6"></div>
+        <button
+          id="resend-link"
+          class="hover:cursor-pointer w-full bg-primary text-white py-3 px-4 rounded-3xl hover:bg-white hover:text-primary border border-primary transition-colors duration-300"
+        >
+          Renvoyer le lien
+        </button>
+      </div>
+
+      <div class="mt-2 text-center text-sm">
+        <a
+          href="/auth/connexion"
+          class="text-primary hover:underline font-medium"
+          >Retour à la connexion</a
+        >
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("forgot-password-form");
+      const messageDiv = document.getElementById("message");
+      const submitButton = document.getElementById("submit-button");
+      const buttonText = document.getElementById("button-text");
+      const buttonLoader = document.getElementById("button-loader");
+      const stepEmail = document.getElementById("step-email");
+      const stepSuccess = document.getElementById("step-success");
+      const emailSentTo = document.getElementById("email-sent-to");
+      const resendLinkButton = document.getElementById("resend-link");
+
+      // Validation des champs en temps réel
+      const validateInput = (input) => {
+        const errorElement = document.querySelector(
+          `.error-message[data-for="${input.name}"]`
+        );
+        let isValid = true;
+
+        // Réinitialiser les erreurs
+        errorElement.textContent = "";
+        errorElement.classList.add("hidden");
+        input.classList.remove("border-red-500");
+
+        if (input.hasAttribute("required") && !input.value.trim()) {
+          errorElement.textContent = "Ce champ est obligatoire";
+          errorElement.classList.remove("hidden");
+          input.classList.add("border-red-500");
+          isValid = false;
+        } else if (input.name === "email" && input.value) {
+          const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailPattern.test(input.value)) {
+            errorElement.textContent =
+              "Veuillez entrer une adresse email valide";
+            errorElement.classList.remove("hidden");
+            input.classList.add("border-red-500");
+            isValid = false;
+          }
+        }
+
+        return isValid;
+      };
+
+      // Ajouter des écouteurs d'événements pour la validation en temps réel
+      form.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("blur", () => validateInput(input));
+      });
+
+      // Fonction pour envoyer la demande de réinitialisation
+      const sendResetRequest = async (email) => {
+        try {
+          // Afficher l'état de chargement
+          buttonText.classList.add("hidden");
+          buttonLoader.classList.remove("hidden");
+          submitButton.disabled = true;
+          messageDiv.textContent = "";
+          messageDiv.className = "mt-4 text-center hidden";
+
+          const response = await fetch("/api/request-password-reset", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Une erreur est survenue");
+          }
+
+          // Toujours montrer l'écran de succès, même si l'email n'existe pas
+          // (pour des raisons de sécurité)
+          stepEmail.classList.add("hidden");
+          stepSuccess.classList.remove("hidden");
+          emailSentTo.textContent = `Email: ${email}`;
+
+          // Stocker l'email pour le bouton "Renvoyer"
+          resendLinkButton.dataset.email = email;
+        } catch (error) {
+          console.error("Erreur:", error);
+          messageDiv.textContent = error.message || "Une erreur est survenue";
+          messageDiv.className =
+            "mt-4 text-center block p-3 bg-red-100 text-red-700 rounded-md";
+
+          // Réinitialiser le bouton
+          buttonText.classList.remove("hidden");
+          buttonLoader.classList.add("hidden");
+          submitButton.disabled = false;
+        }
+      };
+
+      // Gestionnaire de soumission du formulaire
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        // Valider l'email
+        const emailInput = document.getElementById("email");
+        if (!validateInput(emailInput)) {
+          return;
+        }
+
+        await sendResetRequest(emailInput.value);
+      });
+
+      // Gestionnaire pour le bouton "Renvoyer le lien"
+      resendLinkButton.addEventListener("click", async () => {
+        const email = resendLinkButton.dataset.email;
+        if (email) {
+          resendLinkButton.textContent = "Envoi en cours...";
+          resendLinkButton.disabled = true;
+
+          await sendResetRequest(email);
+
+          resendLinkButton.textContent = "Lien renvoyé";
+          setTimeout(() => {
+            resendLinkButton.textContent = "Renvoyer le lien";
+            resendLinkButton.disabled = false;
+          }, 3000);
+        }
+      });
+    });
+  </script>
+</Layout>

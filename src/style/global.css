@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Oleo+Script:wght@400;700&display=swap");
 @import "tailwindcss";
 
+
 @theme {
   --font-primary: "Nunito", sans-serif;
   --font-secondary: "Oleo Script", sans-serif;
@@ -9,18 +10,69 @@
 
 @layer base {
   body {
-    @apply font-primary text-lg;
+    @apply font-primary text-lg text-[#323f92];
   }
+
   h1 {
-    @apply text-4xl;
+    @apply text-4xl text-[#323f92];
   }
 
   h2 {
-    @apply text-2xl;
+    @apply text-2xl text-[#323f92];
   }
 
   h3 {
-    @apply text-xl;
+    @apply text-xl text-[#323f92];
+  }
+}
+
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.noscroll {
+  overflow: hidden;
+}
+
+
+/* Styles pour l'animation */
+
+
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes scrollRight {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Ajustement pour rendre chaque carte plus visible */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
   }
 }
 

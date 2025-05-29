@@ -1,54 +1,61 @@
 ---
 import Button from "./Button.astro";
 import Logo from "../assets/logo_echosafe.svg";
+
+// Récupérer l'URL actuelle pour la comparer avec les liens
+const currentPath = Astro.url.pathname;
 ---
 
 <header
-  class="px-6 py-4 z-10 w-full flex items-stretch justify-between transition-all duration-300 ease-in-out bg-white"
+  class="px-6 py-4 z-50 w-full flex items-stretch justify-between transition-all duration-300 ease-in-out bg-white fixed top-0 left-0"
+  id="main-header"
 >
   <div class="flex items-center gap-2">
-    <a href="/" >
+    <a href="/">
       <Logo class="w-20 lg:w-32 h-auto" />
-    </div>
+    </a>
   </div>
 
   <nav class="hidden lg:flex items-center">
-    <ul class="flex space-x-6 text-[var(--color-primary)] font-anton">
+    <ul class="flex space-x-6 font-anton">
       <li>
         <a
-          class="block py-4 pb-2 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[var(--color-primary)] after:transition-all after:duration-300 hover:after:w-full"
-          href="/">Accueil</a
+          class={`block py-4 pb-2 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[var(--color-primary)] after:transition-all after:duration-300 hover:after:w-full ${currentPath === "/a-propos" ? "text-primary after:w-full" : ""}`}
+          href="/a-propos">À Propos</a
         >
       </li>
       <li>
         <a
-          class="block py-4 pb-2 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[var(--color-primary)] after:transition-all after:duration-300 hover:after:w-full"
-          href="/invite">À Propos</a
+          class={`block py-4 pb-2 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[var(--color-primary)] after:transition-all after:duration-300 hover:after:w-full ${currentPath === "/nos-offres" ? "text-primary after:w-full" : ""}`}
+          href="/nos-offres">Nos Offres</a
         >
       </li>
       <li>
         <a
-          class="block py-4 pb-2 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[var(--color-primary)] after:transition-all after:duration-300 hover:after:w-full"
-          href="/programmes">Nos Offres</a
+          class={`block py-4 pb-2 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[var(--color-primary)] after:transition-all after:duration-300 hover:after:w-full ${currentPath === "/don" ? "text-primary after:w-full" : ""}`}
+          href="/don">Faire un Don</a
         >
       </li>
       <li>
-        <a
-          class="block py-4 pb-2 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[var(--color-primary)] after:transition-all after:duration-300 hover:after:w-full"
-          href="/films">Faire un Don</a
-        >
+        <Button
+          variant="dark"
+          url={`/auth`}
+          text={`S'inscrire / Se connecter`}
+        />
       </li>
       <li>
-        <Button variant="dark" url={``} text={`S'inscrire / Se connecter`} />
-      </li>
-      <li>
-        <Button variant="dark" url={``} text={`Nous Contacter`} />
+        <Button
+          variant="dark"
+          url={`/a-propos#contact`}
+          text={`Nous Contacter`}
+        />
       </li>
     </ul>
   </nav>
 
+  <!-- Bouton du menu modifié pour rester visible -->
   <button
-    class="group relative z-20 flex h-6 w-8 flex-col justify-between self-center *:h-[2px] *:w-full *:bg-[var(--color-primary)] *:transition-all *:duration-300 *:ease lg:hidden"
+    class="group z-60 flex h-6 w-8 flex-col justify-between self-center *:h-[2px] *:w-full *:bg-[var(--color-primary)] *:transition-all *:duration-300 *:ease lg:hidden absolute right-5"
     id="menu-btn"
     aria-label="Menu"
     aria-controls="menu"
@@ -64,74 +71,97 @@ import Logo from "../assets/logo_echosafe.svg";
   </button>
 
   <nav
-    class="visible fixed z-10 inset-0 text-xl font-bold text-[var(--color-primary)] opacity-100 transition-all duration-300 ease-in-out aria-hidden:invisible aria-hidden:opacity-0 bg-white"
+    class="visible fixed z-50 inset-0 text-xl font-bold opacity-100 transition-all duration-300 ease-in-out aria-hidden:invisible aria-hidden:opacity-0 bg-white pt-20"
     id="menu"
     aria-hidden="true"
   >
-    <ul class="mt-30 w-3/4">
+    <ul class="mt-20 w-3/4">
       <li>
         <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
+          class={`block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group ${
+            currentPath === "/" ? "bg-[var(--color-primary)] text-white" : ""
+          }`}
           href="/"
         >
           <span
-            class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
+            class={`relative z-10 ${currentPath === "/" ? "text-white" : "group-hover:text-white"}`}
             >Accueil</span
           >
           <span
-            class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
-          ></span>
+            class={`absolute inset-0 bg-[var(--color-primary)] ${
+              currentPath === "/"
+                ? "translate-x-0"
+                : "-translate-x-full group-hover:translate-x-0"
+            } transition-transform duration-300 ease-in-out`}></span>
         </a>
       </li>
       <li>
         <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/invite"
-        >
-          <span
-            class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >À propos</span
-          >
-          <span
-            class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
-          ></span>
-        </a>
-      </li>
-      <li>
-        <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/programmes"
-        >
-          <span
-            class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >Nos offres</span
-          >
-          <span
-            class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
-          ></span>
-        </a>
-      </li>
-      <li>
-        <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/films"
-        >
-          <span
-            class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >Faire un don</span
-          >
-          <span
-            class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
-          ></span>
-        </a>
-      </li>
-      <li>
-        <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
+          class={`block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group ${
+            currentPath === "/a-propos"
+              ? "bg-[var(--color-primary)] text-white"
+              : ""
+          }`}
           href="/a-propos"
         >
           <span
-            class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
+            class={`relative z-10 ${currentPath === "/a-propos" ? "text-white" : "group-hover:text-white"}`}
+            >À propos</span
+          >
+          <span
+            class={`absolute inset-0 bg-[var(--color-primary)] ${
+              currentPath === "/a-propos"
+                ? "translate-x-0"
+                : "-translate-x-full group-hover:translate-x-0"
+            } transition-transform duration-300 ease-in-out`}></span>
+        </a>
+      </li>
+      <li>
+        <a
+          class={`block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group ${
+            currentPath === "/nos-offres"
+              ? "bg-[var(--color-primary)] text-white"
+              : ""
+          }`}
+          href="/nos-offres"
+        >
+          <span
+            class={`relative z-10 ${currentPath === "/nos-offres" ? "text-white" : "group-hover:text-white"}`}
+            >Nos offres</span
+          >
+          <span
+            class={`absolute inset-0 bg-[var(--color-primary)] ${
+              currentPath === "/nos-offres"
+                ? "translate-x-0"
+                : "-translate-x-full group-hover:translate-x-0"
+            } transition-transform duration-300 ease-in-out`}></span>
+        </a>
+      </li>
+      <li>
+        <a
+          class={`block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group ${
+            currentPath === "/don" ? "bg-[var(--color-primary)] text-white" : ""
+          }`}
+          href="/don"
+        >
+          <span
+            class={`relative z-10 ${currentPath === "/don" ? "text-white" : "group-hover:text-white"}`}
+            >Faire un don</span
+          >
+          <span
+            class={`absolute inset-0 bg-[var(--color-primary)] ${
+              currentPath === "/don"
+                ? "translate-x-0"
+                : "-translate-x-full group-hover:translate-x-0"
+            } transition-transform duration-300 ease-in-out`}></span>
+        </a>
+      </li>
+      <li>
+        <a
+          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
+          href="/a-propos#contact"
+        >
+          <span class="relative z-10 group-hover:text-white"
             >Nous contacter</span
           >
           <span
@@ -143,18 +173,102 @@ import Logo from "../assets/logo_echosafe.svg";
   </nav>
 </header>
 
+<!-- Spacer pour compenser la hauteur du header fixe -->
+<div id="header-spacer"></div>
+
 <script>
+  // Calculer la hauteur du header et l'appliquer au spacer
+  document.addEventListener("DOMContentLoaded", () => {
+    const header = document.querySelector("header");
+    const spacer = document.getElementById("header-spacer");
+
+    if (header && spacer) {
+      const updateSpacerHeight = () => {
+        const headerHeight = header.offsetHeight;
+        spacer.style.height = `${headerHeight}px`;
+      };
+
+      // Initial setup
+      updateSpacerHeight();
+
+      // Update on resize
+      window.addEventListener("resize", updateSpacerHeight);
+    }
+    const mainHeader = document.getElementById("main-header");
+
+    function handleScroll() {
+      if (window.scrollY > 10) {
+        mainHeader.classList.add("shadow-md");
+      } else {
+        mainHeader.classList.remove("shadow-md");
+      }
+    }
+
+    // Vérifier la position initiale
+    handleScroll();
+
+    // Ajouter l'écouteur d'événement de défilement
+    window.addEventListener("scroll", handleScroll);
+  });
+
   const toggle = document.querySelector("#menu-btn");
   const nav = document.querySelector("#menu");
   const page = document.body;
 
   if (toggle && nav) {
     toggle.addEventListener("click", () => {
-      const isOpen = toggle.ariaExpanded === "true";
+      const isOpen = toggle.getAttribute("aria-expanded") === "true";
       const isClosed = !isOpen;
-      toggle.ariaExpanded = String(isClosed);
-      nav.ariaHidden = String(isOpen);
+
+      // Toggle les attributs aria
+      toggle.setAttribute("aria-expanded", isClosed ? "true" : "false");
+      nav.setAttribute("aria-hidden", isOpen ? "true" : "false");
+
+      // Ajoute ou retire la classe "noscroll" sur le body pour désactiver le scroll
       page.classList.toggle("noscroll", isClosed);
     });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const cookiePreferencesBtn = document.getElementById(
+      "cookie-preferences-btn"
+    );
+    const cookieBanner = document.getElementById("cookie-banner");
+
+    if (cookiePreferencesBtn && cookieBanner) {
+      cookiePreferencesBtn.addEventListener("click", function () {
+        // Mettre à jour les cases à cocher selon les valeurs actuelles des cookies
+        const functionalCheckbox =
+          document.getElementById("functional-cookies");
+        const analyticsCheckbox = document.getElementById("analytics-cookies");
+
+        if (functionalCheckbox) {
+          functionalCheckbox.checked =
+            getCookie("functional-cookies") === "true";
+        }
+
+        if (analyticsCheckbox) {
+          analyticsCheckbox.checked = getCookie("analytics-cookies") === "true";
+        }
+
+        // Afficher la bannière
+        cookieBanner.style.display = "block";
+
+        // Faire défiler jusqu'à la bannière
+        cookieBanner.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  });
+
+  // Assurez-vous que cette fonction est disponible
+  function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(";");
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === " ") c = c.substring(1);
+      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return "";
   }
 </script>
