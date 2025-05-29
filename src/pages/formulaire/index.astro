@@ -1,6 +1,27 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Formulaire from "../../components/Formulaire.astro";
+import PocketBase from "pocketbase";
+
+// Vérifier si l'utilisateur vient de s'inscrire
+const isNewUser = Astro.url.searchParams.get("new") === "true";
+
+// Si ce n'est pas un nouvel utilisateur, rediriger vers l'accueil
+if (!isNewUser) {
+  return Astro.redirect("/accueil-app");
+}
+
+// Récupérer l'utilisateur connecté pour ajouter son ID au formulaire
+const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const authCookie = Astro.request.headers.get("cookie");
+let userId = "";
+
+if (authCookie) {
+  pb.authStore.loadFromCookie(authCookie);
+  if (pb.authStore.isValid) {
+    userId = pb.authStore.model.id;
+  }
+}
 
 // Définir les questions pour le formulaire de harcèlement
 const questions = [
@@ -60,9 +81,9 @@ const questions = [
 ---
 
 <Layout>
-  <div class="min-h-screenpy-8">
+  <div class="min-h-screen py-8">
     <div class="max-w-4xl mx-auto">
-      <Formulaire questions={questions} />
+      <Formulaire questions={questions} userId={userId} />
     </div>
   </div>
 </Layout>

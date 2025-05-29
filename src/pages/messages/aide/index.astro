@@ -1,0 +1,169 @@
+---
+import Layout from "../../../layouts/Layoutapp.astro";
+import PocketBase from "pocketbase";
+
+// Récupérer l'utilisateur connecté
+const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const authCookie = Astro.request.headers.get("cookie");
+if (authCookie) {
+  pb.authStore.loadFromCookie(authCookie);
+}
+
+// Rediriger si non connecté
+if (!pb.authStore.isValid) {
+  return Astro.redirect("/auth/connexion");
+}
+
+const currentUserId = pb.authStore.model.id;
+
+// Récupérer la liste des aidants (volontaires)
+let volunteers = { items: [] };
+try {
+  // Récupérer tous les utilisateurs pour vérifier les valeurs is_volunteer
+  const allUsers = await pb.collection("users").getFullList({
+    sort: "created",
+  });
+
+  console.log(
+    "Tous les utilisateurs:",
+    allUsers.map((u) => ({
+      id: u.id,
+      email: u.email,
+      is_volunteer: u.is_volunteer,
+    }))
+  );
+
+  // Filtrer ensuite les volontaires
+  volunteers = await pb.collection("users").getList(1, 50, {
+    filter: "is_volunteer=true",
+    sort: "created",
+  });
+
+  console.log("Nombre de volontaires trouvés:", volunteers.items.length);
+} catch (error) {
+  console.error("Erreur lors de la récupération des aidants:", error);
+}
+
+// Récupérer les conversations d'aide existantes
+let existingConversationsMap = {};
+try {
+  const helpConversations = await pb
+    .collection("conversations")
+    .getList(1, 100, {
+      filter: `type="help" && participants~"${currentUserId}"`,
+      expand: "participants",
+    });
+
+  // Créer un map des aidants avec qui l'utilisateur a déjà une conversation
+  helpConversations.items.forEach((conv) => {
+    const volunteerParticipant = conv.expand.participants?.find(
+      (p) => p.id !== currentUserId && p.is_volunteer
+    );
+    if (volunteerParticipant) {
+      existingConversationsMap[volunteerParticipant.id] = conv.id;
+    }
+  });
+} catch (error) {
+  console.error("Erreur lors de la récupération des conversations:", error);
+}
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-8">
+    <div class="mb-4 flex items-center justify-between">
+      <a
+        href="/messages"
+        class="text-primary hover:underline flex items-center"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 mr-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Retour aux messages
+      </a>
+      <h1 class="text-2xl font-bold text-primary">Aidants disponibles</h1>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <p class="text-gray-600 mb-6">
+        Nos aidants bénévoles sont disponibles pour vous écouter et vous
+        soutenir. Choisissez un aidant avec qui discuter.
+      </p>
+
+      {
+        volunteers.items.length === 0 && (
+          <div class="text-center py-8 mb-4 bg-yellow-50 p-4 rounded-lg">
+            <p class="text-gray-500">Aucun aidant disponible pour le moment.</p>
+            <p class="text-sm mt-2 text-gray-500">
+              Cela peut être dû à un problème technique ou à l'absence d'aidants
+              enregistrés.
+            </p>
+          </div>
+        )
+      }
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {
+          volunteers.items.map((volunteer) => {
+            const hasExistingConversation =
+              volunteer.id in existingConversationsMap;
+            const conversationUrl = hasExistingConversation
+              ? `/messages/aide/${volunteer.id}?conv=${existingConversationsMap[volunteer.id]}`
+              : `/messages/aide/${volunteer.id}`;
+
+            return (
+              <div class="border rounded-lg overflow-hidden hover:shadow-md transition">
+                <div class="p-4">
+                  <div class="flex items-center mb-3">
+                    <div class="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                      {volunteer.avatar ? (
+                        <img
+                          src={pb.getFileUrl(volunteer, volunteer.avatar)}
+                          alt=""
+                          class="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+                          {volunteer.prenom_utilisateur?.charAt(0) || "A"}
+                        </div>
+                      )}
+                    </div>
+                    <div class="ml-3">
+                      <p class="font-semibold">
+                        {volunteer.pseudo_utilisateur || "Aidant"}
+                      </p>
+                      <p class="text-sm text-gray-500">Aidant bénévole</p>
+                    </div>
+                  </div>
+
+                  <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                    {volunteer.bio ||
+                      "Disponible pour vous aider et vous écouter."}
+                  </p>
+
+                  <a
+                    href={conversationUrl}
+                    class="block w-full py-2 text-center bg-primary text-white rounded hover:bg-primary/90 transition"
+                  >
+                    {hasExistingConversation
+                      ? "Continuer la discussion"
+                      : "Démarrer une discussion"}
+                  </a>
+                </div>
+              </div>
+            );
+          })
+        }
+      </div>
+    </div>
+  </div>
+</Layout>

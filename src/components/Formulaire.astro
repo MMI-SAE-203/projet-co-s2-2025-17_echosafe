@@ -202,6 +202,7 @@ const totalQuestions = questions.length;
   }
 </style>
 <script src="../components/PocketBaseScript.astro"></script>
+<script src="https://unpkg.com/pocketbase@0.17.3/dist/pocketbase.umd.js"></script>
 <script define:vars={{ questions, totalQuestions }}>
   class Questionnaire {
     constructor() {
@@ -479,6 +480,9 @@ const totalQuestions = questions.length;
       if (completionMessage) completionMessage.classList.remove("hidden");
 
       console.log("Réponses du questionnaire:", this.answers);
+
+      this.saveAnswers();
+
     }
 
     showResults() {
@@ -519,6 +523,51 @@ const totalQuestions = questions.length;
 
       this.updateDisplay();
     }
+
+    async saveAnswers() {
+  // Seulement si on a un ID utilisateur
+  const userId = "{userId}"; // Cette syntaxe permet d'accéder à la prop userId
+
+  if (userId) {
+    try {
+      // Importation de PocketBase si nécessaire
+      const PocketBase = window.PocketBase;
+      if (!PocketBase) {
+        console.error('PocketBase non chargé');
+        return;
+      }
+      
+      const pb = new PocketBase("https://echosafe.eloishenry.fr");
+      
+      // Récupérer l'utilisateur authentifié
+      const authCookie = document.cookie;
+      if (authCookie) {
+        pb.authStore.loadFromCookie(authCookie);
+      }
+      
+      if (!pb.authStore.isValid) {
+        console.error("Session expirée");
+        return;
+      }
+
+      // Préparer les données à enregistrer
+      const data = {
+        user_id: userId,
+        responses: JSON.stringify(this.answers),
+        questions: JSON.stringify(this.questions),
+        completed_at: new Date().toISOString()
+      };
+
+      // Enregistrer les réponses dans PocketBase
+      await pb.collection('form_responses').create(data);
+      
+      console.log("Réponses enregistrées avec succès !");
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement des réponses:", error);
+    }
+  } else {
+    console.log("Aucun utilisateur connecté, réponses non enregistrées");
+  }
   }
 
   // Initialiser le questionnaire quand le DOM est prêt

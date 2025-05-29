@@ -1,0 +1,216 @@
+---
+import Layout from "../../layouts/Layoutapp.astro";
+import PocketBase from "pocketbase";
+
+// Récupérer l'utilisateur connecté
+const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const authCookie = Astro.request.headers.get("cookie");
+if (authCookie) {
+  pb.authStore.loadFromCookie(authCookie);
+}
+
+// Rediriger si non connecté
+if (!pb.authStore.isValid) {
+  return Astro.redirect("/auth/connexion");
+}
+
+const currentUserId = pb.authStore.model.id;
+
+// Récupérer les conversations privées
+let privateConversations = { items: [] };
+try {
+  privateConversations = await pb.collection("conversations").getList(1, 5, {
+    filter: `type="private" && participants~"${currentUserId}"`,
+    sort: "-updated",
+    expand: "participants,last_message_id",
+  });
+} catch (error) {
+  console.error(
+    "Erreur lors de la récupération des conversations privées:",
+    error
+  );
+}
+
+// Récupérer les conversations d'aide
+let helpConversations = { items: [] };
+try {
+  helpConversations = await pb.collection("conversations").getList(1, 5, {
+    filter: `type="help" && participants~"${currentUserId}"`,
+    sort: "-updated",
+    expand: "participants,last_message_id",
+  });
+} catch (error) {
+  console.error(
+    "Erreur lors de la récupération des conversations d'aide:",
+    error
+  );
+}
+
+// Fonction pour trouver l'autre participant d'une conversation
+function findOtherParticipant(conversation) {
+  if (!conversation.expand?.participants) return null;
+  return conversation.expand.participants.find((p) => p.id !== currentUserId);
+}
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold text-primary mb-6">Messagerie</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Conversations privées -->
+      <div class="bg-white p-4 rounded-lg shadow">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">Messages privés</h2>
+          <a
+            href="/messages/prives"
+            class="text-sm text-primary hover:underline"
+          >
+            Voir tout
+          </a>
+        </div>
+
+        <div class="space-y-3">
+          {
+            privateConversations.items.length === 0 ? (
+              <div class="text-center py-6 text-gray-500">
+                <p>Aucun message privé</p>
+                <p class="text-sm mt-1">
+                  Commencez une conversation avec un utilisateur
+                </p>
+              </div>
+            ) : (
+              privateConversations.items.map((conv) => {
+                const otherUser = findOtherParticipant(conv);
+                let avatarUrl = "";
+
+                if (otherUser?.avatar) {
+                  avatarUrl = pb.getFileUrl(otherUser, otherUser.avatar);
+                }
+
+                return (
+                  <a
+                    href={`/messages/prives/${otherUser?.id}`}
+                    class="block p-3 border rounded-lg hover:bg-gray-50 transition"
+                  >
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                        {otherUser?.avatar ? (
+                          <img
+                            src={avatarUrl}
+                            alt=""
+                            class="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+                            {otherUser?.pseudo_utilisateur?.charAt(0) || "?"}
+                          </div>
+                        )}
+                      </div>
+                      <div class="ml-3 flex-1">
+                        <p class="font-medium">
+                          {otherUser?.pseudo_utilisateur || "Utilisateur"}
+                        </p>
+                        <p class="text-sm text-gray-600 truncate">
+                          {conv.expand?.last_message_id?.content ||
+                            "Commencez une conversation..."}
+                        </p>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })
+            )
+          }
+
+          <div class="pt-3 mt-3 border-t">
+            <a
+              href="/messages/prives"
+              class="block w-full text-center py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
+            >
+              Nouvelle conversation
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversations d'aide -->
+      <div class="bg-white p-4 rounded-lg shadow">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">Conversations d'aide</h2>
+          <a href="/messages/aide" class="text-sm text-primary hover:underline">
+            Voir tout
+          </a>
+        </div>
+
+        <div class="space-y-3">
+          {
+            helpConversations.items.length === 0 ? (
+              <div class="text-center py-6 text-gray-500">
+                <p>Aucune conversation d'aide</p>
+                <p class="text-sm mt-1">
+                  Contactez un aidant pour obtenir de l'aide
+                </p>
+              </div>
+            ) : (
+              helpConversations.items.map((conv) => {
+                const aidant = conv.expand?.participants?.find(
+                  (p) => p.id !== currentUserId && p.is_volunteer
+                );
+                let avatarUrl = "";
+
+                if (aidant?.avatar) {
+                  avatarUrl = pb.getFileUrl(aidant, aidant.avatar);
+                }
+
+                return (
+                  <a
+                    href={`/messages/aide/${aidant?.id}?conv=${conv.id}`}
+                    class="block p-3 border rounded-lg hover:bg-gray-50 transition"
+                  >
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                        {aidant?.avatar ? (
+                          <img
+                            src={avatarUrl}
+                            alt=""
+                            class="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+                            {aidant?.pseudo_utilisateur?.charAt(0) || "A"}
+                          </div>
+                        )}
+                      </div>
+                      <div class="ml-3 flex-1">
+                        <div class="flex justify-between">
+                          <p class="font-medium">
+                            {aidant?.pseudo_utilisateur || "Aidant"}
+                          </p>
+                          <p class="text-xs text-primary">Aidant</p>
+                        </div>
+                        <p class="text-sm text-gray-600 truncate">
+                          {conv.expand?.last_message_id?.content ||
+                            "Demandez de l'aide..."}
+                        </p>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })
+            )
+          }
+
+          <div class="pt-3 mt-3 border-t">
+            <a
+              href="/messages/aide"
+              class="block w-full text-center py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
+            >
+              Trouver un aidant
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1107,8 +1107,9 @@ import Layout from "../../layouts/Layout.astro";
             `;
 
             // Redirection après 2 secondes
+            // Redirection vers le formulaire après 2 secondes
             setTimeout(() => {
-              window.location.href = "/auth/connexion";
+              window.location.href = "/formulaire?new=true";
             }, 2000);
           } else {
             messageDiv.textContent =

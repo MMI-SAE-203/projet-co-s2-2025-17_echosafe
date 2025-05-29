@@ -23,19 +23,34 @@ export async function POST({ request }) {
     await pb.collection("users").authWithPassword(email, password);
     
     // Si on arrive ici, l'authentification a réussi
-    // Récupérer le token d'authentification pour le stocker côté client
-    const authData = pb.authStore.exportToCookie();
+    
+    // Définir une date d'expiration longue si "Se souvenir de moi" est coché
+    const cookieExpiration = rememberMe 
+      ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 an si "Se souvenir de moi" est coché
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);  // 30 jours par défaut
+    
+    // Exporter avec une expiration personnalisée
+    const authData = pb.authStore.exportToCookie({
+      expires: cookieExpiration,
+      secure: true,
+      sameSite: "Lax",
+      path: "/"
+    });
+    
+    // Redirection en fonction du statut d'utilisateur (si nouvel utilisateur -> formulaire, sinon accueil-app)
+    const user = pb.authStore.model;
+    let redirectUrl = "/accueil-app";
     
     return new Response(JSON.stringify({
       status: "success",
       message: "Connexion réussie !",
-      redirect: "/formulaire",
+      redirect: redirectUrl,
       token: authData
     }), {
       status: 200,
       headers: { 
         "Content-Type": "application/json",
-        // Définir le cookie d'authentification
+        // Définir le cookie d'authentification avec l'expiration
         "Set-Cookie": authData
       },
     });

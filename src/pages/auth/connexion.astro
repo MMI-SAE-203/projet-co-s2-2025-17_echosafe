@@ -186,7 +186,7 @@ import Layout from "../../layouts/Layout.astro";
     </div>
   </div>
 
-    <script>
+  <script>
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("login-form");
       const messageDiv = document.getElementById("message");
@@ -289,7 +289,7 @@ import Layout from "../../layouts/Layout.astro";
 
         const formData = new FormData(form);
         const rememberMe = document.getElementById("remember-me").checked;
-        formData.append("remember-me", rememberMe);
+        formData.set("remember-me", rememberMe ? "true" : "false");
 
         try {
           console.log("Envoi de la requête à /api/login");
@@ -316,7 +316,7 @@ import Layout from "../../layouts/Layout.astro";
             // Redirection vers le formulaire après 1 seconde
             setTimeout(() => {
               // Rediriger vers le formulaire au lieu du dashboard
-              window.location.href = "/formulaire";
+              window.location.href = "/accueil-app";
             }, 1000);
           } else {
             messageDiv.textContent =

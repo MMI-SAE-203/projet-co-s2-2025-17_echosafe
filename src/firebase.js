@@ -1,0 +1,26 @@
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+
+// Configuration Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBqxPO-UPRoXgtNCPcYnKpI_Of4UeUyGAg",
+  authDomain: "echo-safe-bbf9e.firebaseapp.com",
+  projectId: "echo-safe-bbf9e",
+  storageBucket: "echo-safe-bbf9e.appspot.com",
+  messagingSenderId: "368915484383",
+  appId: "1:368915484383:web:a57e97259eea20930ae36a",
+  measurementId: "G-8F7PCCQEQT"
+};
+
+// Initialiser Firebase
+const app = initializeApp(firebaseConfig);
+
+// Exporter les services Firebase
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+// Pour utilisation dans les scripts non-module
+if (typeof window !== 'undefined') {
+  window.firebase = { app, db, auth };
+}

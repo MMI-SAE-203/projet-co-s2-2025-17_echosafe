@@ -1,0 +1,132 @@
+---
+import Layout from "../../../layouts/Layoutapp.astro";
+import ChatConversation from "../../../components/ChatConversation.astro";
+import PocketBase from "pocketbase";
+
+// Récupérer l'ID de l'aidant dans l'URL
+const { aidantId } = Astro.params;
+const conversationId = Astro.url.searchParams.get("conv");
+
+// Récupérer l'utilisateur connecté
+const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const authCookie = Astro.request.headers.get("cookie");
+if (authCookie) {
+  pb.authStore.loadFromCookie(authCookie);
+}
+
+// Rediriger si non connecté
+if (!pb.authStore.isValid) {
+  return Astro.redirect("/auth/connexion");
+}
+
+const currentUserId = pb.authStore.model.id;
+
+// Récupérer les informations de l'aidant
+let aidant = null;
+try {
+  aidant = await pb.collection("users").getOne(aidantId);
+} catch (error) {
+  console.error("Erreur lors de la récupération de l'aidant:", error);
+  return Astro.redirect("/messages/aide");
+}
+
+// Vérifier si une conversation existe déjà ou utiliser celle de l'URL
+let conversation = null;
+try {
+  if (conversationId) {
+    // Utiliser la conversation de l'URL
+    conversation = await pb.collection("conversations").getOne(conversationId);
+  } else {
+    // Vérifier si une conversation existe déjà
+    const conversations = await pb.collection("conversations").getList(1, 1, {
+      filter: `type="help" && participants~"${currentUserId}" && participants~"${aidantId}"`,
+    });
+
+    if (conversations.items.length > 0) {
+      conversation = conversations.items[0];
+    } else {
+      // Créer une nouvelle conversation
+      conversation = await pb.collection("conversations").create({
+        type: "help",
+        participants: [currentUserId, aidantId],
+      });
+    }
+  }
+} catch (error) {
+  console.error(
+    "Erreur lors de la récupération/création de la conversation:",
+    error
+  );
+  return Astro.redirect("/messages/aide");
+}
+
+// Récupérer les messages
+let messages = [];
+if (conversation) {
+  try {
+    const messagesData = await pb.collection("messages").getList(1, 100, {
+      filter: `conversation_id="${conversation.id}"`,
+      sort: "created",
+    });
+    messages = messagesData.items;
+
+    // Marquer les messages comme lus
+    const unreadMessages = messages.filter(
+      (msg) =>
+        msg.sender_id !== currentUserId && !msg.read_by.includes(currentUserId)
+    );
+
+    for (const msg of unreadMessages) {
+      await pb.collection("messages").update(msg.id, {
+        read_by: [...msg.read_by, currentUserId],
+      });
+    }
+  } catch (error) {
+    console.error("Erreur lors de la récupération des messages:", error);
+  }
+}
+
+// Préparer l'URL de l'avatar
+let avatarUrl = "";
+if (aidant?.avatar) {
+  avatarUrl = pb.getFileUrl(aidant, aidant.avatar);
+}
+aidant = aidant || {};
+aidant.avatarUrl = avatarUrl;
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-4 md:py-8 h-[calc(100vh-80px)]">
+    <div class="flex items-center mb-4">
+      <a
+        href="/messages/aide"
+        class="text-primary hover:underline flex items-center"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 mr-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Retour aux aidants
+      </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
+      <ChatConversation
+        conversationId={conversation?.id}
+        otherUser={aidant}
+        messages={messages}
+        currentUserId={currentUserId}
+        isVolunteerChat={true}
+      />
+    </div>
+  </div>
+</Layout>

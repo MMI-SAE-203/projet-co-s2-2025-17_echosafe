@@ -1,16 +1,105 @@
 ---
 import Button from "./Button.astro";
+import PocketBase from "pocketbase";
+
+// Vérifier si l'utilisateur est connecté
+const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const authCookie = Astro.request.headers.get("cookie");
+let isLoggedIn = false;
+let userData = null;
+
+if (authCookie) {
+  pb.authStore.loadFromCookie(authCookie);
+  isLoggedIn = pb.authStore.isValid;
+  userData = pb.authStore.model;
+}
+
+// Rediriger si non connecté
+if (!isLoggedIn) {
+  return Astro.redirect("/auth/connexion");
+}
 ---
 
 <header
-  class="px-6 py-4 w-full z-50 flex items-stretch justify-between transition-all duration-300 ease-in-out bg-white"
+  class="px-6 py-4 w-full z-50 flex items-stretch justify-between transition-all duration-300 ease-in-out bg-white shadow-sm"
 >
   <div class="flex items-center gap-2">
-    <h1 id="page-title" class="text-lg font-semibold"></h1>
+    <a href="/accueil-app" class="text-xl font-bold text-primary">EchoSafe</a>
+    <h1 id="page-title" class="text-lg font-semibold ml-4 hidden md:block"></h1>
   </div>
 
+  <!-- User Menu (visible on desktop) -->
+  <div class="hidden md:flex items-center">
+    <nav class="mr-4">
+      <ul class="flex space-x-6">
+        <li>
+          <a href="/accueil-app" class="text-gray-700 hover:text-primary"
+            >Accueil</a>
+        </li>
+        <li>
+          <a href="/messages" class="text-gray-700 hover:text-primary"
+            >Messagerie</a>
+        </li>
+        <li>
+          <a href="/ressources" class="text-gray-700 hover:text-primary"
+            >Ressources</a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="relative group">
+      <button class="flex items-center space-x-2 focus:outline-none">
+        <div
+          class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center"
+        >
+          {
+            userData?.pseudo_utilisateur?.charAt(0) ||
+              userData?.email?.charAt(0) ||
+              "?"
+          }
+        </div>
+        <span class="hidden md:inline"
+          >{userData?.pseudo_utilisateur || userData?.email}</span
+        >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"></path>
+        </svg>
+      </button>
+
+      <div
+        class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block"
+      >
+        <a
+          href="/profil"
+          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >Mon profil</a
+        >
+        <a
+          href="/parametres"
+          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >Paramètres</a
+        >
+        <button
+          id="logout-button"
+          class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+        >
+          Se déconnecter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile menu button -->
   <button
-    class="group relative z-20 flex h-6 w-8 flex-col justify-between self-center *:h-[2px] *:w-full *:bg-[var(--color-primary)] *:transition-all *:duration-300 *:ease lg:hidden"
+    class="group relative z-20 flex h-6 w-8 flex-col justify-between self-center *:h-[2px] *:w-full *:bg-[var(--color-primary)] *:transition-all *:duration-300 *:ease md:hidden"
     id="menu-btn"
     aria-label="Menu"
     aria-controls="menu"
@@ -25,16 +114,40 @@ import Button from "./Button.astro";
     ></span>
   </button>
 
+  <!-- Mobile menu -->
   <nav
     class="visible fixed z-10 inset-0 text-xl font-bold text-[var(--color-primary)] opacity-100 transition-all duration-300 ease-in-out aria-hidden:invisible aria-hidden:opacity-0 bg-white"
     id="menu"
     aria-hidden="true"
   >
-    <ul class="mt-30 w-3/4">
+    <!-- User info in mobile menu -->
+    <div class="pt-20 px-6 pb-4 border-b">
+      <div class="flex items-center">
+        <div
+          class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center text-xl"
+        >
+          {
+            userData?.pseudo_utilisateur?.charAt(0) ||
+              userData?.email?.charAt(0) ||
+              "?"
+          }
+        </div>
+        <div class="ml-3">
+          <p class="font-semibold">
+            {userData?.pseudo_utilisateur || userData?.email}
+          </p>
+          <p class="text-sm text-gray-500">
+            Utilisateur {userData?.is_volunteer ? "bénévole" : ""}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <ul class="mt-4 w-full">
       <li>
         <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/"
+          class="block pl-28 py-3 mb-8 relative overflow-hidden group"
+          href="/accueil-app"
         >
           <span
             class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
@@ -47,12 +160,12 @@ import Button from "./Button.astro";
       </li>
       <li>
         <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/invite"
+          class="block pl-28 py-3 mb-8 relative overflow-hidden group"
+          href="/messages"
         >
           <span
             class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >Humeur</span
+            >Messagerie</span
           >
           <span
             class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
@@ -61,12 +174,12 @@ import Button from "./Button.astro";
       </li>
       <li>
         <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/programmes"
+          class="block pl-28 py-3 mb-8 relative overflow-hidden group"
+          href="/ressources"
         >
           <span
             class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >Défis quotidiens</span
+            >Ressources</span
           >
           <span
             class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
@@ -75,12 +188,12 @@ import Button from "./Button.astro";
       </li>
       <li>
         <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/films"
+          class="block pl-28 py-3 mb-8 relative overflow-hidden group"
+          href="/profil"
         >
           <span
             class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >Message</span
+            >Mon profil</span
           >
           <span
             class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
@@ -89,12 +202,12 @@ import Button from "./Button.astro";
       </li>
       <li>
         <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/a-propos"
+          class="block pl-28 py-3 mb-8 relative overflow-hidden group"
+          href="/parametres"
         >
           <span
             class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >Professionnels</span
+            >Paramètres</span
           >
           <span
             class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
@@ -102,50 +215,79 @@ import Button from "./Button.astro";
         </a>
       </li>
       <li>
-        <a
-          class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/a-propos"
+        <button
+          id="mobile-logout-button"
+          class="block w-full text-left pl-28 py-3 mb-8 relative overflow-hidden group"
         >
-          <span
-            class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >Kit de secours</span
+          <span class="relative z-10 text-red-600 group-hover:text-white"
+            >Se déconnecter</span
           >
           <span
-            class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
+            class="absolute inset-0 bg-red-600 -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
           ></span>
-        </a>
-        <li>
-          <a
-            class="block rounded-r-full pl-28 py-3 mb-8 relative overflow-hidden group"
-            href="/a-propos"
-          >
-            <span
-              class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-              >Faire un don
-            </span>
-            <span
-              class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
-            ></span>
-          </a>
-        </li>
+        </button>
       </li>
     </ul>
   </nav>
 </header>
 
 <script>
-  const toggle = document.querySelector("#menu-btn");
-  const nav = document.querySelector("#menu");
-  const page = document.body;
+  document.addEventListener("DOMContentLoaded", () => {
+    // Gestion du menu mobile
+    const toggle = document.querySelector("#menu-btn");
+    const nav = document.querySelector("#menu");
+    const page = document.body;
 
-  if (toggle && nav) {
-    toggle.addEventListener("click", () => {
-      const isOpen = toggle.ariaExpanded === "true";
-      const isClosed = !isOpen;
-      toggle.ariaExpanded = String(isClosed);
-      nav.ariaHidden = String(isOpen);
-      page.classList.toggle("noscroll", isClosed);
-    });
-  }
+    if (toggle && nav) {
+      toggle.addEventListener("click", () => {
+        const isOpen = toggle.getAttribute("aria-expanded") === "true";
+        const isClosed = !isOpen;
+        toggle.setAttribute("aria-expanded", isClosed ? "true" : "false");
+        nav.setAttribute("aria-hidden", isOpen ? "true" : "false");
+        page.classList.toggle("noscroll", isClosed);
+      });
+    }
+
+    // Définir le titre de la page
+    const pageTitle = document.getElementById("page-title");
+    if (pageTitle) {
+      // Déterminer le titre en fonction de l'URL
+      const path = window.location.pathname;
+
+      if (path.includes("/messages")) {
+        pageTitle.textContent = "Messagerie";
+      } else if (path.includes("/ressources")) {
+        pageTitle.textContent = "Ressources";
+      } else if (path.includes("/profil")) {
+        pageTitle.textContent = "Mon profil";
+      } else if (path.includes("/parametres")) {
+        pageTitle.textContent = "Paramètres";
+      } else if (path.includes("/accueil-app")) {
+        pageTitle.textContent = "Accueil";
+      }
+    }
+
+    // Gérer la déconnexion
+    const logoutButton = document.getElementById("logout-button");
+    const mobileLogoutButton = document.getElementById("mobile-logout-button");
+
+    const handleLogout = async () => {
+      try {
+        // Appeler l'API de déconnexion
+        const response = await fetch("/api/logout", {
+          method: "POST",
+        });
+
+        if (response.ok) {
+          // Rediriger vers la page d'accueil
+          window.location.href = "/";
+        }
+      } catch (error) {
+        console.error("Erreur lors de la déconnexion:", error);
+      }
+    };
+
+    logoutButton?.addEventListener("click", handleLogout);
+    mobileLogoutButton?.addEventListener("click", handleLogout);
+  });
 </script>
-
