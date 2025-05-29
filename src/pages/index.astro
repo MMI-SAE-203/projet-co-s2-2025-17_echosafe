@@ -399,6 +399,21 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
   </div>
 
   <script is:inline>
+    // Définir l'utilitaire de cookies d'abord
+    window.CookieUtils = {
+      savePreferences: function (essential, functional, analytics) {
+        // Créer un cookie qui expire dans 365 jours
+        const expiryDate = new Date();
+        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+
+        // Enregistrer les préférences dans les cookies
+        document.cookie = `cookies-preferences-set=true; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+        document.cookie = `cookies-essential=${essential}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+        document.cookie = `cookies-functional=${functional}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+        document.cookie = `cookies-analytics=${analytics}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+      },
+    };
+
     document.addEventListener("DOMContentLoaded", function () {
       const cookieBanner = document.getElementById("cookie-banner");
       const acceptAllButton = document.getElementById("accept-all-cookies");

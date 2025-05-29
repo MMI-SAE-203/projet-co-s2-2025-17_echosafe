@@ -40,9 +40,10 @@ const totalQuestions = questions.length;
     class="bg-white rounded-3xl shadow-2xl p-8 md:p-10 max-w-lg w-full text-center relative"
   >
     <!-- Bouton retour -->
+    <!-- Bouton retour -->
     <button
       id="backBtn"
-      class="absolute top-6 left-6 md:top-8 md:left-8 text-2xl text-primary hover:scale-110 transition-transform duration-200 hidden"
+      class="hover:cursor-pointer absolute top-6 left-6 md:top-8 md:left-8 text-3xl text-primary hover:scale-110 transition-transform duration-200 hidden w-10 h-10 flex items-center justify-center"
       aria-label="Question précédente"
     >
       ‹
@@ -116,13 +117,13 @@ const totalQuestions = questions.length;
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <button
           id="restartBtn"
-          class="bg-primary text-white px-8 py-3 rounded-full text-base font-semibold hover:bg-primary/90 transition-all duration-300 hover:-translate-y-0.5"
+          class="hover:cursor-pointer bg-primary text-white px-8 py-3 rounded-full text-base font-semibold hover:bg-white hover:text-primary hover:border transition-all duration-300 hover:-translate-y-0.5"
         >
           Recommencer
         </button>
         <button
           id="viewResultsBtn"
-          class="bg-gray-100 text-gray-700 px-8 py-3 rounded-full text-base font-semibold hover:bg-gray-200 transition-all duration-300"
+          class="hover:cursor-pointer bg-gray-100 text-gray-700 px-8 py-3 rounded-full text-base font-semibold hover:bg-gray-200 transition-all duration-300"
         >
           Voir les résultats
         </button>
@@ -137,13 +138,13 @@ const totalQuestions = questions.length;
       <div id="resultsList" class="text-left space-y-4 mb-8"></div>
       <button
         id="backToCompletionBtn"
-        class="bg-gray-100 text-gray-700 px-8 py-3 rounded-full text-base font-semibold hover:bg-gray-200 transition-all duration-300 mr-4"
+        class="hover:cursor-pointer bg-gray-100 text-gray-700 px-8 py-3 rounded-full text-base font-semibold hover:bg-gray-200 transition-all duration-300 mr-4"
       >
         Retour
       </button>
       <button
         id="restartFromResultsBtn"
-        class="bg-primary text-white px-8 py-3 rounded-full text-base font-semibold hover:bg-primary/90 transition-all duration-300"
+        class="hover:cursor-pointer bg-primary text-white px-8 py-3 rounded-full text-base font-semibold hover:bg-white hover:text-primary hover:border transition-all duration-300"
       >
         Recommencer
       </button>
@@ -330,6 +331,15 @@ const totalQuestions = questions.length;
       if (this.currentQuestion < this.totalQuestions - 1) {
         this.currentQuestion++;
         this.updateDisplay();
+
+        // Faire défiler vers le haut du conteneur du questionnaire
+        const questionnaireContainer = document.querySelector(".min-h-screen");
+        if (questionnaireContainer) {
+          questionnaireContainer.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
       } else {
         this.showCompletion();
       }
@@ -339,6 +349,15 @@ const totalQuestions = questions.length;
       if (this.currentQuestion > 0) {
         this.currentQuestion--;
         this.updateDisplay();
+
+        // Faire défiler vers le haut du conteneur du questionnaire
+        const questionnaireContainer = document.querySelector(".min-h-screen");
+        if (questionnaireContainer) {
+          questionnaireContainer.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
       }
     }
 
