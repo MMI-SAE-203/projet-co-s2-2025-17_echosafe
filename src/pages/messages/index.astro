@@ -173,55 +173,446 @@ function findOtherParticipant(conversation) {
   if (!conversation.expand?.participants) return null;
   return conversation.expand.participants.find((p) => p.id !== currentUserId);
 }
+
+// Fonction pour formater la date du dernier message
+function formatMessageDate(timestamp) {
+  if (!timestamp) return "";
+
+  const messageDate = timestamp.toDate
+    ? timestamp.toDate()
+    : new Date(timestamp);
+  const now = new Date();
+  const diff = now - messageDate;
+
+  // Moins d'une minute
+  if (diff < 60 * 1000) {
+    return "À l'instant";
+  }
+
+  // Moins d'une heure
+  if (diff < 60 * 60 * 1000) {
+    const minutes = Math.floor(diff / (60 * 1000));
+    return `Il y a ${minutes} min`;
+  }
+
+  // Aujourd'hui
+  if (messageDate.toDateString() === now.toDateString()) {
+    return messageDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  // Hier
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (messageDate.toDateString() === yesterday.toDateString()) {
+    return "Hier";
+  }
+
+  // Cette semaine
+  const oneWeekAgo = new Date(now);
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  if (messageDate > oneWeekAgo) {
+    const options = { weekday: "long" };
+    return messageDate.toLocaleDateString(undefined, options);
+  }
+
+  // Plus ancien
+  const options = { day: "numeric", month: "short" };
+  return messageDate.toLocaleDateString(undefined, options);
+}
 ---
 
 <Layout>
-  <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold text-primary mb-6">Messagerie</h1>
+  <div class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-5xl">
+    <!-- En-tête mobile avec boutons d'action flottants -->
+    <div
+      class="sticky top-0 z-10 bg-white shadow-sm rounded-lg mb-4 sm:mb-6 sm:static sm:shadow-none sm:bg-transparent"
+    >
+      <div class="flex items-center justify-between p-4 sm:px-0 sm:py-2">
+        <h1 class="text-xl sm:text-2xl font-bold text-primary">Messagerie</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Conversations privées -->
-      <div class="bg-white p-4 rounded-lg shadow">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-semibold">Messages privés</h2>
+        <!-- Boutons d'action visibles sur desktop -->
+        <div class="hidden sm:flex space-x-2">
+          <a
+            href="/messages/aide"
+            class="bg-secondary text-white px-4 py-2 rounded-md hover:bg-secondary/90 transition flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                clip-rule="evenodd"></path>
+            </svg>
+            Trouver de l'aide
+          </a>
           <a
             href="/messages/prives"
-            class="text-sm text-primary hover:underline"
+            class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"
+              ></path>
+            </svg>
+            Nouvelle conversation
+          </a>
+        </div>
+      </div>
+
+      <!-- Onglets de navigation rapide pour mobile -->
+      <div class="flex border-t sm:hidden">
+        <a
+          href="/messages"
+          class="flex-1 py-3 text-center text-primary border-b-2 border-primary font-medium text-sm"
+        >
+          Récents
+        </a>
+        <a
+          href="/messages/prives"
+          class="flex-1 py-3 text-center text-gray-500 hover:text-primary font-medium text-sm"
+        >
+          Messages privés
+        </a>
+        <a
+          href="/messages/aide"
+          class="flex-1 py-3 text-center text-gray-500 hover:text-secondary font-medium text-sm"
+        >
+          Aide
+        </a>
+      </div>
+    </div>
+
+    <!-- Liste de messages récents -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+      <div
+        class="border-b px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between"
+      >
+        <h2
+          class="text-base sm:text-lg font-semibold text-gray-800 flex items-center"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 mr-2 text-primary"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+              clip-rule="evenodd"></path>
+          </svg>
+          Messages récents
+        </h2>
+        <div class="hidden sm:flex space-x-2">
+          <a
+            href="/messages/prives"
+            class="text-primary text-sm hover:underline">Messages privés</a
+          >
+          <span class="text-gray-300">|</span>
+          <a
+            href="/messages/aide"
+            class="text-secondary text-sm hover:underline"
+            >Conversations d'aide</a
+          >
+        </div>
+      </div>
+
+      {/* Liste des conversations combinées (privées et d'aide) */}
+      <div class="divide-y">
+        {
+          [...privateConversations, ...helpConversations]
+            .sort((a, b) => {
+              const dateA =
+                a.updated_at?.toDate?.() || new Date(a.updated_at || 0);
+              const dateB =
+                b.updated_at?.toDate?.() || new Date(b.updated_at || 0);
+              return dateB - dateA;
+            })
+            .slice(0, 10)
+            .map((conv) => {
+              const otherUser = findOtherParticipant(conv);
+              const isHelp = conv.type === "help";
+              const lastMessage = conv.expand?.last_message_id;
+              const lastMessageTime = lastMessage?.created_at
+                ? formatMessageDate(lastMessage.created_at)
+                : "";
+              const isUnread =
+                lastMessage &&
+                lastMessage.sender_id !== currentUserId &&
+                (!lastMessage.read_by ||
+                  !lastMessage.read_by.includes(currentUserId));
+
+              return (
+                <a
+                  href={
+                    isHelp
+                      ? `/messages/aide/${otherUser?.id}?conv=${conv.id}`
+                      : `/messages/prives/${otherUser?.id}`
+                  }
+                  class="block hover:bg-gray-50 active:bg-gray-100 transition duration-150"
+                >
+                  <div class="p-3 sm:p-4 flex items-center">
+                    <div class="relative">
+                      <div
+                        class={`w-10 sm:w-12 h-10 sm:h-12 rounded-full ${isHelp ? "bg-secondary/10" : "bg-primary/10"} flex-shrink-0 overflow-hidden`}
+                      >
+                        <div
+                          class={`w-full h-full flex items-center justify-center ${isHelp ? "bg-secondary" : "bg-primary"} text-white text-lg`}
+                        >
+                          {otherUser?.pseudo_utilisateur?.charAt(0) || "?"}
+                        </div>
+                      </div>
+                      {isHelp && (
+                        <div class="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                      {isUnread && (
+                        <div class="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3" />
+                      )}
+                    </div>
+
+                    <div class="ml-3 flex-1 min-w-0">
+                      <div class="flex justify-between items-center">
+                        <h3 class="font-medium text-gray-900 truncate text-sm sm:text-base">
+                          {otherUser?.pseudo_utilisateur || "Utilisateur"}
+                          {isHelp && (
+                            <span class="ml-1 text-xxs sm:text-xs text-secondary font-normal">
+                              Aidant
+                            </span>
+                          )}
+                        </h3>
+                        <span class="text-xxs sm:text-xs text-gray-500 ml-1 flex-shrink-0">
+                          {lastMessageTime}
+                        </span>
+                      </div>
+
+                      <p
+                        class={`text-xs sm:text-sm truncate ${isUnread ? "font-medium text-gray-900" : "text-gray-500"}`}
+                      >
+                        {lastMessage?.content ||
+                          "Commencez une conversation..."}
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              );
+            })
+        }
+
+        {/* État vide */}
+        {
+          privateConversations.length === 0 &&
+            helpConversations.length === 0 && (
+              <div class="py-10 sm:py-16 text-center px-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-12 sm:h-16 w-12 sm:w-16 mx-auto text-gray-300 mb-3 sm:mb-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                  Pas encore de messages
+                </h3>
+                <p class="text-gray-500 text-sm sm:text-base max-w-md mx-auto mb-6">
+                  Commencez à échanger avec d'autres utilisateurs ou demandez de
+                  l'aide à nos aidants bénévoles.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center sm:space-x-4 space-y-3 sm:space-y-0">
+                  <a
+                    href="/messages/prives"
+                    class="inline-flex items-center justify-center px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary hover:text-white transition text-sm sm:text-base"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 sm:h-5 w-4 sm:w-5 mr-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                    </svg>
+                    Trouver des utilisateurs
+                  </a>
+                  <a
+                    href="/messages/aide"
+                    class="inline-flex items-center justify-center px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition text-sm sm:text-base"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 sm:h-5 w-4 sm:w-5 mr-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Contacter un aidant
+                  </a>
+                </div>
+              </div>
+            )
+        }
+      </div>
+    </div>
+
+    <!-- Aperçu des conversations (grille en colonnes) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      <!-- Conversations privées -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div
+          class="bg-primary/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b"
+        >
+          <h2
+            class="text-base sm:text-lg font-semibold text-gray-800 flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-2 text-primary"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"
+              ></path>
+            </svg>
+            Messages privés
+          </h2>
+          <a
+            href="/messages/prives"
+            class="text-primary text-xs sm:text-sm hover:underline"
           >
             Voir tout
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-3 sm:h-4 w-3 sm:w-4 inline ml-1"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"></path>
+            </svg>
           </a>
         </div>
 
-        <div class="space-y-3">
+        <div class="divide-y max-h-80 overflow-y-auto">
           {
             privateConversations.length === 0 ? (
-              <div class="text-center py-6 text-gray-500">
-                <p>Aucun message privé</p>
-                <p class="text-sm mt-1">
-                  Commencez une conversation avec un utilisateur
+              <div class="text-center py-6 sm:py-8 px-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-10 sm:h-12 w-10 sm:w-12 mx-auto text-gray-300 mb-2 sm:mb-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1"
+                    d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"
+                  />
+                </svg>
+                <p class="text-gray-500 mb-2 text-sm sm:text-base">
+                  Aucun message privé
                 </p>
+                <p class="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">
+                  Discutez en privé avec d'autres utilisateurs
+                </p>
+                <a
+                  href="/messages/prives"
+                  class="inline-flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition text-xs sm:text-sm"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                  </svg>
+                  Nouvelle conversation
+                </a>
               </div>
             ) : (
               privateConversations.map((conv) => {
                 const otherUser = findOtherParticipant(conv);
+                const lastMessage = conv.expand?.last_message_id;
+                const lastMessageTime = lastMessage?.created_at
+                  ? formatMessageDate(lastMessage.created_at)
+                  : "";
+                const isUnread =
+                  lastMessage &&
+                  lastMessage.sender_id !== currentUserId &&
+                  (!lastMessage.read_by ||
+                    !lastMessage.read_by.includes(currentUserId));
 
                 return (
                   <a
                     href={`/messages/prives/${otherUser?.id}`}
-                    class="block p-3 border rounded-lg hover:bg-gray-50 transition"
+                    class="block hover:bg-gray-50 active:bg-gray-100 transition p-3"
                   >
                     <div class="flex items-center">
-                      <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                        <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
-                          {otherUser?.pseudo_utilisateur?.charAt(0) || "?"}
+                      <div class="relative">
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex-shrink-0 overflow-hidden">
+                          <div class="w-full h-full flex items-center justify-center bg-primary text-white">
+                            {otherUser?.pseudo_utilisateur?.charAt(0) || "?"}
+                          </div>
                         </div>
+                        {isUnread && (
+                          <div class="absolute -top-1 -right-1 bg-red-500 rounded-full w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        )}
                       </div>
-                      <div class="ml-3 flex-1">
-                        <p class="font-medium">
-                          {otherUser?.pseudo_utilisateur || "Utilisateur"}
-                        </p>
-                        <p class="text-sm text-gray-600 truncate">
-                          {conv.expand?.last_message_id?.content ||
+                      <div class="ml-2.5 sm:ml-3 flex-1 min-w-0">
+                        <div class="flex justify-between items-center">
+                          <h3
+                            class={`font-medium truncate text-sm sm:text-base ${isUnread ? "text-gray-900" : "text-gray-700"}`}
+                          >
+                            {otherUser?.pseudo_utilisateur || "Utilisateur"}
+                          </h3>
+                          <span class="text-xxs sm:text-xs text-gray-500 whitespace-nowrap ml-1">
+                            {lastMessageTime}
+                          </span>
+                        </div>
+                        <p
+                          class={`text-xs sm:text-sm truncate ${isUnread ? "font-medium text-gray-900" : "text-gray-500"}`}
+                        >
+                          {lastMessage?.content ||
                             "Commencez une conversation..."}
                         </p>
                       </div>
@@ -231,63 +622,150 @@ function findOtherParticipant(conversation) {
               })
             )
           }
+        </div>
 
-          <div class="pt-3 mt-3 border-t">
-            <a
-              href="/messages/prives"
-              class="block w-full text-center py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
-            >
-              Nouvelle conversation
-            </a>
-          </div>
+        <div class="p-3 sm:p-4 border-t bg-gray-50">
+          <a
+            href="/messages/prives"
+            class="block w-full py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition text-center text-sm sm:text-base"
+          >
+            Toutes les conversations
+          </a>
         </div>
       </div>
 
       <!-- Conversations d'aide -->
-      <div class="bg-white p-4 rounded-lg shadow">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-semibold">Conversations d'aide</h2>
-          <a href="/messages/aide" class="text-sm text-primary hover:underline">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div
+          class="bg-secondary/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b"
+        >
+          <h2
+            class="text-base sm:text-lg font-semibold text-gray-800 flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-2 text-secondary"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                clip-rule="evenodd"></path>
+            </svg>
+            Conversations d'aide
+          </h2>
+          <a
+            href="/messages/aide"
+            class="text-secondary text-xs sm:text-sm hover:underline"
+          >
             Voir tout
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-3 sm:h-4 w-3 sm:w-4 inline ml-1"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"></path>
+            </svg>
           </a>
         </div>
 
-        <div class="space-y-3">
+        <div class="divide-y max-h-80 overflow-y-auto">
           {
             helpConversations.length === 0 ? (
-              <div class="text-center py-6 text-gray-500">
-                <p>Aucune conversation d'aide</p>
-                <p class="text-sm mt-1">
-                  Contactez un aidant pour obtenir de l'aide
+              <div class="text-center py-6 sm:py-8 px-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-10 sm:h-12 w-10 sm:w-12 mx-auto text-gray-300 mb-2 sm:mb-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1"
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p class="text-gray-500 mb-2 text-sm sm:text-base">
+                  Aucune conversation d'aide
                 </p>
+                <p class="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">
+                  Obtenez du soutien auprès d'un aidant bénévole
+                </p>
+                <a
+                  href="/messages/aide"
+                  class="inline-flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition text-xs sm:text-sm"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Contacter un aidant
+                </a>
               </div>
             ) : (
               helpConversations.map((conv) => {
                 const aidant = conv.expand?.participants?.find(
                   (p) => p.id !== currentUserId && p.is_volunteer
                 );
+                const lastMessage = conv.expand?.last_message_id;
+                const lastMessageTime = lastMessage?.created_at
+                  ? formatMessageDate(lastMessage.created_at)
+                  : "";
+                const isUnread =
+                  lastMessage &&
+                  lastMessage.sender_id !== currentUserId &&
+                  (!lastMessage.read_by ||
+                    !lastMessage.read_by.includes(currentUserId));
 
                 return (
                   <a
                     href={`/messages/aide/${aidant?.id}?conv=${conv.id}`}
-                    class="block p-3 border rounded-lg hover:bg-gray-50 transition"
+                    class="block hover:bg-gray-50 active:bg-gray-100 transition p-3"
                   >
                     <div class="flex items-center">
-                      <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                        <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
-                          {aidant?.pseudo_utilisateur?.charAt(0) || "A"}
+                      <div class="relative">
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-secondary/10 flex-shrink-0 overflow-hidden">
+                          <div class="w-full h-full flex items-center justify-center bg-secondary text-white">
+                            {aidant?.pseudo_utilisateur?.charAt(0) || "A"}
+                          </div>
                         </div>
+                        {isUnread && (
+                          <div class="absolute -top-1 -right-1 bg-red-500 rounded-full w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        )}
                       </div>
-                      <div class="ml-3 flex-1">
-                        <div class="flex justify-between">
-                          <p class="font-medium">
+                      <div class="ml-2.5 sm:ml-3 flex-1 min-w-0">
+                        <div class="flex justify-between items-center">
+                          <h3
+                            class={`font-medium truncate text-sm sm:text-base ${isUnread ? "text-gray-900" : "text-gray-700"}`}
+                          >
                             {aidant?.pseudo_utilisateur || "Aidant"}
-                          </p>
-                          <p class="text-xs text-primary">Aidant</p>
+                            <span class="ml-1 text-xxs sm:text-xs text-secondary font-normal">
+                              Aidant
+                            </span>
+                          </h3>
+                          <span class="text-xxs sm:text-xs text-gray-500 whitespace-nowrap ml-1">
+                            {lastMessageTime}
+                          </span>
                         </div>
-                        <p class="text-sm text-gray-600 truncate">
-                          {conv.expand?.last_message_id?.content ||
-                            "Demandez de l'aide..."}
+                        <p
+                          class={`text-xs sm:text-sm truncate ${isUnread ? "font-medium text-gray-900" : "text-gray-500"}`}
+                        >
+                          {lastMessage?.content || "Demandez de l'aide..."}
                         </p>
                       </div>
                     </div>
@@ -296,17 +774,82 @@ function findOtherParticipant(conversation) {
               })
             )
           }
+        </div>
 
-          <div class="pt-3 mt-3 border-t">
-            <a
-              href="/messages/aide"
-              class="block w-full text-center py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
-            >
-              Trouver un aidant
-            </a>
-          </div>
+        <div class="p-3 sm:p-4 border-t bg-gray-50">
+          <a
+            href="/messages/aide"
+            class="block w-full py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition text-center text-sm sm:text-base"
+          >
+            Trouver un aidant
+          </a>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Boutons d'action flottants pour mobile -->
+  <div class="fixed bottom-4 right-4 flex flex-col space-y-2 sm:hidden z-20">
+    <a
+      href="/messages/aide"
+      class="bg-secondary text-white p-3 rounded-full shadow-lg hover:bg-secondary/90 transition flex items-center justify-center"
+      aria-label="Trouver de l'aide"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+          clip-rule="evenodd"></path>
+      </svg>
+    </a>
+    <a
+      href="/messages/prives"
+      class="bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition flex items-center justify-center"
+      aria-label="Nouvelle conversation"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"
+        ></path>
+      </svg>
+    </a>
+  </div>
 </Layout>
+
+<style>
+  /* Animation pour les badges non lus */
+  @keyframes pulse {
+    0% {
+      transform: scale(0.95);
+      opacity: 0.9;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0.95);
+      opacity: 0.9;
+    }
+  }
+
+  .bg-red-500 {
+    animation: pulse 2s infinite;
+  }
+
+  /* Taille de texte extra petite pour mobile */
+  .text-xxs {
+    font-size: 0.65rem;
+    line-height: 1;
+  }
+</style>

@@ -139,15 +139,16 @@ otherUser.avatarUrl = ""; // Firebase n'a pas d'avatar par défaut, on utilise u
 ---
 
 <Layout>
-  <div class="container mx-auto px-4 py-4 md:py-8 h-[calc(100vh-80px)]">
-    <div class="flex items-center mb-4">
+  <div class="flex flex-col h-[calc(100vh-64px)] bg-gray-100">
+    <div class="container mx-auto px-4 py-3 flex items-center">
       <a
         href="/messages/prives"
-        class="text-primary hover:underline flex items-center"
+        class="text-primary hover:bg-gray-100 p-1.5 rounded-full flex items-center mr-2 transition-colors"
+        title="Retour aux utilisateurs"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5 mr-1"
+          class="h-5 w-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -158,17 +159,53 @@ otherUser.avatarUrl = ""; // Firebase n'a pas d'avatar par défaut, on utilise u
             stroke-width="2"
             d="M15 19l-7-7 7-7"></path>
         </svg>
-        Retour aux utilisateurs
       </a>
+      <div class="flex items-center">
+        <div
+          class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-medium mr-2"
+        >
+          {otherUser.pseudo_utilisateur?.charAt(0) || "?"}
+        </div>
+        <div>
+          <p class="font-medium">
+            {otherUser.pseudo_utilisateur || "Utilisateur"}
+          </p>
+          <p class="text-xs text-gray-500 flex items-center">
+            <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5"
+            ></span>
+            En ligne
+          </p>
+        </div>
+      </div>
+
+      <div class="ml-auto flex items-center space-x-2">
+        <button
+          class="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+          title="Options"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"
+            ></path>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
-      <ChatConversation
-        conversationId={conversation?.id}
-        otherUser={otherUser}
-        messages={messages}
-        currentUserId={currentUserId}
-      />
+    <div class="flex-1 overflow-hidden px-4 pb-4">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
+        <ChatConversation
+          conversationId={conversation?.id}
+          otherUser={otherUser}
+          messages={messages}
+          currentUserId={currentUserId}
+        />
+      </div>
     </div>
   </div>
 </Layout>

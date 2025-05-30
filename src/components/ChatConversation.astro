@@ -16,11 +16,23 @@ const {
 } = Astro.props;
 
 const isValidConversation = !!conversationId;
+
+// URL de retour en fonction du type de conversation
+const backUrl = isVolunteerChat ? "/messages/aide" : "/messages/prives";
 ---
 
-<div class="flex flex-col h-full bg-gray-50">
+<div class="chat-conversation flex flex-col h-[100vh] sm:h-full bg-gray-50 rounded-lg overflow-hidden shadow-md">
   <!-- En-tête de conversation -->
-  <div class="flex items-center p-4 bg-white border-b shadow-sm">
+  <div class="flex items-center p-3 sm:p-4 bg-white border-b shadow-sm sticky top-0 z-10">
+    <a 
+      href={backUrl}
+      class="p-2 -ml-2 mr-1 sm:mr-2 text-primary hover:bg-gray-100 rounded-full transition-colors sm:hidden"
+      aria-label="Retour"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+      </svg>
+    </a>
     <div
       class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden"
     >
@@ -32,7 +44,7 @@ const isValidConversation = !!conversationId;
             class="w-full h-full object-cover"
           />
         ) : (
-          <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+          <div class={`w-full h-full flex items-center justify-center ${isVolunteerChat ? "bg-secondary" : "bg-primary"} text-white text-lg`}>
             {otherUser?.pseudo_utilisateur?.charAt(0) ||
               otherUser?.prenom_utilisateur?.charAt(0) ||
               "?"}
@@ -40,18 +52,23 @@ const isValidConversation = !!conversationId;
         )
       }
     </div>
-    <div class="ml-3">
-      <p class="font-medium">
+    <div class="ml-3 flex-1 min-w-0">
+      <p class="font-medium truncate">
         {otherUser?.pseudo_utilisateur || "Utilisateur"}
       </p>
-      {isVolunteerChat && <p class="text-xs text-primary">Aidant bénévole</p>}
+      {isVolunteerChat && <p class="text-xs text-secondary">Aidant bénévole</p>}
     </div>
+    <button id="refresh-messages" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    </button>
   </div>
 
   {
     !isValidConversation && (
       <div class="flex-1 flex items-center justify-center bg-gray-50 p-4">
-        <div class="text-center text-gray-500">
+        <div class="text-center text-gray-500 max-w-md">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-16 w-16 mx-auto text-gray-300 mb-4"
@@ -67,7 +84,13 @@ const isValidConversation = !!conversationId;
             />
           </svg>
           <h3 class="text-lg font-medium mb-2">Conversation non disponible</h3>
-          <p>La conversation demandée n'existe pas ou a été supprimée.</p>
+          <p class="mb-4">La conversation demandée n'existe pas ou a été supprimée.</p>
+          <a href="/messages" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            Retour aux messages
+          </a>
         </div>
       </div>
     )
@@ -78,28 +101,35 @@ const isValidConversation = !!conversationId;
   <!-- Zone des messages -->
   <div
     id="message-container"
-    class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f5f5f5]"
+    class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 bg-[#f5f5f5]"
     style="background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNMjAgMEgwdjIwaDIwVjB6IiBmaWxsPSJyZ2JhKDIyOSwgMjI5LCAyMjksIDAuMikiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmNWY1ZjUiLz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+');"
   >
     {
       messages.length === 0 ? (
         <div class="flex flex-col items-center justify-center h-full text-center py-8 text-gray-500">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-16 w-16 text-gray-300 mb-3"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
-          <p class="font-medium">Aucun message pour l'instant</p>
-          <p class="text-sm mt-2">Commencez la conversation...</p>
+          <div class="bg-white p-5 sm:p-6 rounded-xl shadow-sm max-w-md">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-14 sm:h-16 w-14 sm:w-16 text-gray-300 mb-3 mx-auto"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            <p class="font-medium text-lg">Aucun message pour l'instant</p>
+            <p class="text-sm mt-2 mb-4">Commencez la conversation avec {otherUser?.pseudo_utilisateur || "ce contact"}.</p>
+            <div class="text-center">
+              <span class="inline-block px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                Écrivez votre message ci-dessous ↓
+              </span>
+            </div>
+          </div>
         </div>
       ) : (
         messages.map((message, index) => {
@@ -112,15 +142,18 @@ const isValidConversation = !!conversationId;
             hour: "2-digit",
             minute: "2-digit",
           });
+          
+          // Grouper les messages consécutifs du même expéditeur
+          const isConsecutive = index > 0 && messages[index - 1]?.sender_id === message.sender_id;
 
           return (
             <div
-              class={`flex items-end ${isSender ? "justify-end" : "justify-start"} gap-2`}
+              class={`flex items-end ${isSender ? "justify-end" : "justify-start"} gap-1.5 sm:gap-2 ${isConsecutive ? "mt-1" : "mt-3"}`}
               id={`message-${message.id}`}
             >
               {/* Avatar pour les messages reçus */}
               {!isSender && showAvatar ? (
-                <div class="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mb-1">
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mb-1">
                   {otherUser?.avatarUrl ? (
                     <img
                       src={otherUser.avatarUrl}
@@ -128,33 +161,33 @@ const isValidConversation = !!conversationId;
                       class="w-full h-full object-cover"
                     />
                   ) : (
-                    <div class="w-full h-full flex items-center justify-center bg-primary text-white text-sm">
+                    <div class={`w-full h-full flex items-center justify-center ${isVolunteerChat ? "bg-secondary" : "bg-primary"} text-white text-sm`}>
                       {otherUser?.pseudo_utilisateur?.charAt(0) || "?"}
                     </div>
                   )}
                 </div>
-              ) : !isSender ? (
-                <div class="w-8 flex-shrink-0" />
+              ) : !isSender && !showAvatar ? (
+                <div class="w-7 sm:w-8 flex-shrink-0" />
               ) : null}
 
               <div
-                class={`max-w-[75%] px-3 py-2 rounded-lg ${
+                class={`max-w-[80%] sm:max-w-[75%] px-3 py-2 rounded-lg ${
                   isSender
                     ? "bg-primary text-white rounded-br-none"
                     : "bg-white text-gray-800 rounded-bl-none shadow-sm"
-                }`}
+                } ${isConsecutive && !isSender ? "rounded-tl-sm" : ""} ${isConsecutive && isSender ? "rounded-tr-sm" : ""}`}
               >
-                <p class="whitespace-pre-wrap break-words">{message.content}</p>
+                <p class="whitespace-pre-wrap break-words text-sm sm:text-base">{message.content}</p>
                 <p
-                  class={`text-xs mt-1 text-right ${isSender ? "text-primary-100" : "text-gray-500"}`}
+                  class={`text-[10px] sm:text-xs mt-1 text-right ${isSender ? "text-primary-100" : "text-gray-500"}`}
                 >
                   {messageTime}
                   {isSender && (
-                    <span class="ml-1">
+                    <span class="ml-1" title={message.read_by && message.read_by.length > 1 ? "Lu" : "Envoyé"}>
                       {message.read_by && message.read_by.length > 1 ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          class="h-3 w-3 inline"
+                          class="h-2.5 sm:h-3 w-2.5 sm:w-3 inline"
                           viewBox="0 0 20 20"
                           fill="currentColor"
                         >
@@ -167,7 +200,7 @@ const isValidConversation = !!conversationId;
                       ) : (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          class="h-3 w-3 inline opacity-70"
+                          class="h-2.5 sm:h-3 w-2.5 sm:w-3 inline opacity-70"
                           viewBox="0 0 20 20"
                           fill="currentColor"
                         >
@@ -187,34 +220,64 @@ const isValidConversation = !!conversationId;
         })
       )
     }
+    
+    <!-- Indicateur de défilement vers le bas -->
+    <button id="scroll-bottom" class="hidden fixed bottom-20 right-4 sm:bottom-24 sm:right-8 bg-primary text-white p-2 rounded-full shadow-lg hover:bg-primary/90 transition z-20">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+      </svg>
+    </button>
   </div>
 
-  <div class="text-center mt-2 mb-2">
-    <button id="test-firebase" class="text-xs text-gray-500 hover:underline">
+  <div id="debug-controls" class="bg-gray-100 border-t border-b p-1 text-center hidden">
+    <button id="test-firebase" class="text-xs text-gray-500 hover:underline mx-2">
       Vérifier la connexion
     </button>
-    <button id="refresh-messages" class="text-xs text-gray-500 hover:underline">
-    Rafraîchir les messages
-  </button>
+    <button id="refresh-chat" class="text-xs text-gray-500 hover:underline mx-2">
+      Rafraîchir les messages
+    </button>
   </div>
 
-  <div class="border-t bg-white p-3">
-  <form id="message-form" class="flex items-center gap-2">
-    <input type="hidden" name="conversationId" value={conversationId} />
-    <input type="hidden" id="current-user-id" value={currentUserId} />
+  <!-- Zone de saisie du message -->
+  <div class="border-t bg-white p-2 sm:p-3 sticky bottom-0 z-10">
+    <form id="message-form" class="flex items-center gap-2">
+      <input type="hidden" name="conversationId" value={conversationId} />
+      <input type="hidden" id="current-user-id" value={currentUserId} />
 
-    <div class="flex-1 relative">
-      <input
-        type="text"
-        name="message"
-        id="message-input"
-        placeholder="Écrivez votre message..."
-        class="w-full py-3 px-4 bg-gray-100 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/30 pr-10"
-      />
+      <div class="flex-1 relative">
+        <input
+          type="text"
+          name="message"
+          id="message-input"
+          placeholder="Écrivez votre message..."
+          class="w-full py-2 sm:py-3 px-4 bg-gray-100 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/30 pr-10 text-sm sm:text-base"
+          autocomplete="off"
+        />
+        <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <button
+            type="button"
+            id="emoji-button"
+            class="text-gray-500 hover:text-gray-700 p-1"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.536 5.879a1 1 0 001.415 0 3 3 0 014.242 0 1 1 0 001.415-1.415 5 5 0 00-7.072 0 1 1 0 000 1.415z"
+                clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <button
-        type="button"
-        id="emoji-button"
-        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        type="submit"
+        class="bg-primary text-white p-2 sm:p-3 rounded-full hover:bg-primary/90 transition focus:outline-none focus:ring-2 focus:ring-primary/50 flex-shrink-0"
+        id="send-button"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -223,36 +286,50 @@ const isValidConversation = !!conversationId;
           fill="currentColor"
         >
           <path
-            fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.536 5.879a1 1 0 001.415 0 3 3 0 014.242 0 1 1 0 001.415-1.415 5 5 0 00-7.072 0 1 1 0 000 1.415z"
-            clip-rule="evenodd"></path>
+            d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
+          ></path>
         </svg>
       </button>
-    </div>
-
-    <button
-      type="submit"
-      class="bg-primary text-white p-3 rounded-full hover:bg-primary/90 transition focus:outline-none focus:ring-2 focus:ring-primary/50"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-5 w-5"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-      >
-        <path
-          d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
-        ></path>
-      </svg>
-    </button>
-  </form>
-</div>
+    </form>
+  </div>
   </>
   )}
 </div>
 
 <script>
-  // Importer Firebase correctement
+  // Activer le mode plein écran sur mobile
+  document.addEventListener("DOMContentLoaded", () => {
+    const isMobile = window.innerWidth < 640;
+    
+    if (isMobile) {
+      // Masquer le menu navigation sur mobile
+      const appMenu = document.getElementById('app-navigation');
+      if (appMenu) {
+        appMenu.classList.add('hidden');
+      }
+      
+      // Ajuster l'interface pour le plein écran
+      const mainContent = document.getElementById('main-content');
+      if (mainContent) {
+        mainContent.classList.remove('px-4', 'py-6', 'lg:px-6');
+        mainContent.classList.add('p-0');
+        mainContent.style.marginTop = '0';
+        mainContent.style.paddingBottom = '0';
+      }
+      
+      // Rendre le chatContainer plein écran
+      const chatContainer = document.querySelector('.chat-conversation');
+      if (chatContainer) {
+        chatContainer.classList.add('fixed', 'inset-0', 'z-50');
+        chatContainer.classList.remove('rounded-lg');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+  });
+</script>
+
+<script>
+  // Importer Firebase
   import { db } from '../firebase.js';
   import { 
     collection, 
@@ -269,6 +346,14 @@ const isValidConversation = !!conversationId;
     getDocs
   } from "firebase/firestore";
 
+  // Audio pour les notifications
+  let audio;
+  try {
+    audio = new Audio("/assets/notification.mp3");
+  } catch (e) {
+    console.log("Audio non supporté:", e);
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("message-form");
     const messageContainer = document.getElementById("message-container");
@@ -277,15 +362,38 @@ const isValidConversation = !!conversationId;
     const emojiButton = document.getElementById("emoji-button");
     const testButton = document.getElementById("test-firebase");
     const refreshButton = document.getElementById("refresh-messages");
+    const scrollBottomButton = document.getElementById("scroll-bottom");
+    const sendButton = document.getElementById("send-button");
+    const debugControls = document.getElementById("debug-controls");
+    
+    // Afficher les contrôles de débogage avec Ctrl+D
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        debugControls.classList.toggle('hidden');
+      }
+    });
     
     // Variable pour stocker l'écouteur actif
     let unsubscribeListener = null;
+    
+    // Gérer le bouton de défilement vers le bas
+    if (messageContainer && scrollBottomButton) {
+      messageContainer.addEventListener('scroll', () => {
+        const isAtBottom = messageContainer.scrollHeight - messageContainer.scrollTop <= messageContainer.clientHeight + 100;
+        scrollBottomButton.classList.toggle('hidden', isAtBottom);
+      });
+      
+      scrollBottomButton.addEventListener('click', () => {
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+      });
+    }
 
     if (refreshButton) {
-  refreshButton.addEventListener("click", () => {
-    window.location.reload();
-  });
-}
+      refreshButton.addEventListener("click", () => {
+        window.location.reload();
+      });
+    }
 
     // Faire défiler vers le bas pour voir les derniers messages
     if (messageContainer) {
@@ -301,6 +409,13 @@ const isValidConversation = !!conversationId;
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           form.dispatchEvent(new Event("submit"));
+        }
+      });
+      
+      // Effet visuel sur le bouton d'envoi quand le champ n'est pas vide
+      messageInput.addEventListener("input", () => {
+        if (sendButton) {
+          sendButton.classList.toggle('animate-pulse', messageInput.value.trim() !== '');
         }
       });
     }
@@ -370,49 +485,59 @@ const isValidConversation = !!conversationId;
     }
 
     // Gestionnaire d'envoi de message
-    // Dans ChatConversation.astro, remplacer le code d'envoi de message par:
-form?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const formData = new FormData(form);
-  const message = formData.get("message");
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const message = formData.get("message");
+        const conversationId = formData.get("conversationId");
 
-  if (!message || message.toString().trim() === "") return;
+        if (!message || message.toString().trim() === "") return;
 
-  // Vider le champ de saisie
-  messageInput.value = "";
+        // Vider le champ de saisie
+        if (messageInput) {
+          messageInput.value = "";
+          messageInput.focus();
+        }
 
-  // Créer un ID temporaire pour le message
-  const tempMessageId = `temp-${Date.now()}`;
-  
-  // Afficher un message temporaire
-  displayTemporaryMessage(tempMessageId, message.toString().trim());
+        // Créer un ID temporaire pour le message
+        const tempMessageId = `temp-${Date.now()}`;
+        
+        // Afficher un message temporaire
+        displayTemporaryMessage(tempMessageId, message.toString().trim());
 
-  // Envoyer le message via l'API
-  try {
-    const response = await fetch('/api/messages/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        conversation_id: conversationId,
-        content: message.toString().trim(),
-        sender_id: currentUserId
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error("Erreur lors de l'envoi du message");
+        try {
+          // Créer directement le message dans Firebase
+          const messagesCollection = collection(db, "messages");
+          const newMessage = {
+            conversation_id: conversationId,
+            content: message.toString().trim(),
+            sender_id: currentUserId,
+            created_at: serverTimestamp(),
+            read_by: [currentUserId], // Marquer comme lu par l'expéditeur
+          };
+
+          const docRef = await addDoc(messagesCollection, newMessage);
+          console.log("Message envoyé avec succès, ID:", docRef.id);
+          
+          // Mettre à jour le timestamp de la conversation
+          try {
+            const conversationRef = doc(db, "conversations", conversationId.toString());
+            await updateDoc(conversationRef, {
+              last_message: message.toString().trim(),
+              last_message_time: serverTimestamp(),
+              updated_at: serverTimestamp()
+            });
+          } catch (updateError) {
+            console.error("Erreur lors de la mise à jour de la conversation:", updateError);
+          }
+          
+        } catch (error) {
+          console.error("Erreur lors de l'envoi du message:", error);
+          showMessageError(tempMessageId, message.toString().trim(), error);
+        }
+      });
     }
-    
-    const result = await response.json();
-    console.log("Message envoyé avec succès via API, ID:", result.id);
-    
-  } catch (error) {
-    console.error("Erreur lors de l'envoi du message:", error);
-    showMessageError(tempMessageId, message.toString().trim(), error);
-  }
-});
 
     // Fonction pour afficher un message temporaire
     function displayTemporaryMessage(tempMessageId, content) {
@@ -423,12 +548,12 @@ form?.addEventListener("submit", async (e) => {
       
       const messageHtml = `
         <div class="flex items-end justify-end gap-2" id="${tempMessageId}">
-          <div class="max-w-[75%] px-3 py-2 rounded-lg bg-primary text-white rounded-br-none opacity-70">
-            <p class="whitespace-pre-wrap break-words">${content}</p>
-            <p class="text-xs mt-1 text-right text-primary-100">
+          <div class="max-w-[80%] sm:max-w-[75%] px-3 py-2 rounded-lg bg-primary text-white rounded-br-none opacity-70">
+            <p class="whitespace-pre-wrap break-words text-sm sm:text-base">${content}</p>
+            <p class="text-[10px] sm:text-xs mt-1 text-right text-primary-100">
               ${currentTime}
               <span class="ml-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 sm:h-3 w-2.5 sm:w-3 inline animate-pulse" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                 </svg>
               </span>
@@ -453,11 +578,11 @@ form?.addEventListener("submit", async (e) => {
       const tempMessageElement = document.getElementById(tempMessageId);
       if (tempMessageElement) {
         const errorMessageHtml = `
-          <div class="flex items-end justify-end gap-2">
-            <div class="max-w-[75%] px-3 py-2 rounded-lg bg-red-500 text-white rounded-br-none">
-              <p class="whitespace-pre-wrap break-words">${content}</p>
-              <p class="text-xs mt-1 text-right text-red-100">
-                ${currentTime} - Erreur: ${error.message || "Erreur inconnue"}
+          <div class="flex items-end justify-end gap-2" id="${tempMessageId}-error">
+            <div class="max-w-[80%] sm:max-w-[75%] px-3 py-2 rounded-lg bg-red-500 text-white rounded-br-none">
+              <p class="whitespace-pre-wrap break-words text-sm sm:text-base">${content}</p>
+              <p class="text-[10px] sm:text-xs mt-1 text-right text-red-100">
+                ${currentTime} - Erreur d'envoi
                 <button class="ml-1 text-white underline" onclick="resendMessage('${tempMessageId}', '${content.replace(/'/g, "\\'")}')">
                   Réessayer
                 </button>
@@ -471,7 +596,7 @@ form?.addEventListener("submit", async (e) => {
 
     // Fonction pour renvoyer un message qui a échoué
     window.resendMessage = async (messageId, content) => {
-      const errorElement = document.getElementById(messageId);
+      const errorElement = document.getElementById(`${messageId}-error`);
       if (errorElement) {
         errorElement.remove();
         if (messageInput) {
@@ -514,14 +639,12 @@ form?.addEventListener("submit", async (e) => {
       // Écouteur en temps réel avec gestion d'erreur
       unsubscribeListener = onSnapshot(
         q, 
-        { includeMetadataChanges: true },  // Inclure les métadonnées pour détecter les changements de synchronisation
+        { includeMetadataChanges: true },
         (snapshot) => {
           console.log("Mise à jour des messages reçue, documents:", snapshot.docs.length);
-          console.log("Statut des métadonnées: hasPendingWrites =", snapshot.metadata.hasPendingWrites);
-          console.log("Statut des métadonnées: fromCache =", snapshot.metadata.fromCache);
           
           snapshot.docChanges().forEach((change) => {
-            console.log("Changement détecté:", change.type, change.doc.id, "metadata:", change.doc.metadata);
+            console.log("Changement détecté:", change.type, change.doc.id);
             
             if (change.type === "added" || change.type === "modified") {
               const message = {
@@ -608,13 +731,13 @@ form?.addEventListener("submit", async (e) => {
       
       if (isSender) {
         messageHtml = `
-          <div class="flex items-end justify-end gap-2" id="message-${message.id}">
-            <div class="max-w-[75%] px-3 py-2 rounded-lg bg-primary text-white rounded-br-none">
-              <p class="whitespace-pre-wrap break-words">${message.content}</p>
-              <p class="text-xs mt-1 text-right text-primary-100">
+          <div class="flex items-end justify-end gap-1.5 sm:gap-2" id="message-${message.id}">
+            <div class="max-w-[80%] sm:max-w-[75%] px-3 py-2 rounded-lg bg-primary text-white rounded-br-none">
+              <p class="whitespace-pre-wrap break-words text-sm sm:text-base">${message.content}</p>
+              <p class="text-[10px] sm:text-xs mt-1 text-right text-primary-100">
                 ${messageTime}
                 <span class="ml-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline ${message.read_by && message.read_by.length > 1 ? '' : 'opacity-70'}" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 sm:h-3 w-2.5 sm:w-3 inline ${message.read_by && message.read_by.length > 1 ? '' : 'opacity-70'}" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                   </svg>
                 </span>
@@ -624,15 +747,15 @@ form?.addEventListener("submit", async (e) => {
         `;
       } else {
         messageHtml = `
-          <div class="flex items-end justify-start gap-2" id="message-${message.id}">
-            <div class="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mb-1">
+          <div class="flex items-end justify-start gap-1.5 sm:gap-2" id="message-${message.id}">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mb-1">
               <div class="w-full h-full flex items-center justify-center bg-primary text-white text-sm">
                 ${message.sender_initial || "?"}
               </div>
             </div>
-            <div class="max-w-[75%] px-3 py-2 rounded-lg bg-white text-gray-800 rounded-bl-none shadow-sm animate-fadeIn">
-              <p class="whitespace-pre-wrap break-words">${message.content}</p>
-              <p class="text-xs mt-1 text-right text-gray-500">
+            <div class="max-w-[80%] sm:max-w-[75%] px-3 py-2 rounded-lg bg-white text-gray-800 rounded-bl-none shadow-sm animate-fadeIn">
+              <p class="whitespace-pre-wrap break-words text-sm sm:text-base">${message.content}</p>
+              <p class="text-[10px] sm:text-xs mt-1 text-right text-gray-500">
                 ${messageTime}
               </p>
             </div>
@@ -659,8 +782,9 @@ form?.addEventListener("submit", async (e) => {
             }
             
             // Jouer un son de notification
-            const audio = new Audio("/assets/notification.mp3");
-            audio.play().catch(err => console.log("Impossible de jouer le son de notification"));
+            if (audio) {
+              audio.play().catch(err => console.log("Impossible de jouer le son de notification"));
+            }
           } catch (e) {
             console.log("Notification non supportée");
           }
@@ -688,13 +812,13 @@ form?.addEventListener("submit", async (e) => {
           });
         
         const realMessageHtml = `
-          <div class="flex items-end justify-end gap-2" id="message-${message.id}">
-            <div class="max-w-[75%] px-3 py-2 rounded-lg bg-primary text-white rounded-br-none">
-              <p class="whitespace-pre-wrap break-words">${message.content}</p>
-              <p class="text-xs mt-1 text-right text-primary-100">
+          <div class="flex items-end justify-end gap-1.5 sm:gap-2" id="message-${message.id}">
+            <div class="max-w-[80%] sm:max-w-[75%] px-3 py-2 rounded-lg bg-primary text-white rounded-br-none">
+              <p class="whitespace-pre-wrap break-words text-sm sm:text-base">${message.content}</p>
+              <p class="text-[10px] sm:text-xs mt-1 text-right text-primary-100">
                 ${messageTime}
-                <span class="ml-1" title="Lu">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline" viewBox="0 0 20 20" fill="currentColor">
+                <span class="ml-1" title="Envoyé">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 sm:h-3 w-2.5 sm:w-3 inline opacity-70" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                   </svg>
                 </span>
@@ -737,5 +861,56 @@ form?.addEventListener("submit", async (e) => {
 
   .animate-fadeIn {
     animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  .animate-pulse {
+    animation: pulse 1.5s infinite;
+  }
+  
+  /* Styles spécifiques pour l'affichage mobile */
+  @media (max-width: 640px) {
+    /* Assurer que l'interface de chat prend tout l'écran */
+    body.chat-active {
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Optimiser la taille du texte pour mobile */
+    #message-container .whitespace-pre-wrap {
+      font-size: 0.95rem;
+    }
+  }
+  
+  /* Style pour masquer la barre de défilement tout en permettant le défilement */
+  #message-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+  }
+  
+  #message-container::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  #message-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  #message-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
   }
 </style>

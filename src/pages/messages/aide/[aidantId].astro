@@ -156,15 +156,16 @@ aidant.avatarUrl = ""; // Firebase n'a pas d'avatar par défaut, on utilise une 
 ---
 
 <Layout>
-  <div class="container mx-auto px-4 py-4 md:py-8 h-[calc(100vh-80px)]">
-    <div class="flex items-center mb-4">
+  <div class="flex flex-col h-[calc(100vh-64px)] bg-gray-100">
+    <div class="container mx-auto px-4 py-3 flex items-center">
       <a
         href="/messages/aide"
-        class="text-primary hover:underline flex items-center"
+        class="text-primary hover:bg-gray-100 p-1.5 rounded-full flex items-center mr-2 transition-colors"
+        title="Retour aux aidants"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5 mr-1"
+          class="h-5 w-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -175,18 +176,32 @@ aidant.avatarUrl = ""; // Firebase n'a pas d'avatar par défaut, on utilise une 
             stroke-width="2"
             d="M15 19l-7-7 7-7"></path>
         </svg>
-        Retour aux aidants
       </a>
+      <div class="flex items-center">
+        <div
+          class="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-white font-medium mr-2"
+        >
+          {aidant.pseudo_utilisateur?.charAt(0) || "A"}
+        </div>
+        <div>
+          <p class="font-medium">{aidant.pseudo_utilisateur || "Aidant"}</p>
+          <p class="text-xs text-secondary">
+            Aidant bénévole • Conversation confidentielle
+          </p>
+        </div>
+      </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
-      <ChatConversation
-        conversationId={conversation?.id}
-        otherUser={aidant}
-        messages={messages}
-        currentUserId={currentUserId}
-        isVolunteerChat={true}
-      />
+    <div class="flex-1 overflow-hidden px-4 pb-4">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
+        <ChatConversation
+          conversationId={conversation?.id}
+          otherUser={aidant}
+          messages={messages}
+          currentUserId={currentUserId}
+          isVolunteerChat={true}
+        />
+      </div>
     </div>
   </div>
 </Layout>
