@@ -8,14 +8,14 @@ const isMessagePage =
 
 {
   !isMessagePage && (
-    <div class="fixed bottom-0 left-0 right-0 z-2 bg-white shadow-lg border-t border-gray-300">
+    <div class="fixed bottom-0 left-0 right-0 z-10 bg-white shadow-lg border-t border-gray-300">
       <div class="max-w-md mx-auto flex justify-between items-center px-10 py-4">
         <a
           href="/messages"
           class="flex flex-col items-center text-indigo-700 hover:text-indigo-900 transition"
         >
           <img
-            src="/assets/iconediscussion.svg"
+            src="/src/assets/iconediscussion.svg"
             alt="Discussions"
             class="w-7 h-7 mb-1"
           />
@@ -25,7 +25,11 @@ const isMessagePage =
           href="/accueil-app"
           class="flex flex-col items-center text-indigo-700 hover:text-indigo-900 transition"
         >
-          <img src="/assets/iconehome.svg" alt="Accueil" class="w-7 h-7 mb-1" />
+          <img
+            src="/src/assets/iconehome.svg"
+            alt="Accueil"
+            class="w-7 h-7 mb-1"
+          />
         </a>
 
         <a
@@ -33,7 +37,7 @@ const isMessagePage =
           class="flex flex-col items-center text-indigo-700 hover:text-indigo-900 transition"
         >
           <img
-            src="/assets/iconeprofil.svg"
+            src="/src/assets/iconeprofil.svg"
             alt="Profil"
             class="w-7 h-7 mb-1"
           />
