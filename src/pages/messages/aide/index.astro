@@ -1,8 +1,18 @@
 ---
 import Layout from "../../../layouts/Layoutapp.astro";
 import PocketBase from "pocketbase";
+import { db } from "../../../firebase.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+} from "firebase/firestore";
 
-// Récupérer l'utilisateur connecté
+// Récupérer l'utilisateur connecté (l'authentification reste avec PocketBase)
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
@@ -16,53 +26,157 @@ if (!pb.authStore.isValid) {
 
 const currentUserId = pb.authStore.model.id;
 
-// Récupérer la liste des aidants (volontaires)
-let volunteers = { items: [] };
 try {
-  // Récupérer tous les utilisateurs pour vérifier les valeurs is_volunteer
-  const allUsers = await pb.collection("users").getFullList({
-    sort: "created",
+  // Récupérer tous les aidants de PocketBase
+  const pocketBaseVolunteers = await pb.collection("users").getFullList({
+    filter: "is_volunteer = true",
   });
 
-  console.log(
-    "Tous les utilisateurs:",
-    allUsers.map((u) => ({
-      id: u.id,
-      email: u.email,
-      is_volunteer: u.is_volunteer,
-    }))
+  console.log(`${pocketBaseVolunteers.length} aidants trouvés dans PocketBase`);
+
+  // Synchroniser chaque aidant avec Firebase
+  for (const volunteer of pocketBaseVolunteers) {
+    const volunteerRef = doc(db, "users", volunteer.id);
+
+    // Données à synchroniser
+    const userData = {
+      pseudo_utilisateur:
+        volunteer.pseudo || volunteer.prenom_utilisateur || "Aidant",
+      is_volunteer: true,
+      role: "volunteer",
+      bio: volunteer.bio || "Aidant bénévole disponible pour vous aider.",
+    };
+
+    // Créer ou mettre à jour l'aidant dans Firebase
+    await setDoc(volunteerRef, userData, { merge: true });
+    console.log(`Aidant ${volunteer.id} synchronisé avec Firebase`);
+  }
+} catch (syncError) {
+  console.error("Erreur lors de la synchronisation des aidants:", syncError);
+}
+
+// Vérifier et créer l'utilisateur courant dans Firebase s'il n'existe pas
+try {
+  const currentUserRef = doc(db, "users", currentUserId);
+  const currentUserSnap = await getDoc(currentUserRef);
+
+  if (!currentUserSnap.exists()) {
+    console.log("Création de l'utilisateur courant dans Firebase");
+    await setDoc(currentUserRef, {
+      pseudo_utilisateur:
+        pb.authStore.model.pseudo_utilisateur || "Utilisateur",
+      is_volunteer: pb.authStore.model.is_volunteer || false,
+      role: pb.authStore.model.is_volunteer ? "volunteer" : "user",
+    });
+  }
+} catch (error) {
+  console.error(
+    "Erreur lors de la vérification/création de l'utilisateur:",
+    error
   );
+}
 
-  // Filtrer ensuite les volontaires
-  volunteers = await pb.collection("users").getList(1, 50, {
-    filter: "is_volunteer=true",
-    sort: "created",
-  });
+// Récupérer la liste des aidants (volontaires) depuis Firestore
+let volunteers = [];
+try {
+  const usersRef = collection(db, "users");
 
-  console.log("Nombre de volontaires trouvés:", volunteers.items.length);
+  // Essayer d'abord avec is_volunteer = true
+  let q = query(usersRef, where("is_volunteer", "==", true));
+  let volunteersSnapshot = await getDocs(q);
+
+  // Si aucun résultat, essayer avec role = volunteer
+  if (volunteersSnapshot.empty) {
+    console.log(
+      "Aucun aidant trouvé avec is_volunteer=true, essai avec role=volunteer"
+    );
+    q = query(usersRef, where("role", "==", "volunteer"));
+    volunteersSnapshot = await getDocs(q);
+  }
+
+  // Si toujours aucun résultat, récupérer tous les utilisateurs
+  if (volunteersSnapshot.empty) {
+    console.log(
+      "Récupération de tous les utilisateurs pour trouver les aidants"
+    );
+    volunteersSnapshot = await getDocs(usersRef);
+
+    // Filtrer les utilisateurs qui pourraient être des aidants
+    volunteers = volunteersSnapshot.docs
+      .filter((doc) => doc.id !== currentUserId)
+      .map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          is_volunteer: data.is_volunteer || data.role === "volunteer" || false,
+        };
+      })
+      .filter((user) => user.is_volunteer);
+  } else {
+    // Traiter les résultats de la requête filtrée
+    volunteers = volunteersSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      is_volunteer: true,
+    }));
+  }
+
+  console.log("Nombre de volontaires trouvés:", volunteers.length);
+
+  // Si nous n'avons toujours aucun aidant, créons-en un pour les tests
+  if (volunteers.length === 0) {
+    console.log("Aucun aidant trouvé, création d'un aidant de test");
+
+    // Créer un aidant de test dans Firebase
+    const testAidantId = "aidant-test-" + Date.now();
+    const testAidantRef = doc(db, "users", testAidantId);
+
+    await setDoc(testAidantRef, {
+      pseudo_utilisateur: "Aidant Test",
+      is_volunteer: true,
+      role: "volunteer",
+      bio: "Ceci est un aidant de test créé automatiquement.",
+    });
+
+    // Ajouter l'aidant de test à la liste
+    volunteers.push({
+      id: testAidantId,
+      pseudo_utilisateur: "Aidant Test",
+      is_volunteer: true,
+      role: "volunteer",
+      bio: "Ceci est un aidant de test créé automatiquement.",
+    });
+
+    console.log("Aidant de test créé avec ID:", testAidantId);
+  }
 } catch (error) {
   console.error("Erreur lors de la récupération des aidants:", error);
 }
 
-// Récupérer les conversations d'aide existantes
+// Récupérer les conversations d'aide existantes depuis Firestore
 let existingConversationsMap = {};
 try {
-  const helpConversations = await pb
-    .collection("conversations")
-    .getList(1, 100, {
-      filter: `type="help" && participants~"${currentUserId}"`,
-      expand: "participants",
-    });
+  const conversationsRef = collection(db, "conversations");
+  const q = query(
+    conversationsRef,
+    where("type", "==", "help"),
+    where("participants", "array-contains", currentUserId)
+  );
+
+  const querySnapshot = await getDocs(q);
 
   // Créer un map des aidants avec qui l'utilisateur a déjà une conversation
-  helpConversations.items.forEach((conv) => {
-    const volunteerParticipant = conv.expand.participants?.find(
-      (p) => p.id !== currentUserId && p.is_volunteer
+  for (const doc of querySnapshot.docs) {
+    const conversation = doc.data();
+    const volunteerParticipant = conversation.participants.find(
+      (id) => id !== currentUserId
     );
+
     if (volunteerParticipant) {
-      existingConversationsMap[volunteerParticipant.id] = conv.id;
+      existingConversationsMap[volunteerParticipant] = doc.id;
     }
-  });
+  }
 } catch (error) {
   console.error("Erreur lors de la récupération des conversations:", error);
 }
@@ -100,7 +214,7 @@ try {
       </p>
 
       {
-        volunteers.items.length === 0 && (
+        volunteers.length === 0 && (
           <div class="text-center py-8 mb-4 bg-yellow-50 p-4 rounded-lg">
             <p class="text-gray-500">Aucun aidant disponible pour le moment.</p>
             <p class="text-sm mt-2 text-gray-500">
@@ -113,7 +227,7 @@ try {
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {
-          volunteers.items.map((volunteer) => {
+          volunteers.map((volunteer) => {
             const hasExistingConversation =
               volunteer.id in existingConversationsMap;
             const conversationUrl = hasExistingConversation
@@ -125,17 +239,9 @@ try {
                 <div class="p-4">
                   <div class="flex items-center mb-3">
                     <div class="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                      {volunteer.avatar ? (
-                        <img
-                          src={pb.getFileUrl(volunteer, volunteer.avatar)}
-                          alt=""
-                          class="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
-                          {volunteer.prenom_utilisateur?.charAt(0) || "A"}
-                        </div>
-                      )}
+                      <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+                        {volunteer.pseudo_utilisateur?.charAt(0) || "A"}
+                      </div>
                     </div>
                     <div class="ml-3">
                       <p class="font-semibold">

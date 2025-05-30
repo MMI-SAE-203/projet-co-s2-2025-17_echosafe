@@ -2,12 +2,29 @@
 import Layout from "../../../layouts/Layoutapp.astro";
 import ChatConversation from "../../../components/ChatConversation.astro";
 import PocketBase from "pocketbase";
+import { db } from "../../../firebase.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  orderBy,
+  getDoc,
+  doc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 // Récupérer l'ID de l'aidant dans l'URL
 const { aidantId } = Astro.params;
 const conversationId = Astro.url.searchParams.get("conv");
 
-// Récupérer l'utilisateur connecté
+// S'assurer que cette page n'est pas accédée directement sans ID d'aidant
+if (!aidantId) {
+  return Astro.redirect("/messages/aide");
+}
+
+// Récupérer l'utilisateur connecté (l'authentification reste avec PocketBase)
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
@@ -21,10 +38,21 @@ if (!pb.authStore.isValid) {
 
 const currentUserId = pb.authStore.model.id;
 
-// Récupérer les informations de l'aidant
+// Récupérer les informations de l'aidant depuis Firestore
 let aidant = null;
 try {
-  aidant = await pb.collection("users").getOne(aidantId);
+  const aidantRef = doc(db, "users", aidantId);
+  const aidantSnap = await getDoc(aidantRef);
+
+  if (aidantSnap.exists()) {
+    aidant = {
+      id: aidantSnap.id,
+      ...aidantSnap.data(),
+    };
+  } else {
+    console.error("Aidant non trouvé dans Firestore");
+    return Astro.redirect("/messages/aide");
+  }
 } catch (error) {
   console.error("Erreur lors de la récupération de l'aidant:", error);
   return Astro.redirect("/messages/aide");
@@ -35,21 +63,54 @@ let conversation = null;
 try {
   if (conversationId) {
     // Utiliser la conversation de l'URL
-    conversation = await pb.collection("conversations").getOne(conversationId);
+    const conversationRef = doc(db, "conversations", conversationId);
+    const conversationSnap = await getDoc(conversationRef);
+
+    if (conversationSnap.exists()) {
+      conversation = {
+        id: conversationSnap.id,
+        ...conversationSnap.data(),
+      };
+    } else {
+      throw new Error("Conversation non trouvée");
+    }
   } else {
     // Vérifier si une conversation existe déjà
-    const conversations = await pb.collection("conversations").getList(1, 1, {
-      filter: `type="help" && participants~"${currentUserId}" && participants~"${aidantId}"`,
-    });
+    const conversationsRef = collection(db, "conversations");
+    const q = query(
+      conversationsRef,
+      where("type", "==", "help"),
+      where("participants", "array-contains", currentUserId)
+    );
 
-    if (conversations.items.length > 0) {
-      conversation = conversations.items[0];
-    } else {
-      // Créer une nouvelle conversation
-      conversation = await pb.collection("conversations").create({
+    const querySnapshot = await getDocs(q);
+
+    // Chercher la conversation qui contient l'aidant
+    for (const doc of querySnapshot.docs) {
+      const data = doc.data();
+      if (data.participants.includes(aidantId)) {
+        conversation = {
+          id: doc.id,
+          ...data,
+        };
+        break;
+      }
+    }
+
+    // Si aucune conversation n'existe, en créer une nouvelle
+    if (!conversation) {
+      const newConversation = await addDoc(collection(db, "conversations"), {
         type: "help",
         participants: [currentUserId, aidantId],
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
       });
+
+      conversation = {
+        id: newConversation.id,
+        type: "help",
+        participants: [currentUserId, aidantId],
+      };
     }
   }
 } catch (error) {
@@ -60,39 +121,38 @@ try {
   return Astro.redirect("/messages/aide");
 }
 
-// Récupérer les messages
+// Récupérer les messages de la conversation depuis Firestore
 let messages = [];
 if (conversation) {
   try {
-    const messagesData = await pb.collection("messages").getList(1, 100, {
-      filter: `conversation_id="${conversation.id}"`,
-      sort: "created",
-    });
-    messages = messagesData.items;
-
-    // Marquer les messages comme lus
-    const unreadMessages = messages.filter(
-      (msg) =>
-        msg.sender_id !== currentUserId && !msg.read_by.includes(currentUserId)
+    const messagesRef = collection(db, "messages");
+    const q = query(
+      messagesRef,
+      where("conversation_id", "==", conversation.id),
+      orderBy("created_at", "asc")
     );
 
-    for (const msg of unreadMessages) {
-      await pb.collection("messages").update(msg.id, {
-        read_by: [...msg.read_by, currentUserId],
-      });
-    }
+    const querySnapshot = await getDocs(q);
+
+    messages = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      // Convertir les timestamps Firestore en dates JS pour le rendu côté client
+      created: doc.data().created_at
+        ? doc.data().created_at.toDate()
+        : new Date(),
+      updated: doc.data().updated_at
+        ? doc.data().updated_at.toDate()
+        : new Date(),
+    }));
   } catch (error) {
     console.error("Erreur lors de la récupération des messages:", error);
   }
 }
 
-// Préparer l'URL de l'avatar
-let avatarUrl = "";
-if (aidant?.avatar) {
-  avatarUrl = pb.getFileUrl(aidant, aidant.avatar);
-}
+// Préparer les données de l'aidant pour le composant
 aidant = aidant || {};
-aidant.avatarUrl = avatarUrl;
+aidant.avatarUrl = ""; // Firebase n'a pas d'avatar par défaut, on utilise une chaîne vide
 ---
 
 <Layout>

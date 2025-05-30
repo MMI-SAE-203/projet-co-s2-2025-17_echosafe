@@ -16,11 +16,9 @@ const firebaseConfig = {
 // Initialiser Firebase
 const app = initializeApp(firebaseConfig);
 
-// Exporter les services Firebase
+// Initialiser les services Firebase
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-// Pour utilisation dans les scripts non-module
-if (typeof window !== 'undefined') {
-  window.firebase = { app, db, auth };
-}
+// Exporter l'app pour l'utiliser ailleurs si nécessaire
+export default app;

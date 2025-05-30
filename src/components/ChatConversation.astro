@@ -116,6 +116,7 @@ const isValidConversation = !!conversationId;
           return (
             <div
               class={`flex items-end ${isSender ? "justify-end" : "justify-start"} gap-2`}
+              id={`message-${message.id}`}
             >
               {/* Avatar pour les messages reçus */}
               {!isSender && showAvatar ? (
@@ -188,7 +189,15 @@ const isValidConversation = !!conversationId;
     }
   </div>
 
-  <!-- Formulaire d'envoi de message -->
+  <div class="text-center mt-2 mb-2">
+    <button id="test-firebase" class="text-xs text-gray-500 hover:underline">
+      Vérifier la connexion
+    </button>
+    <button id="refresh-messages" class="text-xs text-gray-500 hover:underline">
+    Rafraîchir les messages
+  </button>
+  </div>
+
   <div class="border-t bg-white p-3">
   <form id="message-form" class="flex items-center gap-2">
     <input type="hidden" name="conversationId" value={conversationId} />
@@ -243,156 +252,254 @@ const isValidConversation = !!conversationId;
 </div>
 
 <script>
-    import { db } from '../firebase.js';
-    import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, getDocs, updateDoc, doc, arrayUnion } from "firebase/firestore";
+  // Importer Firebase correctement
+  import { db } from '../firebase.js';
+  import { 
+    collection, 
+    addDoc, 
+    query, 
+    where, 
+    orderBy, 
+    onSnapshot, 
+    serverTimestamp, 
+    updateDoc, 
+    doc, 
+    arrayUnion, 
+    getDoc,
+    getDocs
+  } from "firebase/firestore";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("message-form");
+    const messageContainer = document.getElementById("message-container");
+    const messageInput = document.getElementById("message-input");
+    const currentUserIdElement = document.getElementById("current-user-id");
+    const emojiButton = document.getElementById("emoji-button");
+    const testButton = document.getElementById("test-firebase");
+    const refreshButton = document.getElementById("refresh-messages");
+    
+    // Variable pour stocker l'écouteur actif
+    let unsubscribeListener = null;
+
+    if (refreshButton) {
+  refreshButton.addEventListener("click", () => {
+    window.location.reload();
+  });
+}
+
+    // Faire défiler vers le bas pour voir les derniers messages
+    if (messageContainer) {
+      messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+
+    // Focus sur le champ de saisie
+    if (messageInput) {
+      messageInput.focus();
+      
+      // Permettre l'envoi avec Entrée (pas Shift+Entrée)
+      messageInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          form.dispatchEvent(new Event("submit"));
+        }
+      });
+    }
+
+    // Récupérer l'ID de la conversation et l'ID de l'utilisateur
+    const conversationIdInput = document.querySelector('input[name="conversationId"]');
+    const conversationId = conversationIdInput?.value;
+    const currentUserId = currentUserIdElement?.value;
+
+    console.log("Initialisation du chat:", { conversationId, currentUserId });
+
+    // Vérifier si les informations nécessaires sont présentes
+    if (!conversationId || !currentUserId) {
+      console.error("ID de conversation ou utilisateur manquant");
+      return;
+    }
+
+    // Configurer les permissions de notification
+    checkNotificationPermission();
+
+    // Charger les messages existants et configurer l'écoute en temps réel
+    setupMessagesListener(conversationId, currentUserId);
+
+    // Configuration du bouton de test Firebase
+    if (testButton) {
+      testButton.addEventListener("click", async () => {
+        try {
+          // Tester la connexion à Firebase
+          console.log("Test de la connexion Firebase...");
+          
+          if (!conversationId) {
+            alert("ID de conversation manquant");
+            return;
+          }
+          
+          // Récupérer la conversation depuis Firebase
+          const conversationRef = doc(db, "conversations", conversationId);
+          const conversationSnap = await getDoc(conversationRef);
+          
+          if (conversationSnap.exists()) {
+            console.log("Conversation trouvée:", conversationSnap.data());
+            
+            // Récupérer les messages
+            const messagesRef = collection(db, "messages");
+            const q = query(
+              messagesRef,
+              where("conversation_id", "==", conversationId),
+              orderBy("created_at", "asc")
+            );
+            
+            const messagesSnap = await getDocs(q);
+            console.log("Messages trouvés:", messagesSnap.size);
+            
+            messagesSnap.docs.forEach(doc => {
+              console.log("Message:", doc.id, doc.data());
+            });
+            
+            alert(`Connexion OK!\nConversation: ${conversationId}\nMessages: ${messagesSnap.size}`);
+          } else {
+            alert("Conversation non trouvée!");
+          }
+        } catch (error) {
+          console.error("Erreur de test:", error);
+          alert(`Erreur: ${error.message}`);
+        }
+      });
+    }
+
+    // Gestionnaire d'envoi de message
+    // Dans ChatConversation.astro, remplacer le code d'envoi de message par:
+form?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(form);
+  const message = formData.get("message");
+
+  if (!message || message.toString().trim() === "") return;
+
+  // Vider le champ de saisie
+  messageInput.value = "";
+
+  // Créer un ID temporaire pour le message
+  const tempMessageId = `temp-${Date.now()}`;
   
-    document.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("message-form");
-      const messageContainer = document.getElementById("message-container");
-      const messageInput = document.getElementById("message-input");
-      const currentUserIdElement = document.getElementById("current-user-id");
-  
-      // Faire défiler vers le bas pour voir les derniers messages
+  // Afficher un message temporaire
+  displayTemporaryMessage(tempMessageId, message.toString().trim());
+
+  // Envoyer le message via l'API
+  try {
+    const response = await fetch('/api/messages/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        conversation_id: conversationId,
+        content: message.toString().trim(),
+        sender_id: currentUserId
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error("Erreur lors de l'envoi du message");
+    }
+    
+    const result = await response.json();
+    console.log("Message envoyé avec succès via API, ID:", result.id);
+    
+  } catch (error) {
+    console.error("Erreur lors de l'envoi du message:", error);
+    showMessageError(tempMessageId, message.toString().trim(), error);
+  }
+});
+
+    // Fonction pour afficher un message temporaire
+    function displayTemporaryMessage(tempMessageId, content) {
+      const currentTime = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      
+      const messageHtml = `
+        <div class="flex items-end justify-end gap-2" id="${tempMessageId}">
+          <div class="max-w-[75%] px-3 py-2 rounded-lg bg-primary text-white rounded-br-none opacity-70">
+            <p class="whitespace-pre-wrap break-words">${content}</p>
+            <p class="text-xs mt-1 text-right text-primary-100">
+              ${currentTime}
+              <span class="ml-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </span>
+            </p>
+          </div>
+        </div>
+      `;
+      
       if (messageContainer) {
+        messageContainer.insertAdjacentHTML("beforeend", messageHtml);
         messageContainer.scrollTop = messageContainer.scrollHeight;
       }
-  
-      // Focus sur le champ de saisie
-      if (messageInput) {
-        messageInput.focus();
-      }
-  
-      // Récupérer l'ID de la conversation et l'ID de l'utilisateur
-      const conversationIdInput = document.querySelector('input[name="conversationId"]');
-      const conversationId = conversationIdInput?.value;
-      const currentUserId = currentUserIdElement?.value;
-  
-      console.log("Initialisation du chat:", { conversationId, currentUserId });
-  
-      // Vérifier si les informations nécessaires sont présentes
-      if (!conversationId || !currentUserId) {
-        console.error("ID de conversation ou utilisateur manquant");
-        return;
-      }
-  
-      // Charger les messages existants et configurer l'écoute en temps réel
-      setupMessagesListener(conversationId, currentUserId);
-  
-      // Gestionnaire d'envoi de message
-      form?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        const message = formData.get("message");
-  
-        if (!message || message.toString().trim() === "") return;
-  
-        // Vider le champ de saisie
-        messageInput.value = "";
-  
-        // Créer un ID temporaire pour le message
-        const tempMessageId = `temp-${Date.now()}`;
-        
-        // Afficher un message temporaire
-        const currentTime = new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        
-        const messageHtml = `
-          <div class="flex items-end justify-end gap-2" id="${tempMessageId}">
-            <div class="max-w-[75%] px-3 py-2 rounded-lg bg-primary text-white rounded-br-none opacity-70">
-              <p class="whitespace-pre-wrap break-words">${message.toString().trim()}</p>
-              <p class="text-xs mt-1 text-right text-primary-100">
-                ${currentTime}
-                <span class="ml-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline animate-pulse" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                  </svg>
-                </span>
+    }
+    
+    // Fonction pour afficher une erreur de message
+    function showMessageError(tempMessageId, content, error) {
+      const currentTime = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      
+      const tempMessageElement = document.getElementById(tempMessageId);
+      if (tempMessageElement) {
+        const errorMessageHtml = `
+          <div class="flex items-end justify-end gap-2">
+            <div class="max-w-[75%] px-3 py-2 rounded-lg bg-red-500 text-white rounded-br-none">
+              <p class="whitespace-pre-wrap break-words">${content}</p>
+              <p class="text-xs mt-1 text-right text-red-100">
+                ${currentTime} - Erreur: ${error.message || "Erreur inconnue"}
+                <button class="ml-1 text-white underline" onclick="resendMessage('${tempMessageId}', '${content.replace(/'/g, "\\'")}')">
+                  Réessayer
+                </button>
               </p>
             </div>
           </div>
         `;
-        
-        // Ajouter le message temporaire au conteneur
-        if (messageContainer) {
-          messageContainer.insertAdjacentHTML("beforeend", messageHtml);
-          messageContainer.scrollTop = messageContainer.scrollHeight;
+        tempMessageElement.outerHTML = errorMessageHtml;
+      }
+    }
+
+    // Fonction pour renvoyer un message qui a échoué
+    window.resendMessage = async (messageId, content) => {
+      const errorElement = document.getElementById(messageId);
+      if (errorElement) {
+        errorElement.remove();
+        if (messageInput) {
+          messageInput.value = content;
+          messageInput.focus();
         }
-  
-        // Envoyer le message à Firebase
-        try {
-          console.log("Envoi du message via Firebase...");
-          
-          // Ajouter le message à la collection "messages"
-          const messagesRef = collection(db, "messages");
-          const newMessage = await addDoc(messagesRef, {
-            conversation_id: conversationId,
-            content: message.toString().trim(),
-            sender_id: currentUserId,
-            read_by: [currentUserId],
-            created_at: serverTimestamp()
-          });
-          
-          console.log("Message créé avec succès:", newMessage.id);
-          
-          // Mettre à jour la conversation avec le dernier message
-          try {
-            const conversationRef = doc(db, "conversations", conversationId);
-            await updateDoc(conversationRef, {
-              last_message_id: newMessage.id,
-              updated_at: serverTimestamp()
-            });
-          } catch (updateError) {
-            console.warn("Erreur lors de la mise à jour de la conversation:", updateError);
-          }
-          
-          // Remplacer le message temporaire (sera fait automatiquement par l'écouteur)
-          const tempMessageElement = document.getElementById(tempMessageId);
-          if (tempMessageElement) {
-            tempMessageElement.classList.remove("opacity-70");
-          }
-          
-        } catch (error) {
-          console.error("Erreur lors de l'envoi du message:", error);
-          
-          // Gérer l'erreur dans l'interface
-          const tempMessageElement = document.getElementById(tempMessageId);
-          if (tempMessageElement) {
-            const errorMessageHtml = `
-              <div class="flex items-end justify-end gap-2">
-                <div class="max-w-[75%] px-3 py-2 rounded-lg bg-red-500 text-white rounded-br-none">
-                  <p class="whitespace-pre-wrap break-words">${message.toString().trim()}</p>
-                  <p class="text-xs mt-1 text-right text-red-100">
-                    ${currentTime} - Erreur: ${error.message || "Erreur inconnue"}
-                    <button class="ml-1 text-white underline" onclick="resendMessage('${tempMessageId}', '${message.toString().trim().replace(/'/g, "\\'")}')">
-                      Réessayer
-                    </button>
-                  </p>
-                </div>
-              </div>
-            `;
-            tempMessageElement.outerHTML = errorMessageHtml;
-          }
-        }
-      });
-  
-      // Fonction pour renvoyer un message qui a échoué
-      window.resendMessage = async (messageId, content) => {
-        const errorElement = document.getElementById(messageId);
-        if (errorElement) {
-          errorElement.remove();
-          if (messageInput) {
-            messageInput.value = content;
-            messageInput.focus();
-          }
-        }
-      };
-    });
-  
+      }
+    };
+    
+    // Vérifier les permissions de notification
+    function checkNotificationPermission() {
+      if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+        // Demander l'autorisation après une interaction utilisateur
+        document.addEventListener("click", function requestNotification() {
+          Notification.requestPermission();
+          document.removeEventListener("click", requestNotification);
+        }, { once: true });
+      }
+    }
+
     // Configurer l'écouteur de messages
     function setupMessagesListener(conversationId, currentUserId) {
       console.log("Configuration de l'écouteur de messages...");
+      
+      // Nettoyer l'écouteur précédent si existant
+      if (unsubscribeListener) {
+        unsubscribeListener();
+      }
       
       // Créer une requête pour obtenir les messages de cette conversation
       const messagesRef = collection(db, "messages");
@@ -401,46 +508,59 @@ const isValidConversation = !!conversationId;
         where("conversation_id", "==", conversationId),
         orderBy("created_at", "asc")
       );
+
+      console.log("Requête configurée, attente de messages...");
       
-      // Écouteur en temps réel
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        console.log("Mise à jour des messages reçue");
-        
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "added") {
-            const message = {
-              id: change.doc.id,
-              ...change.doc.data()
-            };
+      // Écouteur en temps réel avec gestion d'erreur
+      unsubscribeListener = onSnapshot(
+        q, 
+        { includeMetadataChanges: true },  // Inclure les métadonnées pour détecter les changements de synchronisation
+        (snapshot) => {
+          console.log("Mise à jour des messages reçue, documents:", snapshot.docs.length);
+          console.log("Statut des métadonnées: hasPendingWrites =", snapshot.metadata.hasPendingWrites);
+          console.log("Statut des métadonnées: fromCache =", snapshot.metadata.fromCache);
+          
+          snapshot.docChanges().forEach((change) => {
+            console.log("Changement détecté:", change.type, change.doc.id, "metadata:", change.doc.metadata);
             
-            // Vérifier si ce message existe déjà dans le DOM
-            if (!document.getElementById(`message-${message.id}`)) {
-              // Si c'est un message d'un autre utilisateur
-              if (message.sender_id !== currentUserId) {
-                // Récupérer les détails de l'expéditeur et afficher le message
-                fetchSenderDetails(message.sender_id).then(senderInfo => {
-                  const messageWithSender = {
-                    ...message,
-                    sender_initial: senderInfo?.pseudo_utilisateur?.charAt(0) || "?"
-                  };
-                  appendNewMessage(messageWithSender, currentUserId);
-                });
-              } else {
-                // Si c'est notre propre message, remplacer le message temporaire
-                updateSentMessage(message);
+            if (change.type === "added" || change.type === "modified") {
+              const message = {
+                id: change.doc.id,
+                ...change.doc.data()
+              };
+              
+              console.log("Message traité:", message.id, message.content);
+              
+              // Vérifier si ce message existe déjà dans le DOM
+              if (!document.getElementById(`message-${message.id}`)) {
+                // Si c'est un message d'un autre utilisateur
+                if (message.sender_id !== currentUserId) {
+                  // Récupérer les détails de l'expéditeur et afficher le message
+                  fetchSenderDetails(message.sender_id).then(senderInfo => {
+                    const messageWithSender = {
+                      ...message,
+                      sender_initial: senderInfo?.pseudo_utilisateur?.charAt(0) || "?"
+                    };
+                    appendNewMessage(messageWithSender, currentUserId);
+                  });
+                } else {
+                  // Si c'est notre propre message, remplacer le message temporaire
+                  updateSentMessage(message);
+                }
               }
             }
-          }
-        });
-      });
-      
-      // Nettoyer l'écouteur lorsque l'utilisateur quitte la page
-      window.addEventListener('beforeunload', () => {
-        console.log("Nettoyage de l'écouteur de messages");
-        unsubscribe();
-      });
+          });
+        }, 
+        (error) => {
+          console.error("Erreur de l'écouteur de messages:", error);
+          // Tentative de reconnexion après un délai
+          setTimeout(() => {
+            setupMessagesListener(conversationId, currentUserId);
+          }, 5000);
+        }
+      );
     }
-  
+
     // Récupérer les détails de l'expéditeur
     async function fetchSenderDetails(senderId) {
       try {
@@ -459,7 +579,7 @@ const isValidConversation = !!conversationId;
         return { pseudo_utilisateur: "?" };
       }
     }
-  
+
     // Ajouter un nouveau message au conteneur
     function appendNewMessage(message, currentUserId) {
       const messageContainer = document.getElementById("message-container");
@@ -547,24 +667,24 @@ const isValidConversation = !!conversationId;
         }
       }
     }
-  
+
     // Mettre à jour un message envoyé (remplacer le message temporaire)
     function updateSentMessage(message) {
       // Identifier tous les messages temporaires
       const tempMessages = document.querySelectorAll('[id^="temp-"]');
-      
+    
       if (tempMessages.length > 0) {
-        // Remplacer le dernier message temporaire
+        // Prendre le dernier message temporaire
         const lastTempMessage = tempMessages[tempMessages.length - 1];
         
         const messageTime = message.created_at ? 
           new Date(message.created_at.toDate()).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour: "2-digit", 
+            minute: "2-digit"
           }) : 
           new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour: "2-digit", 
+            minute: "2-digit"
           });
         
         const realMessageHtml = `
@@ -573,8 +693,8 @@ const isValidConversation = !!conversationId;
               <p class="whitespace-pre-wrap break-words">${message.content}</p>
               <p class="text-xs mt-1 text-right text-primary-100">
                 ${messageTime}
-                <span class="ml-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline opacity-70" viewBox="0 0 20 20" fill="currentColor">
+                <span class="ml-1" title="Lu">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                   </svg>
                 </span>
@@ -586,7 +706,7 @@ const isValidConversation = !!conversationId;
         lastTempMessage.outerHTML = realMessageHtml;
       }
     }
-  
+
     // Marquer un message comme lu
     async function markMessageAsRead(messageId, currentUserId) {
       try {
@@ -600,11 +720,9 @@ const isValidConversation = !!conversationId;
         console.error("Erreur lors du marquage du message comme lu:", error);
       }
     }
-  </script>
-  
-  <!-- Ajouter une balise script pour importer Firebase directement (pour le développement) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  });
+</script>
+
 <style>
   @keyframes fadeIn {
     from {
@@ -621,5 +739,3 @@ const isValidConversation = !!conversationId;
     animation: fadeIn 0.3s ease-out forwards;
   }
 </style>
-
-<script src="https://unpkg.com/pocketbase@0.17.3/dist/pocketbase.umd.js"></script>

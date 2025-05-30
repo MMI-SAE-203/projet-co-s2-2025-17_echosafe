@@ -1,8 +1,17 @@
 ---
 import Layout from "../../layouts/Layoutapp.astro";
 import PocketBase from "pocketbase";
+import { db } from "../../firebase.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 
-// Récupérer l'utilisateur connecté
+// Récupérer l'utilisateur connecté (l'authentification reste avec PocketBase)
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
@@ -16,14 +25,70 @@ if (!pb.authStore.isValid) {
 
 const currentUserId = pb.authStore.model.id;
 
-// Récupérer les conversations privées
-let privateConversations = { items: [] };
+// Récupérer les conversations privées depuis Firebase
+let privateConversations = [];
 try {
-  privateConversations = await pb.collection("conversations").getList(1, 5, {
-    filter: `type="private" && participants~"${currentUserId}"`,
-    sort: "-updated",
-    expand: "participants,last_message_id",
-  });
+  const conversationsRef = collection(db, "conversations");
+  const privateQuery = query(
+    conversationsRef,
+    where("type", "==", "private"),
+    where("participants", "array-contains", currentUserId),
+    orderBy("updated_at", "desc"),
+    limit(5)
+  );
+
+  const querySnapshot = await getDocs(privateQuery);
+
+  // Convertir les documents Firestore en objets JavaScript
+  privateConversations = await Promise.all(
+    querySnapshot.docs.map(async (doc) => {
+      const conversationData = {
+        id: doc.id,
+        ...doc.data(),
+        expand: { participants: [], last_message_id: null },
+      };
+
+      // Récupérer les participants de la conversation
+      for (const participantId of conversationData.participants || []) {
+        if (participantId !== currentUserId) {
+          // Récupérer les détails de l'autre participant depuis Firestore
+          const userRef = collection(db, "users");
+          const userQuery = query(
+            userRef,
+            where("__name__", "==", participantId)
+          );
+          const userSnapshot = await getDocs(userQuery);
+
+          if (!userSnapshot.empty) {
+            const userData = userSnapshot.docs[0].data();
+            conversationData.expand.participants.push({
+              id: participantId,
+              ...userData,
+            });
+          }
+        }
+      }
+
+      // Récupérer le dernier message s'il existe
+      if (conversationData.last_message_id) {
+        const messagesRef = collection(db, "messages");
+        const messageQuery = query(
+          messagesRef,
+          where("__name__", "==", conversationData.last_message_id)
+        );
+        const messageSnapshot = await getDocs(messageQuery);
+
+        if (!messageSnapshot.empty) {
+          conversationData.expand.last_message_id = {
+            id: messageSnapshot.docs[0].id,
+            ...messageSnapshot.docs[0].data(),
+          };
+        }
+      }
+
+      return conversationData;
+    })
+  );
 } catch (error) {
   console.error(
     "Erreur lors de la récupération des conversations privées:",
@@ -31,14 +96,71 @@ try {
   );
 }
 
-// Récupérer les conversations d'aide
-let helpConversations = { items: [] };
+// Récupérer les conversations d'aide depuis Firebase
+let helpConversations = [];
 try {
-  helpConversations = await pb.collection("conversations").getList(1, 5, {
-    filter: `type="help" && participants~"${currentUserId}"`,
-    sort: "-updated",
-    expand: "participants,last_message_id",
-  });
+  const conversationsRef = collection(db, "conversations");
+  const helpQuery = query(
+    conversationsRef,
+    where("type", "==", "help"),
+    where("participants", "array-contains", currentUserId),
+    orderBy("updated_at", "desc"),
+    limit(5)
+  );
+
+  const querySnapshot = await getDocs(helpQuery);
+
+  // Convertir les documents Firestore en objets JavaScript
+  helpConversations = await Promise.all(
+    querySnapshot.docs.map(async (doc) => {
+      const conversationData = {
+        id: doc.id,
+        ...doc.data(),
+        expand: { participants: [], last_message_id: null },
+      };
+
+      // Récupérer les participants de la conversation
+      for (const participantId of conversationData.participants || []) {
+        if (participantId !== currentUserId) {
+          // Récupérer les détails de l'autre participant depuis Firestore
+          const userRef = collection(db, "users");
+          const userQuery = query(
+            userRef,
+            where("__name__", "==", participantId)
+          );
+          const userSnapshot = await getDocs(userQuery);
+
+          if (!userSnapshot.empty) {
+            const userData = userSnapshot.docs[0].data();
+            userData.is_volunteer = userData.role === "volunteer"; // Mapper le champ role à is_volunteer
+            conversationData.expand.participants.push({
+              id: participantId,
+              ...userData,
+            });
+          }
+        }
+      }
+
+      // Récupérer le dernier message s'il existe
+      if (conversationData.last_message_id) {
+        const messagesRef = collection(db, "messages");
+        const messageQuery = query(
+          messagesRef,
+          where("__name__", "==", conversationData.last_message_id)
+        );
+        const messageSnapshot = await getDocs(messageQuery);
+
+        if (!messageSnapshot.empty) {
+          conversationData.expand.last_message_id = {
+            id: messageSnapshot.docs[0].id,
+            ...messageSnapshot.docs[0].data(),
+          };
+        }
+      }
+
+      return conversationData;
+    })
+  );
 } catch (error) {
   console.error(
     "Erreur lors de la récupération des conversations d'aide:",
@@ -72,7 +194,7 @@ function findOtherParticipant(conversation) {
 
         <div class="space-y-3">
           {
-            privateConversations.items.length === 0 ? (
+            privateConversations.length === 0 ? (
               <div class="text-center py-6 text-gray-500">
                 <p>Aucun message privé</p>
                 <p class="text-sm mt-1">
@@ -80,13 +202,8 @@ function findOtherParticipant(conversation) {
                 </p>
               </div>
             ) : (
-              privateConversations.items.map((conv) => {
+              privateConversations.map((conv) => {
                 const otherUser = findOtherParticipant(conv);
-                let avatarUrl = "";
-
-                if (otherUser?.avatar) {
-                  avatarUrl = pb.getFileUrl(otherUser, otherUser.avatar);
-                }
 
                 return (
                   <a
@@ -95,17 +212,9 @@ function findOtherParticipant(conversation) {
                   >
                     <div class="flex items-center">
                       <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                        {otherUser?.avatar ? (
-                          <img
-                            src={avatarUrl}
-                            alt=""
-                            class="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
-                            {otherUser?.pseudo_utilisateur?.charAt(0) || "?"}
-                          </div>
-                        )}
+                        <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+                          {otherUser?.pseudo_utilisateur?.charAt(0) || "?"}
+                        </div>
                       </div>
                       <div class="ml-3 flex-1">
                         <p class="font-medium">
@@ -145,7 +254,7 @@ function findOtherParticipant(conversation) {
 
         <div class="space-y-3">
           {
-            helpConversations.items.length === 0 ? (
+            helpConversations.length === 0 ? (
               <div class="text-center py-6 text-gray-500">
                 <p>Aucune conversation d'aide</p>
                 <p class="text-sm mt-1">
@@ -153,15 +262,10 @@ function findOtherParticipant(conversation) {
                 </p>
               </div>
             ) : (
-              helpConversations.items.map((conv) => {
+              helpConversations.map((conv) => {
                 const aidant = conv.expand?.participants?.find(
                   (p) => p.id !== currentUserId && p.is_volunteer
                 );
-                let avatarUrl = "";
-
-                if (aidant?.avatar) {
-                  avatarUrl = pb.getFileUrl(aidant, aidant.avatar);
-                }
 
                 return (
                   <a
@@ -170,17 +274,9 @@ function findOtherParticipant(conversation) {
                   >
                     <div class="flex items-center">
                       <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                        {aidant?.avatar ? (
-                          <img
-                            src={avatarUrl}
-                            alt=""
-                            class="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
-                            {aidant?.pseudo_utilisateur?.charAt(0) || "A"}
-                          </div>
-                        )}
+                        <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+                          {aidant?.pseudo_utilisateur?.charAt(0) || "A"}
+                        </div>
                       </div>
                       <div class="ml-3 flex-1">
                         <div class="flex justify-between">

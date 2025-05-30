@@ -21,9 +21,7 @@ export async function POST({ request }) {
     
     // Authentification avec PocketBase
     await pb.collection("users").authWithPassword(email, password);
-    
-    // Si on arrive ici, l'authentification a réussi
-    
+        
     // Définir une date d'expiration longue si "Se souvenir de moi" est coché
     const cookieExpiration = rememberMe 
       ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 an si "Se souvenir de moi" est coché

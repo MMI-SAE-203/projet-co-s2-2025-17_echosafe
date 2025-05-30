@@ -1,5 +1,3 @@
-migrateData();
-
 import PocketBase from 'pocketbase';
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, setDoc, doc } from "firebase/firestore";
@@ -22,6 +20,21 @@ const db = getFirestore(app);
 // Initialiser PocketBase
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 
+// Fonction pour nettoyer les objets (remplacer undefined par null ou "")
+function cleanObjectForFirestore(obj) {
+  const cleanObj = {};
+  for (const key in obj) {
+    // Si la valeur est undefined, la remplacer par une chaîne vide
+    cleanObj[key] = obj[key] === undefined ? "" : obj[key];
+    
+    // Si la valeur est null, la garder comme null
+    if (obj[key] === null) {
+      cleanObj[key] = null;
+    }
+  }
+  return cleanObj;
+}
+
 async function migrateData() {
   try {
     // 1. Migrer les utilisateurs
@@ -29,7 +42,8 @@ async function migrateData() {
     const users = await pb.collection("users").getFullList();
     
     for (const user of users) {
-      await setDoc(doc(db, "users", user.id), {
+      // Préparer l'objet utilisateur en remplaçant les undefined
+      const userData = cleanObjectForFirestore({
         pseudo_utilisateur: user.pseudo_utilisateur,
         email: user.email,
         prenom_utilisateur: user.prenom_utilisateur || "",
@@ -37,6 +51,9 @@ async function migrateData() {
         role: user.role || "user",
         created_at: new Date(user.created)
       });
+      
+      console.log(`Migration de l'utilisateur: ${user.id}`);
+      await setDoc(doc(db, "users", user.id), userData);
     }
     
     // 2. Migrer les conversations
@@ -44,13 +61,16 @@ async function migrateData() {
     const conversations = await pb.collection("conversations").getFullList();
     
     for (const conversation of conversations) {
-      await setDoc(doc(db, "conversations", conversation.id), {
+      // Préparer l'objet conversation en remplaçant les undefined
+      const conversationData = cleanObjectForFirestore({
         participants: conversation.participants || [],
         title: conversation.title || "",
         last_message_id: conversation.last_message_id || "",
         created_at: new Date(conversation.created),
         updated_at: new Date(conversation.updated)
       });
+      
+      await setDoc(doc(db, "conversations", conversation.id), conversationData);
     }
     
     // 3. Migrer les messages
@@ -58,7 +78,8 @@ async function migrateData() {
     const messages = await pb.collection("messages").getFullList();
     
     for (const message of messages) {
-      await setDoc(doc(db, "messages", message.id), {
+      // Préparer l'objet message en remplaçant les undefined
+      const messageData = cleanObjectForFirestore({
         conversation_id: message.conversation_id,
         sender_id: message.sender_id,
         content: message.content,
@@ -66,12 +87,17 @@ async function migrateData() {
         created_at: new Date(message.created),
         updated_at: new Date(message.updated)
       });
+      
+      await setDoc(doc(db, "messages", message.id), messageData);
     }
     
     console.log("Migration terminée avec succès !");
     
   } catch (error) {
     console.error("Erreur lors de la migration:", error);
+    console.error("Stack trace:", error.stack);
   }
 }
 
+// Appeler la fonction de migration après sa définition
+migrateData();

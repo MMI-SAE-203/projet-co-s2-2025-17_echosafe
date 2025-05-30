@@ -1,56 +1,82 @@
-import PocketBase from 'pocketbase';
+import { db } from '../../../firebase.js';
+import { 
+  collection, 
+  addDoc, 
+  doc, 
+  updateDoc, 
+  serverTimestamp,
+  getDoc
+} from "firebase/firestore";
 
-export const post = async ({ request }) => {
+export async function POST({ request }) {
   try {
-    const data = await request.json();
-    const { conversation_id, content, sender_id } = data;
-    
+    const body = await request.json();
+    const { conversation_id, content, sender_id } = body;
+
+    console.log("API: Réception d'une demande d'envoi", { conversation_id, sender_id });
+
     if (!conversation_id || !content || !sender_id) {
-      return new Response(JSON.stringify({ error: 'Données manquantes' }), { 
-        status: 400,
+      return new Response(
+        JSON.stringify({ 
+          error: "Données manquantes: conversation_id, content et sender_id sont requis" 
+        }), 
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Vérifier que la conversation existe
+    const conversationRef = doc(db, "conversations", conversation_id);
+    const conversationSnap = await getDoc(conversationRef);
+    
+    if (!conversationSnap.exists()) {
+      return new Response(
+        JSON.stringify({ error: "Conversation non trouvée" }), 
+        { 
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Ajouter le message
+    const messagesRef = collection(db, "messages");
+    const newMessage = await addDoc(messagesRef, {
+      conversation_id,
+      content,
+      sender_id,
+      read_by: [sender_id],
+      created_at: serverTimestamp()
+    });
+
+    console.log("API: Message créé avec ID", newMessage.id);
+
+    // Mettre à jour la conversation avec le dernier message
+    await updateDoc(conversationRef, {
+      last_message_id: newMessage.id,
+      updated_at: serverTimestamp()
+    });
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        id: newMessage.id 
+      }), 
+      { 
+        status: 200,
         headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
-    // Initialiser PocketBase
-    const pb = new PocketBase("https://echosafe.eloishenry.fr");
-    
-    // Authentification admin - REMPLACEZ CES VALEURS par vos identifiants réels
-    // ⚠️ Pour des raisons de sécurité, ces identifiants devraient être dans des variables d'environnement
-    try {
-      await pb.admins.authWithPassword("bryan.thierry@edu.univ-fcomte.fr", "1234567890");
-      console.log("Authentification admin réussie");
-    } catch (authError) {
-      console.error("Erreur d'authentification admin:", authError);
-      // On continue quand même pour tester d'autres méthodes
-    }
-    
-    // Créer le message
-    const newMessage = await pb.collection("messages").create({
-      conversation_id: conversation_id,
-      sender_id: sender_id,
-      content: content,
-      read_by: [sender_id]
-    });
-    
-    console.log("Message créé avec succès:", newMessage);
-    
-    return new Response(JSON.stringify(newMessage), { 
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+      }
+    );
   } catch (error) {
-    console.error('Erreur API détaillée:', error);
-    
-    // Retourner une réponse d'erreur plus détaillée
-    return new Response(JSON.stringify({ 
-      error: 'Erreur serveur', 
-      message: error.message,
-      details: error.data ? error.data : null,
-      status: error.status || 500
-    }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    console.error('Erreur API:', error);
+    return new Response(
+      JSON.stringify({ error: error.message || "Une erreur est survenue" }), 
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }

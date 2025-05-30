@@ -1,12 +1,17 @@
 ---
 import Layout from "../../../layouts/Layoutapp.astro";
-import ChatConversation from "../../../components/ChatConversation.astro";
 import PocketBase from "pocketbase";
+import { db } from "../../../firebase.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+} from "firebase/firestore";
 
-// Récupérer l'ID de l'utilisateur dans l'URL
-const { userId } = Astro.params;
-
-// Récupérer l'utilisateur connecté
+// Récupérer l'utilisateur connecté (l'authentification reste avec PocketBase)
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
@@ -20,79 +25,54 @@ if (!pb.authStore.isValid) {
 
 const currentUserId = pb.authStore.model.id;
 
-// Récupérer les informations de l'autre utilisateur
-let otherUser = null;
+// Récupérer la liste des utilisateurs depuis Firestore (exclure l'utilisateur courant)
+let users = [];
 try {
-  otherUser = await pb.collection("users").getOne(userId);
+  const usersRef = collection(db, "users");
+  const usersSnapshot = await getDocs(usersRef);
+
+  users = usersSnapshot.docs
+    .map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+    .filter((user) => user.id !== currentUserId);
 } catch (error) {
-  console.error("Erreur lors de la récupération de l'utilisateur:", error);
-  return Astro.redirect("/messages/prives");
+  console.error("Erreur lors de la récupération des utilisateurs:", error);
 }
 
-// Vérifier si une conversation existe déjà
-let conversation = null;
+// Récupérer les conversations privées existantes depuis Firestore
+let existingConversations = {};
 try {
-  const conversations = await pb.collection("conversations").getList(1, 1, {
-    filter: `type="private" && participants~"${currentUserId}" && participants~"${userId}"`,
-  });
-
-  if (conversations.items.length > 0) {
-    conversation = conversations.items[0];
-  } else {
-    // Créer une nouvelle conversation
-    conversation = await pb.collection("conversations").create({
-      type: "private",
-      participants: [currentUserId, userId],
-    });
-  }
-} catch (error) {
-  console.error(
-    "Erreur lors de la récupération/création de la conversation:",
-    error
+  const conversationsRef = collection(db, "conversations");
+  const q = query(
+    conversationsRef,
+    where("type", "==", "private"),
+    where("participants", "array-contains", currentUserId)
   );
-  return Astro.redirect("/messages/prives");
-}
 
-// Récupérer les messages
-let messages = [];
-if (conversation) {
-  try {
-    const messagesData = await pb.collection("messages").getList(1, 100, {
-      filter: `conversation_id="${conversation.id}"`,
-      sort: "created",
-    });
-    messages = messagesData.items;
+  const querySnapshot = await getDocs(q);
 
-    // Marquer les messages comme lus
-    const unreadMessages = messages.filter(
-      (msg) =>
-        msg.sender_id !== currentUserId && !msg.read_by.includes(currentUserId)
+  // Créer un map des utilisateurs avec qui l'utilisateur a déjà une conversation
+  querySnapshot.docs.forEach((doc) => {
+    const conversation = doc.data();
+    const otherUserId = conversation.participants.find(
+      (id) => id !== currentUserId
     );
-
-    for (const msg of unreadMessages) {
-      await pb.collection("messages").update(msg.id, {
-        read_by: [...msg.read_by, currentUserId],
-      });
+    if (otherUserId) {
+      existingConversations[otherUserId] = doc.id;
     }
-  } catch (error) {
-    console.error("Erreur lors de la récupération des messages:", error);
-  }
+  });
+} catch (error) {
+  console.error("Erreur lors de la récupération des conversations:", error);
 }
-
-// Préparer l'URL de l'avatar
-let avatarUrl = "";
-if (otherUser?.avatar) {
-  avatarUrl = pb.getFileUrl(otherUser, otherUser.avatar);
-}
-otherUser = otherUser || {};
-otherUser.avatarUrl = avatarUrl;
 ---
 
 <Layout>
-  <div class="container mx-auto px-4 py-4 md:py-8 h-[calc(100vh-80px)]">
-    <div class="flex items-center mb-4">
+  <div class="container mx-auto px-4 py-8">
+    <div class="mb-4 flex items-center justify-between">
       <a
-        href="/messages/prives"
+        href="/messages"
         class="text-primary hover:underline flex items-center"
       >
         <svg
@@ -108,17 +88,62 @@ otherUser.avatarUrl = avatarUrl;
             stroke-width="2"
             d="M15 19l-7-7 7-7"></path>
         </svg>
-        Retour aux utilisateurs
+        Retour aux messages
       </a>
+      <h1 class="text-2xl font-bold text-primary">Messages privés</h1>
     </div>
 
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
-      <ChatConversation
-        conversationId={conversation?.id}
-        otherUser={otherUser}
-        messages={messages}
-        currentUserId={currentUserId}
-      />
+    <div class="bg-white rounded-lg shadow p-6">
+      <p class="text-gray-600 mb-6">
+        Sélectionnez un utilisateur pour démarrer ou continuer une conversation.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {
+          users.map((user) => {
+            const hasExistingConversation = user.id in existingConversations;
+
+            return (
+              <div class="border rounded-lg overflow-hidden hover:shadow-md transition">
+                <div class="p-4">
+                  <div class="flex items-center mb-3">
+                    <div class="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                      <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+                        {user.pseudo_utilisateur?.charAt(0) || "?"}
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <p class="font-semibold">
+                        {user.pseudo_utilisateur || "Utilisateur"}
+                      </p>
+                      <p class="text-sm text-gray-500">
+                        {user.role === "volunteer" ? "Aidant" : "Utilisateur"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`/messages/prives/${user.id}`}
+                    class="block w-full py-2 text-center bg-primary text-white rounded hover:bg-primary/90 transition"
+                  >
+                    {hasExistingConversation
+                      ? "Continuer la discussion"
+                      : "Démarrer une discussion"}
+                  </a>
+                </div>
+              </div>
+            );
+          })
+        }
+      </div>
+
+      {
+        users.length === 0 && (
+          <div class="text-center py-8">
+            <p class="text-gray-500">Aucun autre utilisateur disponible.</p>
+          </div>
+        )
+      }
     </div>
   </div>
 </Layout>
