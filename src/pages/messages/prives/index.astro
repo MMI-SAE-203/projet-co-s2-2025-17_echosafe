@@ -24,6 +24,7 @@ if (!pb.authStore.isValid) {
 }
 
 const currentUserId = pb.authStore.model.id;
+const isVolunteer = pb.authStore.model.is_volunteer || false;
 
 // Récupérer la liste des utilisateurs depuis Firestore (exclure l'utilisateur courant)
 let users = [];
@@ -69,13 +70,19 @@ try {
 
 // Séparer les utilisateurs avec qui on a déjà parlé et les nouveaux
 const recentUsers = users.filter((user) => user.id in existingConversations);
-const newUsers = users.filter((user) => !(user.id in existingConversations));
+
+// Séparer les utilisateurs par type
+const volunteers = users.filter(user => user.is_volunteer === true || user.role === "volunteer");
+const regularUsers = users.filter(user => user.is_volunteer !== true && user.role !== "volunteer");
+
+// Nouveaux amis potentiels (utilisateurs normaux avec qui on n'a pas encore parlé)
+const potentialFriends = regularUsers.filter(user => !(user.id in existingConversations));
 ---
 
 <Layout>
-  <div class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-6xl">
-    <!-- En-tête mobile avec navigation -->
-    <div class="relative bg-white shadow-sm rounded-lg mb-4 sm:mb-6 sm:static sm:shadow-none sm:bg-transparent">
+  <div class="container mx-auto px-0 sm:px-4 py-0 sm:py-6 max-w-6xl">
+    <!-- En-tête mobile avec navigation (pleine largeur sur mobile) -->
+    <div class="bg-white shadow-sm mb-4 sm:mb-6 sm:static sm:shadow-none sm:bg-transparent sm:rounded-lg sm:px-0">
       <div class="flex items-center justify-between p-4 sm:px-0 sm:py-2">
         <div class="flex items-center">
           <a
@@ -153,112 +160,213 @@ const newUsers = users.filter((user) => !(user.id in existingConversations));
         </div>
       </div>
 
-      <!-- Onglets de navigation rapide pour mobile -->
-      <div class="flex border-t sm:hidden">
-        <a href="/messages/prives" class="flex-1 py-3 text-center text-primary border-b-2 border-primary font-medium text-sm">
-          Messages privés
-        </a>
-        <a href="/messages/aide" class="flex-1 py-3 text-center text-gray-500 hover:text-secondary font-medium text-sm">
-          Aide
-        </a>
-      </div>
+      <!-- Onglets de navigation rapide pour mobile (uniquement pour les utilisateurs standard) -->
+      {!isVolunteer && (
+        <div class="flex border-t sm:hidden">
+          <a href="/messages/prives" class="flex-1 py-3 text-center text-primary border-b-2 border-primary font-medium text-sm">
+            Messages privés
+          </a>
+          <a href="/messages/aide" class="flex-1 py-3 text-center text-gray-500 hover:text-secondary font-medium text-sm">
+            Aide
+          </a>
+        </div>
+      )}
     </div>
 
-    {
-      recentUsers.length > 0 && (
-        <div class="mb-6">
-          <h2 class="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 px-3 sm:px-0 flex items-center">
+    <!-- Navigation d'onglets desktop (visible uniquement sur SM et plus, uniquement pour les utilisateurs standard) -->
+    <div class="px-3 sm:px-0">
+      {!isVolunteer && (
+        <div class="hidden sm:flex mb-6 border-b">
+          <a 
+            href="/messages/prives" 
+            class="px-6 py-3 text-primary border-b-2 border-primary font-medium"
+            aria-current="page"
+          >
+            Messages privés
+          </a>
+          <a 
+            href="/messages/aide" 
+            class="px-6 py-3 text-gray-500 hover:text-secondary hover:border-b-2 hover:border-secondary font-medium"
+          >
+            Trouver de l'aide
+          </a>
+        </div>
+      )}
+
+      {
+        recentUsers.length > 0 && (
+          <div class="mb-6">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 px-3 sm:px-0 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 mr-2 text-primary"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Conversations récentes
+            </h2>
+            
+            <!-- Affichage en liste horizontale sur mobile -->
+            <div class="flex overflow-x-auto pb-2 sm:hidden px-3 -mx-3 space-x-3 hide-scrollbar recent-conversations">
+              {recentUsers.map((user) => (
+                <a
+                  href={`/messages/prives/${user.id}`}
+                  class="flex-shrink-0 w-48 flex items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm"
+                >
+                  <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border-2 border-primary">
+                    <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+                      {user.pseudo_utilisateur?.charAt(0) || "?"}
+                    </div>
+                  </div>
+                  <div class="ml-3 flex-1 min-w-0">
+                    <p class="font-semibold text-gray-800 truncate text-sm">
+                      {user.pseudo_utilisateur || "Utilisateur"}
+                    </p>
+                    <p class="text-xs text-gray-500 flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-3 w-3 mr-1 text-green-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Continuer
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
+            
+            <!-- Affichage en grille sur desktop -->
+            <div class="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {recentUsers.map((user) => (
+                <a
+                  href={`/messages/prives/${user.id}`}
+                  class="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
+                >
+                  <div class="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border-2 border-primary">
+                    <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
+                      {user.pseudo_utilisateur?.charAt(0) || "?"}
+                    </div>
+                  </div>
+                  <div class="ml-3 flex-1 min-w-0">
+                    <p class="font-semibold text-gray-800 truncate">
+                      {user.pseudo_utilisateur || "Utilisateur"}
+                    </p>
+                    <p class="text-sm text-gray-500 flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-3 w-3 mr-1 text-green-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Continuer la discussion
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )
+      }
+    </div>
+
+    <!-- Section Trouver des amis (uniquement pour les utilisateurs standards) -->
+    {!isVolunteer && potentialFriends.length > 0 && (
+      <div class="mb-8 px-3 sm:px-0">
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 mr-2 text-primary"
+              class="h-5 w-5 mr-2 text-blue-500"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
               <path
-                fill-rule="evenodd"
-                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                clip-rule="evenodd"
-              />
+                d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"
+              ></path>
             </svg>
-            Conversations récentes
+            Trouver des amis
           </h2>
-          
-          <!-- Affichage en liste horizontale sur mobile -->
-          <div class="flex overflow-x-auto pb-2 sm:hidden px-3 -mx-3 space-x-3 hide-scrollbar recent-conversations">
-            {recentUsers.map((user) => (
-              <a
-                href={`/messages/prives/${user.id}`}
-                class="flex-shrink-0 w-48 flex items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm"
-              >
-                <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border-2 border-primary">
-                  <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
-                    {user.pseudo_utilisateur?.charAt(0) || "?"}
-                  </div>
-                </div>
-                <div class="ml-3 flex-1 min-w-0">
-                  <p class="font-semibold text-gray-800 truncate text-sm">
-                    {user.pseudo_utilisateur || "Utilisateur"}
-                  </p>
-                  <p class="text-xs text-gray-500 flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-3 w-3 mr-1 text-green-500"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    Continuer
-                  </p>
-                </div>
-              </a>
-            ))}
-          </div>
-          
-          <!-- Affichage en grille sur desktop -->
-          <div class="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {recentUsers.map((user) => (
-              <a
-                href={`/messages/prives/${user.id}`}
-                class="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
-              >
-                <div class="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border-2 border-primary">
-                  <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
-                    {user.pseudo_utilisateur?.charAt(0) || "?"}
-                  </div>
-                </div>
-                <div class="ml-3 flex-1 min-w-0">
-                  <p class="font-semibold text-gray-800 truncate">
-                    {user.pseudo_utilisateur || "Utilisateur"}
-                  </p>
-                  <p class="text-sm text-gray-500 flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-3 w-3 mr-1 text-green-500"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    Continuer la discussion
-                  </p>
-                </div>
-              </a>
-            ))}
-          </div>
+          <button id="show-all-friends" class="text-primary text-sm font-medium hover:underline">
+            Voir tous
+          </button>
         </div>
-      )
-    }
 
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- Liste des amis potentiels sur mobile (affichage horizontal) -->
+        <div class="flex overflow-x-auto pb-2 sm:hidden -mx-3 space-x-3 hide-scrollbar potential-friends">
+          {potentialFriends.slice(0, 6).map((user) => (
+            <div class="flex-shrink-0 w-40 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+              <div class="h-24 bg-blue-50 flex items-center justify-center">
+                <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden border-2 border-blue-400">
+                  <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
+                    {user.pseudo_utilisateur?.charAt(0) || "?"}
+                  </div>
+                </div>
+              </div>
+              <div class="p-3">
+                <p class="font-semibold text-gray-800 truncate text-sm text-center">
+                  {user.pseudo_utilisateur || "Utilisateur"}
+                </p>
+                <a
+                  href={`/messages/prives/${user.id}`}
+                  class="block w-full mt-2 py-1.5 px-2 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors text-center"
+                >
+                  Envoyer un message
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <!-- Liste des amis potentiels sur desktop (affichage en grille) -->
+        <div class="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 potential-friends-grid">
+          {potentialFriends.slice(0, 10).map((user) => (
+            <div class="bg-white rounded-lg border border-gray-200 hover:shadow-md transition overflow-hidden group">
+              <div class="h-28 bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden border-2 border-blue-400">
+                  <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
+                    {user.pseudo_utilisateur?.charAt(0) || "?"}
+                  </div>
+                </div>
+              </div>
+              <div class="p-3">
+                <p class="font-semibold text-gray-800 truncate text-center">
+                  {user.pseudo_utilisateur || "Utilisateur"}
+                </p>
+                <a
+                  href={`/messages/prives/${user.id}`}
+                  class="block w-full mt-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center"
+                >
+                  Envoyer un message
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- Section tous les utilisateurs (pleine largeur sur mobile) -->
+    <div class="sm:bg-white sm:rounded-lg sm:shadow-lg sm:overflow-hidden">
+      <!-- En-tête de la section -->
       <div class="border-b px-4 sm:px-6 py-3 sm:py-4 bg-gray-50">
         <h2 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
           <svg
@@ -275,74 +383,66 @@ const newUsers = users.filter((user) => !(user.id in existingConversations));
         </h2>
       </div>
 
-      <div class="p-4 sm:p-6">
-        <p class="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
-          Sélectionnez un utilisateur pour démarrer ou continuer une
-          conversation.
-        </p>
+      <!-- Liste des utilisateurs (style différent sur mobile vs desktop) -->
+      <div class="user-grid sm:p-0">
+        {
+          users.length > 0 ? (
+            <div class="divide-y divide-gray-100">
+              {users.map((user) => {
+                const hasExistingConversation = user.id in existingConversations;
 
-        <div
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 user-grid"
-        >
-          {
-            users.map((user) => {
-              const hasExistingConversation = user.id in existingConversations;
-
-              return (
-                <div class="border rounded-lg overflow-hidden hover:shadow-md transition bg-white">
-                  <div class="p-3 sm:p-4">
-                    <div class="flex items-center mb-2 sm:mb-3">
-                      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                        <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg">
-                          {user.pseudo_utilisateur?.charAt(0) || "?"}
-                        </div>
-                      </div>
-                      <div class="ml-3">
-                        <p class="font-semibold text-gray-800 text-sm sm:text-base">
-                          {user.pseudo_utilisateur || "Utilisateur"}
-                        </p>
-                        <p class="text-xxs sm:text-xs text-gray-500">
-                          {user.role === "volunteer" ? (
-                            <span class="inline-flex items-center bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="h-3 w-3 mr-1"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" />
-                              </svg>
-                              Aidant
-                            </span>
-                          ) : (
-                            <span>Utilisateur</span>
-                          )}
-                        </p>
+                return (
+                  <a
+                    href={`/messages/prives/${user.id}`}
+                    class="flex items-center p-4 sm:p-6 hover:bg-gray-50 transition"
+                  >
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                      <div class="w-full h-full flex items-center justify-center bg-primary text-white text-lg sm:text-xl">
+                        {user.pseudo_utilisateur?.charAt(0) || "?"}
                       </div>
                     </div>
-
-                    <a
-                      href={`/messages/prives/${user.id}`}
-                      class={`block w-full py-2 text-center rounded transition text-sm sm:text-base ${
-                        hasExistingConversation
-                          ? "bg-gray-100 text-primary hover:bg-gray-200 border border-primary"
-                          : "bg-primary text-white hover:bg-primary/90"
-                      }`}
-                    >
-                      {hasExistingConversation
-                        ? "Continuer la discussion"
-                        : "Démarrer une discussion"}
-                    </a>
-                  </div>
-                </div>
-              );
-            })
-          }
-        </div>
-
-        {
-          users.length === 0 && (
-            <div class="text-center py-6 sm:py-8 bg-gray-50 rounded-lg">
+                    <div class="ml-4 flex-1">
+                      <p class="font-semibold text-gray-800 text-base sm:text-lg">
+                        {user.pseudo_utilisateur || "Utilisateur"}
+                      </p>
+                      <p class="text-sm text-gray-500 mt-1">
+                        {user.is_volunteer === true || user.role === "volunteer" ? (
+                          <span class="inline-flex items-center bg-secondary/10 text-secondary px-2 py-0.5 rounded-full text-xs">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              class="h-3 w-3 mr-1"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" />
+                            </svg>
+                            Aidant
+                          </span>
+                        ) : (
+                          <span>Utilisateur</span>
+                        )}
+                      </p>
+                    </div>
+                    <div class="text-primary">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          ) : (
+            <div class="text-center py-6 sm:py-8 bg-gray-50">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-10 sm:h-12 w-10 sm:w-12 mx-auto text-gray-400 mb-3 sm:mb-4"
@@ -369,6 +469,58 @@ const newUsers = users.filter((user) => !(user.id in existingConversations));
         }
       </div>
     </div>
+
+    <!-- Modal pour voir tous les amis potentiels (caché par défaut) -->
+    <div id="all-friends-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-gray-800">Trouver des amis</h3>
+          <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-4 overflow-y-auto max-h-[calc(90vh-60px)]">
+          <div class="relative mb-4">
+            <input
+              type="text"
+              id="search-friends-modal"
+              placeholder="Rechercher un ami..."
+              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+            />
+            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 modal-friend-grid">
+            {potentialFriends.map((user) => (
+              <div
+                class="flex flex-col items-center p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
+                data-name={user.pseudo_utilisateur || "Utilisateur"}
+              >
+                <div class="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border-2 border-blue-400">
+                  <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
+                    {user.pseudo_utilisateur?.charAt(0) || "?"}
+                  </div>
+                </div>
+                <p class="font-semibold text-gray-800 text-center mt-2">
+                  {user.pseudo_utilisateur || "Utilisateur"}
+                </p>
+                <a
+                  href={`/messages/prives/${user.id}`}
+                  class="block w-full mt-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center"
+                >
+                  Envoyer un message
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </Layout>
 
@@ -380,7 +532,7 @@ const newUsers = users.filter((user) => !(user.id in existingConversations));
     
     const performSearch = (searchValue) => {
       const searchLower = searchValue.toLowerCase();
-      const userCards = document.querySelectorAll(".user-grid > div");
+      const userCards = document.querySelectorAll(".user-grid a");
 
       userCards.forEach((card) => {
         const userName = card
@@ -409,6 +561,51 @@ const newUsers = users.filter((user) => !(user.id in existingConversations));
         if (searchInputDesktop) searchInputDesktop.value = e.target.value;
       });
     }
+
+    // Gérer la modal "Voir tous les amis"
+    const showAllFriendsBtn = document.getElementById("show-all-friends");
+    const allFriendsModal = document.getElementById("all-friends-modal");
+    const closeModalBtn = document.getElementById("close-modal");
+    const searchFriendsModal = document.getElementById("search-friends-modal");
+
+    if (showAllFriendsBtn && allFriendsModal) {
+      showAllFriendsBtn.addEventListener("click", () => {
+        allFriendsModal.classList.remove("hidden");
+        document.body.style.overflow = "hidden"; // Empêcher le défilement du corps de page
+      });
+    }
+
+    if (closeModalBtn && allFriendsModal) {
+      closeModalBtn.addEventListener("click", () => {
+        allFriendsModal.classList.add("hidden");
+        document.body.style.overflow = ""; // Restaurer le défilement
+      });
+
+      // Fermer également en cliquant en dehors de la modal
+      allFriendsModal.addEventListener("click", (e) => {
+        if (e.target === allFriendsModal) {
+          allFriendsModal.classList.add("hidden");
+          document.body.style.overflow = "";
+        }
+      });
+    }
+
+    // Recherche dans la modal
+    if (searchFriendsModal) {
+      searchFriendsModal.addEventListener("input", (e) => {
+        const searchValue = e.target.value.toLowerCase();
+        const friendCards = document.querySelectorAll(".modal-friend-grid > div");
+
+        friendCards.forEach((card) => {
+          const userName = card.getAttribute("data-name").toLowerCase();
+          if (userName.includes(searchValue)) {
+            card.style.display = "";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      });
+    }
   });
 </script>
 
@@ -430,8 +627,19 @@ const newUsers = users.filter((user) => !(user.id in existingConversations));
   }
   
   /* Animation subtile pour les éléments de la liste de défilement horizontal */
-  .recent-conversations > a:active {
+  .recent-conversations > a:active,
+  .potential-friends > div:active {
     transform: scale(0.98);
     transition: transform 0.1s;
+  }
+
+  /* Animation pour la modal */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  #all-friends-modal:not(.hidden) {
+    animation: fadeIn 0.2s ease-out;
   }
 </style>
