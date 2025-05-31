@@ -24,7 +24,8 @@ if (!pb.authStore.isValid) {
 }
 
 const currentUserId = pb.authStore.model.id;
-const isVolunteer = pb.authStore.model.is_volunteer || false;
+// Vérification stricte du statut de bénévole
+const isVolunteer = pb.authStore.model.is_volunteer === true;
 
 // Récupérer la liste des utilisateurs depuis Firestore (exclure l'utilisateur courant)
 let users = [];
@@ -71,12 +72,19 @@ try {
 // Séparer les utilisateurs avec qui on a déjà parlé et les nouveaux
 const recentUsers = users.filter((user) => user.id in existingConversations);
 
-// Séparer les utilisateurs par type
-const volunteers = users.filter(user => user.is_volunteer === true || user.role === "volunteer");
-const regularUsers = users.filter(user => user.is_volunteer !== true && user.role !== "volunteer");
+// Séparer les utilisateurs par type (comparaison stricte)
+const volunteers = users.filter(user => 
+  user.is_volunteer === true || user.role === "volunteer"
+);
+
+const regularUsers = users.filter(user => 
+  user.is_volunteer !== true && user.role !== "volunteer"
+);
 
 // Nouveaux amis potentiels (utilisateurs normaux avec qui on n'a pas encore parlé)
-const potentialFriends = regularUsers.filter(user => !(user.id in existingConversations));
+const potentialFriends = regularUsers.filter(user => 
+  !(user.id in existingConversations)
+);
 ---
 
 <Layout>
@@ -313,7 +321,10 @@ const potentialFriends = regularUsers.filter(user => !(user.id in existingConver
         <!-- Liste des amis potentiels sur mobile (affichage horizontal) -->
         <div class="flex overflow-x-auto pb-2 sm:hidden -mx-3 space-x-3 hide-scrollbar potential-friends">
           {potentialFriends.slice(0, 6).map((user) => (
-            <div class="flex-shrink-0 w-40 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <a
+              href={`/messages/prives/${user.id}`}
+              class="flex-shrink-0 w-40 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
+            >
               <div class="h-24 bg-blue-50 flex items-center justify-center">
                 <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden border-2 border-blue-400">
                   <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
@@ -325,21 +336,21 @@ const potentialFriends = regularUsers.filter(user => !(user.id in existingConver
                 <p class="font-semibold text-gray-800 truncate text-sm text-center">
                   {user.pseudo_utilisateur || "Utilisateur"}
                 </p>
-                <a
-                  href={`/messages/prives/${user.id}`}
-                  class="block w-full mt-2 py-1.5 px-2 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors text-center"
-                >
+                <div class="w-full mt-2 py-1.5 px-2 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors text-center">
                   Envoyer un message
-                </a>
+                </div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
 
         <!-- Liste des amis potentiels sur desktop (affichage en grille) -->
         <div class="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 potential-friends-grid">
           {potentialFriends.slice(0, 10).map((user) => (
-            <div class="bg-white rounded-lg border border-gray-200 hover:shadow-md transition overflow-hidden group">
+            <a
+              href={`/messages/prives/${user.id}`}
+              class="bg-white rounded-lg border border-gray-200 hover:shadow-md transition overflow-hidden group"
+            >
               <div class="h-28 bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                 <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden border-2 border-blue-400">
                   <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
@@ -351,14 +362,11 @@ const potentialFriends = regularUsers.filter(user => !(user.id in existingConver
                 <p class="font-semibold text-gray-800 truncate text-center">
                   {user.pseudo_utilisateur || "Utilisateur"}
                 </p>
-                <a
-                  href={`/messages/prives/${user.id}`}
-                  class="block w-full mt-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center"
-                >
+                <div class="w-full mt-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center">
                   Envoyer un message
-                </a>
+                </div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </div>
@@ -497,7 +505,8 @@ const potentialFriends = regularUsers.filter(user => !(user.id in existingConver
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 modal-friend-grid">
             {potentialFriends.map((user) => (
-              <div
+              <a
+                href={`/messages/prives/${user.id}`}
                 class="flex flex-col items-center p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
                 data-name={user.pseudo_utilisateur || "Utilisateur"}
               >
@@ -509,13 +518,10 @@ const potentialFriends = regularUsers.filter(user => !(user.id in existingConver
                 <p class="font-semibold text-gray-800 text-center mt-2">
                   {user.pseudo_utilisateur || "Utilisateur"}
                 </p>
-                <a
-                  href={`/messages/prives/${user.id}`}
-                  class="block w-full mt-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center"
-                >
+                <div class="w-full mt-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center">
                   Envoyer un message
-                </a>
-              </div>
+                </div>
+              </a>
             ))}
           </div>
         </div>
@@ -594,7 +600,7 @@ const potentialFriends = regularUsers.filter(user => !(user.id in existingConver
     if (searchFriendsModal) {
       searchFriendsModal.addEventListener("input", (e) => {
         const searchValue = e.target.value.toLowerCase();
-        const friendCards = document.querySelectorAll(".modal-friend-grid > div");
+        const friendCards = document.querySelectorAll(".modal-friend-grid > a");
 
         friendCards.forEach((card) => {
           const userName = card.getAttribute("data-name").toLowerCase();
@@ -628,7 +634,7 @@ const potentialFriends = regularUsers.filter(user => !(user.id in existingConver
   
   /* Animation subtile pour les éléments de la liste de défilement horizontal */
   .recent-conversations > a:active,
-  .potential-friends > div:active {
+  .potential-friends > a:active {
     transform: scale(0.98);
     transition: transform 0.1s;
   }

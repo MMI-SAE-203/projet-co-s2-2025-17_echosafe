@@ -32,36 +32,7 @@ if (isVolunteer) {
   return Astro.redirect("/messages/prives");
 }
 
-try {
-  // Récupérer tous les aidants de PocketBase
-  const pocketBaseVolunteers = await pb.collection("users").getFullList({
-    filter: "is_volunteer = true",
-  });
-
-  console.log(`${pocketBaseVolunteers.length} aidants trouvés dans PocketBase`);
-
-  // Synchroniser chaque aidant avec Firebase
-  for (const volunteer of pocketBaseVolunteers) {
-    const volunteerRef = doc(db, "users", volunteer.id);
-
-    // Données à synchroniser
-    const userData = {
-      pseudo_utilisateur:
-        volunteer.pseudo || volunteer.prenom_utilisateur || "Aidant",
-      is_volunteer: true,
-      role: "volunteer",
-      bio: volunteer.bio || "Aidant bénévole disponible pour vous aider.",
-    };
-
-    // Créer ou mettre à jour l'aidant dans Firebase
-    await setDoc(volunteerRef, userData, { merge: true });
-    console.log(`Aidant ${volunteer.id} synchronisé avec Firebase`);
-  }
-} catch (syncError) {
-  console.error("Erreur lors de la synchronisation des aidants:", syncError);
-}
-
-// Vérifier et créer l'utilisateur courant dans Firebase s'il n'existe pas
+// Assurer que l'utilisateur courant existe dans Firebase
 try {
   const currentUserRef = doc(db, "users", currentUserId);
   const currentUserSnap = await getDoc(currentUserRef);
@@ -71,8 +42,8 @@ try {
     await setDoc(currentUserRef, {
       pseudo_utilisateur:
         pb.authStore.model.pseudo_utilisateur || "Utilisateur",
-      is_volunteer: pb.authStore.model.is_volunteer || false,
-      role: pb.authStore.model.is_volunteer ? "volunteer" : "user",
+      is_volunteer: false,
+      role: "user",
     });
   }
 } catch (error) {
@@ -82,85 +53,217 @@ try {
   );
 }
 
-// Récupérer la liste des aidants (volontaires) depuis Firestore
+// Récupérer d'abord les aidants bénévoles de PocketBase et les synchroniser avec Firebase
+try {
+  const pocketBaseVolunteers = await pb.collection("users").getFullList({
+    filter: "is_volunteer = true",
+  });
+
+  console.log(
+    `${pocketBaseVolunteers.length} aidants bénévoles trouvés dans PocketBase`
+  );
+
+  // Synchroniser chaque aidant bénévole avec Firebase
+  for (const volunteer of pocketBaseVolunteers) {
+    const volunteerRef = doc(db, "users", volunteer.id);
+
+    // Données à synchroniser pour les bénévoles
+    const userData = {
+      pseudo_utilisateur:
+        volunteer.pseudo || volunteer.prenom_utilisateur || "Aidant",
+      is_volunteer: true,
+      is_association: false, // Explicitement définir comme non-association
+      role: "volunteer",
+      bio: volunteer.bio || "Aidant bénévole disponible pour vous aider.",
+      updated_at: new Date().toISOString(),
+      volunteer_type: "benevole",
+    };
+
+    // Créer ou mettre à jour dans Firebase
+    await setDoc(volunteerRef, userData, { merge: true });
+  }
+} catch (error) {
+  console.error(
+    "Erreur lors de la synchronisation des aidants bénévoles:",
+    error
+  );
+}
+
+// Récupérer et afficher les détails des associations pour le débogage
+let associations = [];
+try {
+  // Récupérer toutes les associations de PocketBase avec un log détaillé
+  associations = await pb.collection("association").getFullList();
+  console.log(
+    `${associations.length} associations professionnelles trouvées dans PocketBase`
+  );
+
+  // Afficher les détails de chaque association pour le débogage
+  associations.forEach((association, index) => {
+    console.log(`Association ${index + 1} (ID: ${association.id}):`);
+    console.log({
+      nom: association.nom_personne,
+      bio: association.biographie_association,
+      modes: association.Mode_de_consultation,
+      image: association.Image_du_professionnel ? "Présente" : "Absente",
+    });
+  });
+
+  // Pour chaque association, créer un document dans Firebase
+  for (const association of associations) {
+    const aidantId = `association-${association.id}`;
+    const aidantRef = doc(db, "users", aidantId);
+
+    // Vérifier si l'image existe
+    const hasImage = association.Image_du_professionnel ? true : false;
+
+    // Données à synchroniser pour les associations (AJOUT DE is_association: true)
+    const userData = {
+      pseudo_utilisateur: association.nom_personne || "Professionnel",
+      is_volunteer: true,
+      is_association: true, // Nouveau champ pour identifier explicitement les associations
+      role: "volunteer",
+      bio:
+        association.biographie_association ||
+        "Professionnel disponible pour vous aider.",
+      association_id: association.id,
+      consultation_modes: association.Mode_de_consultation || [],
+      disponibilites: association.Disponibilites || null,
+      adresse: association.Adresse || "",
+      lien: association.Lien_de_lassociation || "",
+      travail: association.Travail_de_la_personne || "",
+      has_image: hasImage,
+      image_filename: hasImage ? association.Image_du_professionnel : "",
+      updated_at: new Date().toISOString(),
+      volunteer_type: "association",
+    };
+
+    // Créer ou mettre à jour l'aidant dans Firebase
+    await setDoc(aidantRef, userData, { merge: true });
+    console.log(
+      `Association ${association.id} synchronisée avec Firebase comme aidant ${aidantId}`
+    );
+  }
+} catch (error) {
+  console.error("Erreur lors de la synchronisation des associations:", error);
+}
+
+// Ajouter des logs pour le débogage
+console.log("Démarrage de la récupération des aidants depuis Firebase...");
+
+// Récupérer TOUS les aidants depuis Firebase uniquement (centralisé)
 let volunteers = [];
 try {
   const usersRef = collection(db, "users");
-
-  // Essayer d'abord avec is_volunteer = true
   let q = query(usersRef, where("is_volunteer", "==", true));
-  let volunteersSnapshot = await getDocs(q);
+  const volunteersSnapshot = await getDocs(q);
 
-  // Si aucun résultat, essayer avec role = volunteer
+  console.log(
+    "Résultat brut de Firebase:",
+    volunteersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+  );
+
   if (volunteersSnapshot.empty) {
-    console.log(
-      "Aucun aidant trouvé avec is_volunteer=true, essai avec role=volunteer"
-    );
-    q = query(usersRef, where("role", "==", "volunteer"));
-    volunteersSnapshot = await getDocs(q);
-  }
-
-  // Si toujours aucun résultat, récupérer tous les utilisateurs
-  if (volunteersSnapshot.empty) {
-    console.log(
-      "Récupération de tous les utilisateurs pour trouver les aidants"
-    );
-    volunteersSnapshot = await getDocs(usersRef);
-
-    // Filtrer les utilisateurs qui pourraient être des aidants
+    console.log("Aucun aidant trouvé dans Firebase");
+  } else {
+    // Récupérer tous les aidants qui ne sont pas l'utilisateur courant
     volunteers = volunteersSnapshot.docs
       .filter((doc) => doc.id !== currentUserId)
-      .map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          is_volunteer: data.is_volunteer || data.role === "volunteer" || false,
-        };
-      })
-      .filter((user) => user.is_volunteer);
-  } else {
-    // Traiter les résultats de la requête filtrée
-    volunteers = volunteersSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      is_volunteer: true,
-    }));
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+    console.log(`${volunteers.length} aidants récupérés depuis Firebase`);
+
+    // Afficher le nombre d'associations et de bénévoles
+    const associationCount = volunteers.filter(
+      (v) => v.is_association === true || v.id.startsWith("association-")
+    ).length;
+    const benevoleCount = volunteers.length - associationCount;
+    console.log(
+      `Dont ${associationCount} associations et ${benevoleCount} bénévoles`
+    );
   }
 
-  console.log("Nombre de volontaires trouvés:", volunteers.length);
+  // Créer une liste combinée d'aidants (bénévoles de Firebase + associations de PocketBase)
+  let allVolunteers = [...volunteers];
 
-  // Si nous n'avons toujours aucun aidant, créons-en un pour les tests
+  // Ajouter directement les associations de PocketBase si elles ne sont pas déjà dans la liste
+  for (const association of associations) {
+    // Vérifier si cette association est déjà dans la liste des volunteers
+    const aidantId = `association-${association.id}`;
+    const alreadyExists = allVolunteers.some((v) => v.id === aidantId);
+
+    if (!alreadyExists) {
+      console.log(
+        `Ajout direct de l'association ${association.id} (${association.nom_personne})`
+      );
+
+      // Ajouter l'association directement à la liste d'affichage
+      allVolunteers.push({
+        id: aidantId,
+        pseudo_utilisateur: association.nom_personne || "Professionnel",
+        is_volunteer: true,
+        is_association: true,
+        role: "volunteer",
+        bio:
+          association.biographie_association ||
+          "Professionnel disponible pour vous aider.",
+        association_id: association.id,
+        consultation_modes: association.Mode_de_consultation || [],
+        disponibilites: association.Disponibilites || null,
+        adresse: association.Adresse || "",
+        lien: association.Lien_de_lassociation || "",
+        travail: association.Travail_de_la_personne || "",
+        has_image: association.Image_du_professionnel ? true : false,
+        image_filename: association.Image_du_professionnel || "",
+        volunteer_type: "association",
+      });
+    }
+  }
+
+  // Remplacer la liste des volunteers par la liste combinée
+  volunteers = allVolunteers;
+
+  console.log(
+    `Liste finale d'aidants: ${volunteers.length} (dont ${associations.length} associations en tout)`
+  );
+
+  // Créer un aidant de test si aucun aidant n'est disponible
   if (volunteers.length === 0) {
-    console.log("Aucun aidant trouvé, création d'un aidant de test");
+    console.log("Aucun aidant disponible, création d'un aidant de test");
 
-    // Créer un aidant de test dans Firebase
     const testAidantId = "aidant-test-" + Date.now();
     const testAidantRef = doc(db, "users", testAidantId);
 
     await setDoc(testAidantRef, {
       pseudo_utilisateur: "Aidant Test",
       is_volunteer: true,
+      is_association: false,
       role: "volunteer",
       bio: "Ceci est un aidant de test créé automatiquement.",
+      volunteer_type: "benevole",
     });
 
-    // Ajouter l'aidant de test à la liste
     volunteers.push({
       id: testAidantId,
       pseudo_utilisateur: "Aidant Test",
       is_volunteer: true,
+      is_association: false,
       role: "volunteer",
       bio: "Ceci est un aidant de test créé automatiquement.",
+      volunteer_type: "benevole",
     });
-
-    console.log("Aidant de test créé avec ID:", testAidantId);
   }
 } catch (error) {
-  console.error("Erreur lors de la récupération des aidants:", error);
+  console.error(
+    "Erreur lors de la récupération des aidants depuis Firebase:",
+    error
+  );
 }
 
-// Récupérer les conversations d'aide existantes depuis Firestore
+// Récupérer les conversations existantes
 let existingConversationsMap = {};
 try {
   const conversationsRef = collection(db, "conversations");
@@ -170,10 +273,9 @@ try {
     where("participants", "array-contains", currentUserId)
   );
 
-  const querySnapshot = await getDocs(q);
+  const conversationsSnapshot = await getDocs(q);
 
-  // Créer un map des aidants avec qui l'utilisateur a déjà une conversation
-  for (const doc of querySnapshot.docs) {
+  for (const doc of conversationsSnapshot.docs) {
     const conversation = doc.data();
     const volunteerParticipant = conversation.participants.find(
       (id) => id !== currentUserId
@@ -183,6 +285,10 @@ try {
       existingConversationsMap[volunteerParticipant] = doc.id;
     }
   }
+
+  console.log(
+    `${Object.keys(existingConversationsMap).length} conversations existantes trouvées`
+  );
 } catch (error) {
   console.error("Erreur lors de la récupération des conversations:", error);
 }
@@ -190,7 +296,7 @@ try {
 
 <Layout>
   <div class="container mx-auto px-0 sm:px-4 py-0 sm:py-6 max-w-6xl">
-    <!-- En-tête mobile avec navigation (pleine largeur sur mobile) -->
+    <!-- En-tête mobile avec navigation -->
     <div
       class="bg-white shadow-sm mb-4 sm:mb-6 sm:static sm:shadow-none sm:bg-transparent sm:rounded-lg sm:px-0"
     >
@@ -324,7 +430,7 @@ try {
         </a>
       </div>
 
-      <!-- Bannière d'aide simplifiée (optimisée pour mobile) -->
+      <!-- Bannière d'aide -->
       <div
         class="bg-gray-50 p-4 sm:p-5 border-b sm:bg-white sm:rounded-t-lg sm:shadow-lg"
       >
@@ -365,13 +471,14 @@ try {
               Besoin de soutien ?
             </h2>
             <p class="text-gray-600 mt-1 max-w-2xl text-sm sm:text-base">
-              Nos aidants bénévoles sont disponibles pour vous écouter et vous
-              accompagner.
+              Nos aidants bénévoles et professionnels sont disponibles pour vous
+              écouter et vous accompagner.
             </p>
           </div>
         </div>
       </div>
 
+      {/* Message si aucun aidant disponible */}
       {
         volunteers.length === 0 && (
           <div class="text-center py-8 sm:py-12 px-4 bg-white sm:shadow-lg">
@@ -402,7 +509,7 @@ try {
         )
       }
 
-      {/* Liste des aidants (adapté pour mobile: vue liste) */}
+      {/* Liste des aidants (si des aidants sont disponibles) */}
       {
         volunteers.length > 0 && (
           <div class="bg-white sm:shadow-lg sm:rounded-b-lg sm:overflow-hidden">
@@ -416,17 +523,39 @@ try {
                   : `/messages/aide/${volunteer.id}`;
                 const status = Math.random() > 0.5 ? "online" : "offline"; // Simulation de statut
 
+                // MODIFICATION DE LA DÉTECTION DES ASSOCIATIONS
+                const isAssociation =
+                  volunteer.is_association === true ||
+                  volunteer.volunteer_type === "association" ||
+                  volunteer.id.startsWith("association-") ||
+                  volunteer.association_id;
+
                 return (
-                  <div class="p-4 volunteer-card">
+                  <div
+                    class="p-4 volunteer-card"
+                    data-type={isAssociation ? "association" : "volunteer"}
+                  >
                     <div class="flex items-start">
                       <div class="relative flex-shrink-0">
                         <div class="w-14 h-14 rounded-full bg-gray-100 overflow-hidden border-2 border-secondary flex items-center justify-center">
-                          <span class="text-secondary text-xl font-semibold">
-                            {volunteer.pseudo_utilisateur?.charAt(0) || "A"}
-                          </span>
+                          {isAssociation && volunteer.image_filename ? (
+                            <img
+                              src={`https://echosafe.eloishenry.fr/api/files/association/${volunteer.association_id}/${volunteer.image_filename}`}
+                              alt={volunteer.pseudo_utilisateur}
+                              class="w-full h-full object-cover"
+                              onError={`this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<span class="text-secondary text-xl font-semibold flex items-center justify-center w-full h-full">' + (this.alt ? this.alt.charAt(0) : 'P') + '</span>';`}
+                            />
+                          ) : (
+                            <span class="text-secondary text-xl font-semibold">
+                              {volunteer.pseudo_utilisateur?.charAt(0) ||
+                                (isAssociation ? "P" : "A")}
+                            </span>
+                          )}
                         </div>
                         <div
-                          class={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${status === "online" ? "bg-green-500" : "bg-gray-400"}`}
+                          class={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${
+                            status === "online" ? "bg-green-500" : "bg-gray-400"
+                          }`}
                         />
                       </div>
 
@@ -436,13 +565,23 @@ try {
                             {volunteer.pseudo_utilisateur || "Aidant"}
                           </h3>
                           <span class="ml-2 px-2 py-0.5 bg-secondary/10 text-secondary rounded-full text-xxs">
-                            Aidant
+                            {isAssociation ? "Professionnel" : "Bénévole"}
                           </span>
                         </div>
 
+                        {volunteer.travail && (
+                          <p class="text-xs text-gray-600 mb-1">
+                            {volunteer.travail}
+                          </p>
+                        )}
+
                         <p class="text-xs text-gray-500 flex items-center mb-2">
                           <span
-                            class={`inline-block w-2 h-2 rounded-full mr-1.5 ${status === "online" ? "bg-green-500" : "bg-gray-400"}`}
+                            class={`inline-block w-2 h-2 rounded-full mr-1.5 ${
+                              status === "online"
+                                ? "bg-green-500"
+                                : "bg-gray-400"
+                            }`}
                           />
                           {status === "online" ? "Disponible" : "Hors ligne"}
                         </p>
@@ -509,32 +648,66 @@ try {
                   : `/messages/aide/${volunteer.id}`;
                 const status = Math.random() > 0.5 ? "online" : "offline"; // Simulation de statut
 
+                // MODIFICATION DE LA DÉTECTION DES ASSOCIATIONS
+                const isAssociation =
+                  volunteer.is_association === true ||
+                  volunteer.volunteer_type === "association" ||
+                  volunteer.id.startsWith("association-") ||
+                  volunteer.association_id;
+
                 return (
-                  <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 volunteer-card">
+                  <div
+                    class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 volunteer-card"
+                    data-type={isAssociation ? "association" : "volunteer"}
+                  >
                     <div class="p-5">
                       <div class="flex items-center mb-4">
                         <div class="relative">
                           <div class="w-14 h-14 rounded-full bg-gray-100 flex-shrink-0 overflow-hidden border-2 border-secondary flex items-center justify-center">
-                            <span class="text-secondary text-xl font-semibold">
-                              {volunteer.pseudo_utilisateur?.charAt(0) || "A"}
-                            </span>
+                            {isAssociation && volunteer.image_filename ? (
+                              <img
+                                src={`https://echosafe.eloishenry.fr/api/files/association/${volunteer.association_id}/${volunteer.image_filename}`}
+                                alt={volunteer.pseudo_utilisateur}
+                                class="w-full h-full object-cover"
+                                onError={`this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<span class="text-secondary text-xl font-semibold flex items-center justify-center w-full h-full">' + (this.alt ? this.alt.charAt(0) : 'P') + '</span>';`}
+                              />
+                            ) : (
+                              <span class="text-secondary text-xl font-semibold">
+                                {volunteer.pseudo_utilisateur?.charAt(0) ||
+                                  (isAssociation ? "P" : "A")}
+                              </span>
+                            )}
                           </div>
                           <div
-                            class={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${status === "online" ? "bg-green-500" : "bg-gray-400"}`}
+                            class={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${
+                              status === "online"
+                                ? "bg-green-500"
+                                : "bg-gray-400"
+                            }`}
                           />
                         </div>
+
                         <div class="ml-4">
                           <div class="flex items-center flex-wrap">
                             <h3 class="font-semibold text-gray-800 text-lg">
                               {volunteer.pseudo_utilisateur || "Aidant"}
                             </h3>
                             <span class="ml-2 px-2 py-0.5 bg-secondary/10 text-secondary rounded-full text-xs">
-                              Aidant
+                              {isAssociation ? "Professionnel" : "Bénévole"}
                             </span>
                           </div>
+                          {volunteer.travail && (
+                            <p class="text-sm text-gray-600">
+                              {volunteer.travail}
+                            </p>
+                          )}
                           <p class="text-sm text-gray-500 flex items-center">
                             <span
-                              class={`inline-block w-2 h-2 rounded-full mr-1.5 ${status === "online" ? "bg-green-500" : "bg-gray-400"}`}
+                              class={`inline-block w-2 h-2 rounded-full mr-1.5 ${
+                                status === "online"
+                                  ? "bg-green-500"
+                                  : "bg-gray-400"
+                              }`}
                             />
                             {status === "online" ? "Disponible" : "Hors ligne"}
                           </p>
@@ -550,6 +723,35 @@ try {
                         </p>
                       </div>
 
+                      {isAssociation &&
+                        volunteer.consultation_modes &&
+                        volunteer.consultation_modes.length > 0 && (
+                          <div class="mb-4">
+                            <p class="text-sm font-medium text-gray-700 mb-1">
+                              Modes de consultation :
+                            </p>
+                            <div class="flex flex-wrap gap-1">
+                              {Array.isArray(volunteer.consultation_modes) &&
+                                volunteer.consultation_modes.map((mode) => (
+                                  <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                    {mode}
+                                  </span>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                      {volunteer.adresse && (
+                        <div class="mb-4">
+                          <p class="text-sm font-medium text-gray-700 mb-1">
+                            Adresse :
+                          </p>
+                          <p class="text-sm text-gray-600">
+                            {volunteer.adresse}
+                          </p>
+                        </div>
+                      )}
+
                       <a
                         href={conversationUrl}
                         class="flex items-center justify-center w-full py-2.5 px-4 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-medium text-base"
@@ -558,15 +760,11 @@ try {
                           <>
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              class="h-5 w-5 mr-2"
+                              class="h-4 w-4 mr-2"
                               viewBox="0 0 20 20"
                               fill="currentColor"
                             >
-                              <path
-                                fill-rule="evenodd"
-                                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                                clip-rule="evenodd"
-                              />
+                              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
                             </svg>
                             Continuer la discussion
                           </>
@@ -574,7 +772,7 @@ try {
                           <>
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              class="h-5 w-5 mr-2"
+                              class="h-4 w-4 mr-2"
                               viewBox="0 0 20 20"
                               fill="currentColor"
                             >
@@ -585,6 +783,31 @@ try {
                           </>
                         )}
                       </a>
+
+                      {volunteer.lien && (
+                        <a
+                          href={volunteer.lien}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="flex items-center justify-center w-full py-2 px-4 bg-white text-secondary border border-secondary rounded-lg hover:bg-secondary/5 transition-colors font-medium text-sm mt-2"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
+                          </svg>
+                          Visiter le site
+                        </a>
+                      )}
                     </div>
                   </div>
                 );
@@ -598,15 +821,44 @@ try {
 </Layout>
 
 <script>
-  // Script pour la recherche d'aidants
+  // Diagnostic et recherche d'aidants
   document.addEventListener("DOMContentLoaded", () => {
-    const searchInputDesktop = document.getElementById(
-      "search-volunteers-desktop"
-    );
-    const searchInputMobile = document.getElementById(
-      "search-volunteers-mobile"
+    // Compter et afficher les types d'aidants
+    const totalCards = document.querySelectorAll(".volunteer-card").length;
+    const associationCards = document.querySelectorAll(
+      ".volunteer-card[data-type='association']"
+    ).length;
+    const volunteerCards = document.querySelectorAll(
+      ".volunteer-card[data-type='volunteer']"
+    ).length;
+
+    console.log(
+      `Total aidants affichés: ${totalCards} (${associationCards} associations, ${volunteerCards} bénévoles)`
     );
 
+    // Vérifier les images des associations
+    document
+      .querySelectorAll(".volunteer-card[data-type='association'] img")
+      .forEach((img, index) => {
+        console.log(`Association ${index + 1} image: ${img.src}`);
+
+        // Tester l'URL de l'image
+        fetch(img.src)
+          .then((response) => {
+            if (!response.ok) {
+              console.error(
+                `URL d'image inaccessible: ${img.src} (${response.status} ${response.statusText})`
+              );
+            } else {
+              console.log(`URL d'image valide: ${img.src}`);
+            }
+          })
+          .catch((error) => {
+            console.error(`Erreur de requête pour l'image: ${img.src}`, error);
+          });
+      });
+
+    // Fonction de recherche d'aidants
     const performSearch = (searchValue) => {
       const searchLower = searchValue.toLowerCase();
       const volunteerCards = document.querySelectorAll(".volunteer-card");
@@ -620,21 +872,51 @@ try {
           ? volunteerBioElem.textContent.toLowerCase()
           : "";
 
+        // Rechercher aussi dans le travail et l'adresse
+        const volunteerWorkElem = card.querySelector(
+          "div.mb-4 p:not(.italic):not(.font-medium)"
+        );
+        const volunteerWork = volunteerWorkElem
+          ? volunteerWorkElem.textContent.toLowerCase()
+          : "";
+
+        // Rechercher dans les modes de consultation
+        const consultationModes = Array.from(
+          card.querySelectorAll(".bg-blue-100")
+        )
+          .map((el) => el.textContent.toLowerCase())
+          .join(" ");
+
         if (
           volunteerName.includes(searchLower) ||
-          volunteerBio.includes(searchLower)
+          volunteerBio.includes(searchLower) ||
+          volunteerWork.includes(searchLower) ||
+          consultationModes.includes(searchLower)
         ) {
           card.style.display = "";
         } else {
           card.style.display = "none";
         }
       });
+
+      // Mettre à jour le compteur après la recherche
+      const visibleCards = document.querySelectorAll(
+        ".volunteer-card:not([style*='display: none'])"
+      ).length;
+      console.log(`Aidants visibles après recherche: ${visibleCards}`);
     };
+
+    // Brancher les champs de recherche
+    const searchInputDesktop = document.getElementById(
+      "search-volunteers-desktop"
+    );
+    const searchInputMobile = document.getElementById(
+      "search-volunteers-mobile"
+    );
 
     if (searchInputDesktop) {
       searchInputDesktop.addEventListener("input", (e) => {
         performSearch(e.target.value);
-        // Synchroniser la recherche mobile
         if (searchInputMobile) searchInputMobile.value = e.target.value;
       });
     }
@@ -642,7 +924,6 @@ try {
     if (searchInputMobile) {
       searchInputMobile.addEventListener("input", (e) => {
         performSearch(e.target.value);
-        // Synchroniser la recherche desktop
         if (searchInputDesktop) searchInputDesktop.value = e.target.value;
       });
     }
