@@ -9,7 +9,7 @@
 }
 
 @layer base {
-  body {
+  body { 
     @apply font-primary text-lg text-[#323f92];
   }
 

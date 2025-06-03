@@ -1,0 +1,82 @@
+---
+import "../style/global.css";
+export interface Props {
+  variant?: "default" | "dark" | "outlined";
+  size?: "small" | "medium" | "large";
+  url?: string;
+  text?: string;
+  icon?: string; // Paramètre optionnel pour l'icône
+  fullWidth?: boolean; // Nouvelle propriété pour contrôler la largeur
+  mobileFullWidth?: boolean; // Nouvelle propriété pour la largeur sur mobile
+  withArrow?: boolean; // Nouvelle propriété pour la flèche
+}
+
+const {
+  variant = "default",
+  size = "medium",
+  url = "#",
+  text = "",
+  icon = "",
+  fullWidth = false, // Par défaut, le bouton n'est pas en pleine largeur
+  mobileFullWidth = false, // Par défaut, le bouton n'est pas en pleine largeur sur mobile
+  withArrow = false, // Par défaut, pas de flèche
+} = Astro.props;
+
+const variantClass = {
+  default:
+    "border-[var(--color-primary)] bg-white hover:bg-[var(--color-primary)] hover:text-white",
+  dark: "border border-[var(--color-primary)] bg-[var(--color-primary)] text-white hover:bg-white hover:text-[var(--color-primary)]",
+  outlined: "border-indigo-200 bg-red hover:bg-indigo-50",
+};
+
+const sizeClass = {
+  small: "px-4 py-2.5 text-sm",
+  medium: "px-6 py-3 text-base",
+  large: "px-8 py-4 text-base",
+};
+
+// Classe pour la taille de l'icône - AUGMENTÉE
+const iconSizeClass = {
+  small: "w-5 h-5", // Augmenté de w-4 h-4
+  medium: "w-6 h-6", // Augmenté de w-5 h-5
+  large: "w-7 h-7", // Augmenté de w-6 h-6
+};
+
+// Classe pour la taille de la flèche
+const arrowSizeClass = {
+  small: "w-4 h-4",
+  medium: "w-5 h-5",
+  large: "w-6 h-6",
+};
+
+// Modification pour la disposition avec icônes aux extrémités
+const widthClass = fullWidth ? "w-full" : "";
+---
+
+<a
+  href={url}
+  class={`inline-flex items-center justify-between text-[var(--color-primary)] border-1 border-[var(--color-primary)] font-normal rounded-xl transition duration-300 ease-in-out ${variantClass[variant]} ${sizeClass[size]} ${widthClass}`}
+>
+  <div class="flex items-center gap-2">
+    {icon && <span class={iconSizeClass[size]} set:html={icon} />}
+    <slot />
+    <span>{text}</span>
+  </div>
+
+  {
+    withArrow && (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class={`${arrowSizeClass[size]} text-[var(--color-primary)]`}
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    )
+  }
+</a>

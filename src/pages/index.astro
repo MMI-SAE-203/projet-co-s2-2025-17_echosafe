@@ -6,77 +6,81 @@ import Card_accueil from "../components/Card_accueil.astro";
 import TemoignageCard from "../components/TemoignageCard.astro";
 import FAQItem from "../components/FAQItem.astro";
 
+// Version optimisée des témoignages (textes raccourcis tout en préservant le sens)
 const testimonials = [
   {
     name: "Marie D.",
     rating: 5,
     content:
-      "Echo Safe a changé ma vie. Grâce aux canaux de discussion anonymes, j'ai pu partager mes expériences et recevoir un soutien immédiat incroyable. La part personnalisée m'a aidée à passer sur une bonne voie. Merci infiniment!",
+      "Grâce aux canaux anonymes, j'ai pu partager mes expériences et recevoir un soutien immédiat. La partie personnalisée m'a vraiment aidée.",
   },
   {
     name: "Alexandre M.",
     rating: 5,
     content:
-      "J'ai été impressionné par la modération active et la sécurité des communications sur Echo Safe. Cela m'a permis de discuter librement avec des professionnels et d'autres utilisateurs sans me soucier de la confidentialité de mes informations.",
+      "La modération et la sécurité des communications sur Echo Safe me permettent de discuter librement sans crainte pour ma confidentialité.",
   },
   {
     name: "Sophie L.",
     rating: 5,
     content:
-      "Le Kit de Secours est une fonctionnalité essentielle. Savoir que j'ai accès à des numéros d'urgence et à des conseils pratiques en cas de besoin me rassure énormément. L'application est facile à utiliser et vraiment efficace.",
+      "Le Kit de Secours est essentiel. Avoir accès aux numéros d'urgence et conseils pratiques me rassure. L'application est facile à utiliser.",
   },
   {
     name: "Julien C.",
     rating: 5,
     content:
-      "Echo Safe est bien plus qu'une application, c'est une communauté. J'ai trouvé un soutien incroyable grâce aux discussions anonymes et personnalisé. Je me sens enfin compris.",
+      "Echo Safe est une vraie communauté. J'ai trouvé un soutien incroyable grâce aux discussions anonymes et personnalisées.",
   },
   {
     name: "Émilie T.",
     rating: 5,
     content:
-      "Je ne me sentais pas à l'aise pour partager mes problèmes avant de découvrir Echo Safe. L'anonymat et la bienveillance de la communauté m'ont permis de m'ouvrir et de trouver des solutions.",
+      "L'anonymat et la bienveillance de la communauté m'ont permis de m'ouvrir et de trouver des solutions à mes problèmes.",
   },
   {
     name: "Thomas B.",
     rating: 5,
     content:
-      "La fonctionnalité de suivi d'humeur est incroyablement utile. Elle m'aide à identifier mes déclencheurs et à mieux gérer mon anxiété au quotidien. Une application qui change vraiment la vie.",
+      "Le suivi d'humeur m'aide à identifier mes déclencheurs et à mieux gérer mon anxiété quotidienne.",
   },
   {
     name: "Laura M.",
     rating: 5,
     content:
-      "J'apprécie particulièrement les ressources et les conseils personnalisés. Ils sont vraiment adaptés à ma situation et m'ont aidée à progresser rapidement dans mon parcours.",
+      "Les ressources et conseils personnalisés sont vraiment adaptés à ma situation et m'aident à progresser.",
   },
   {
     name: "Nicolas P.",
     rating: 5,
     content:
-      "Echo Safe offre un excellent équilibre entre soutien professionnel et communautaire. C'est rassurant de savoir qu'on peut obtenir de l'aide de qualité à tout moment, où que l'on soit.",
+      "Excellent équilibre entre soutien professionnel et communautaire. Une aide de qualité disponible en permanence.",
   },
 ];
 
 // Diviser les témoignages en deux rangées
 const topRowTestimonials = testimonials.slice(0, 4);
 const bottomRowTestimonials = testimonials.slice(4, 8);
+
+// Précharger uniquement ce qui est visible initialement
+const preloadTestimonials = testimonials.slice(0, 2);
 ---
 
 <Layout>
   <Hero />
   <section class="container mx-auto px-4 py-8">
-    <div class="flex flex-col justify-center items-center px-4">
+    <div class="flex flex-col justify-center items-center">
       <h2
-        class="font-secondary text-3xl md:text-5xl font-bold text-center mb-12"
+        class="font-secondary text-3xl md:text-5xl font-bold text-center mb-10"
       >
         Des outils concrets pour surmonter le harcèlement
       </h2>
     </div>
 
-    <!-- Section 1: Espaces de soutien et de partage (fond rose) -->
+    <!-- Section 1: Espaces de soutien et de partage -->
     <Card_accueil
       title="Espaces de soutien et de partage"
-      description="Rejoignez notre communauté bienveillante pour échanger anonymement dans des canaux publics ou privés avec des professionnels et des membres. Un environnement sécurisé et respectueux garanti."
+      description="Rejoignez notre communauté pour échanger anonymement avec des professionnels et d'autres membres dans un environnement sécurisé."
       buttonText="Découvrir l'outil"
       buttonLink="#"
       imageUrl="/src/assets/maquette_accueil/maquette_message.webp"
@@ -84,12 +88,15 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
       imagePosition="right"
       layout="horizontal"
       bgGradient="bg-gradient-to-r from-[#FFE3FA] to-[#FF9CED]"
+      loading="lazy"
+      width="400"
+      height="300"
     />
 
-    <!-- Section 2: Suivi de ton humeur (fond saumon) -->
+    <!-- Section 2: Suivi de ton humeur -->
     <Card_accueil
       title="Suivi votre humeur"
-      description="Suivez votre bien-être avec le Moodtracker en enregistrant vos humeurs et en recevant des conseils personnalisés pour améliorer votre état d'esprit."
+      description="Enregistrez vos humeurs avec le Moodtracker et recevez des conseils personnalisés pour améliorer votre bien-être."
       buttonText="Suivre votre humeur"
       buttonLink="#"
       imageUrl="/src/assets/maquette_accueil/maquette_humeur.webp"
@@ -97,12 +104,15 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
       bgGradient="bg-gradient-to-r from-[#FFDEDE] to-[#EDA8A8]"
       imagePosition="left"
       layout="horizontal"
+      loading="lazy"
+      width="400"
+      height="300"
     />
 
-    <!-- Section 3: Kit de secours contre le harcèlement (fond bleu clair) -->
+    <!-- Section 3: Kit de secours -->
     <Card_accueil
       title="Kit de secours contre le harcèlement"
-      description="Accédez rapidement aux ressources essentielles avec notre Kit de Secours : numéros d'urgence, conseils pratiques et soutien immédiat pour faire face au harcèlement."
+      description="Accédez aux ressources essentielles : numéros d'urgence, conseils pratiques et soutien immédiat contre le harcèlement."
       buttonText="Découvrir le kit"
       buttonLink="#"
       imageUrl="/src/assets/maquette_accueil/maquette_kit-de-secours.webp"
@@ -110,40 +120,44 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
       bgGradient="bg-gradient-to-r from-[#E2EEFF] to-[#7CA7E5]"
       imagePosition="right"
       layout="horizontal"
+      loading="lazy"
+      width="400"
+      height="300"
     />
   </section>
+
   <section class="w-full bg-gradient-to-b from-[#323F92] to-[#121D64] py-16">
     <div class="max-w-6xl mx-auto px-4">
-      <!-- TITRE -->
       <h2
-        class="font-secondary text-white text-3xl md:text-5xl font-bold text-center mb-12"
+        class="font-secondary text-white text-3xl md:text-5xl font-bold text-center mb-10"
       >
         Un accompagnement motivant<br />et adapté à votre rythme
       </h2>
 
-      <!-- CARDS -->
       <div class="flex flex-col md:flex-row justify-center gap-8">
         <Card_accueil
-          title="Plan de suivi personnalisé pour victimes"
-          description="Accédez rapidement aux ressources essentielles avec notre Kit de Secours : numéros d'urgence, conseils pratiques et soutien immédiat pour faire face au harcèlement."
-          buttonText="Découvrir le kit"
+          title="Plan de suivi personnalisé"
+          description="Un parcours adapté à votre situation avec des ressources et du soutien pour avancer à votre rythme."
+          buttonText="Découvrir"
           buttonLink="#"
           bgColor="bg-white"
           layout="horizontal"
+          loading="lazy"
         />
         <Card_accueil
           title="Défis et récompenses"
-          description="Restez motivé grâce à notre système de récompenses ! Gagnez des badges et participez à des défis quotidiens pour célébrer chaque étape franchie."
+          description="Restez motivé avec notre système de badges et de défis quotidiens pour célébrer chaque progrès."
           buttonText="Défis & récompenses"
           buttonLink="#"
           bgColor="bg-white"
           layout="horizontal"
+          loading="lazy"
         />
       </div>
     </div>
   </section>
+
   <section class="relative py-10 px-4">
-    <!-- Titre -->
     <div class="relative flex flex-col items-center mb-10 z-10">
       <h2
         class="relative text-3xl md:text-4xl font-bold font-secondary text-center z-10 bg-white/70 px-4 py-2 rounded-lg"
@@ -152,118 +166,134 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
       </h2>
     </div>
 
-    <!-- Image de l'homme DERRIÈRE LES CARDS -->
+    <!-- Image de l'homme optimisée -->
     <div class="absolute right-0 md:right-30 -top-15 w-40 z-0">
       <img
         src="/src/assets/homme-securite.webp"
-        alt="Homme sécurité"
+        alt="Sécurité"
         class="w-full h-auto object-cover"
+        loading="lazy"
+        width="160"
+        height="240"
       />
     </div>
 
-    <!-- Les cartes (au-dessus de l'image) -->
     <div class="relative z-10 mx-auto max-w-7xl">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Tes cartes -->
         <Card_accueil
-          title="Protection des communications personnelles"
-          description="Votre sécurité est notre priorité. Grâce à des outils comme Google Perspective API et Socket.io, nous filtrons et modérons les contenus pour garantir un environnement sûr et respectueux."
-          buttonText="Découvrez vos protections"
+          title="Protection des communications"
+          description="Nous filtrons et modérons les contenus avec des outils avancés pour garantir un environnement sûr et respectueux."
+          buttonText="En savoir plus"
           buttonLink="#"
           bgColor="bg-[#cfe1ff]"
           bgGradient="bg-gradient-to-r from-[#E2EEFF] to-[#B1D2FF]"
           layout="vertical"
+          loading="lazy"
         />
 
         <Card_accueil
-          title="Infrastructure Sécurisée pour vos données"
-          description="Nous utilisons Infomaniak pour garantir une infrastructure sécurisée. Grâce à un chiffrement de bout en bout et des outils de surveillance, vos messages restent protégés et confidentiels."
-          buttonText="Découvrez nos infrastructures"
+          title="Infrastructure Sécurisée"
+          description="Chiffrement de bout en bout et outils de surveillance pour protéger vos messages et données confidentielles."
+          buttonText="En savoir plus"
           buttonLink="#"
           bgColor="bg-[#cfe1ff]"
           bgGradient="bg-gradient-to-r from-[#E2EEFF] to-[#B1D2FF]"
           layout="vertical"
+          loading="lazy"
         />
 
         <div class="md:col-span-2">
           <Card_accueil
             title="Mesures de Sécurité Supplémentaires"
-            description="Nous avons mis en place des politiques de sécurité strictes, avec des audits réguliers et des tests de pénétration pour détecter les vulnérabilités. L'authentification à deux facteurs renforce également la sécurité des comptes utilisateurs."
-            buttonText="Nos protections avancées"
+            description="Audits réguliers, tests de sécurité et authentification à deux facteurs pour protéger votre compte et vos informations."
+            buttonText="Nos protections"
             buttonLink="#"
             bgColor="bg-[#cfe1ff]"
             bgGradient="bg-gradient-to-r from-[#E2EEFF] to-[#B1D2FF]"
             layout="vertical"
+            loading="lazy"
           />
         </div>
       </div>
     </div>
   </section>
 
-  <section class="">
+  <section>
     <div class="flex justify-center items-center gap-2 mb-4">
-      <img src="src/assets/etoile.svg" alt="Étoile" class="w-5 h-5" />
+      <!-- Remplacer l'image d'étoile par un SVG inline -->
+      <svg
+        class="w-5 h-5 text-yellow-400"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+      >
+        <path
+          d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+        ></path>
+      </svg>
       <span class="text-sm font-medium">4.8/5 sur 10k avis</span>
     </div>
 
     <div class="relative flex flex-col items-center mb-10">
-      <!-- Image de la femme -->
+      <!-- Image de la femme optimisée -->
       <div
         class="absolute left-0 md:left-30 top-1/2 transform -translate-y-1/2 w-40 z-0"
       >
         <img
           src="/src/assets/femme-temoignage.webp"
-          alt="Femme témoignage"
-          class="w-full h-full object-cover"
+          alt="Témoignage"
+          class="w-full h-auto object-cover"
+          loading="lazy"
+          width="160"
+          height="240"
         />
       </div>
 
-      <!-- Titre -->
       <h2
         class="relative text-3xl md:text-4xl font-bold font-secondary text-center z-10 bg-white/70 px-4 py-2 rounded-lg"
       >
-        Témoignages d'utilisateurs,<br />voici ce qu'ils en pensent
+        Témoignages d'utilisateurs
       </h2>
     </div>
 
     <div
       class="relative bg-gradient-to-b from-[#FFDEDE] to-[#FFB3B3] py-16 overflow-hidden"
     >
-      <div
-        class="flex w-full gap-x-4 [animation-name:scrollLeft] [animation-duration:30s] [animation-timing-function:linear] [animation-iteration-count:infinite] top-row"
-      >
-        {
-          topRowTestimonials.map((testimonial) => (
-            <div class="min-w-[280px] md:min-w-[320px] flex-shrink-0 w-full md:w-[calc(50%-12px)]">
-              <TemoignageCard
-                name={testimonial.name}
-                rating={testimonial.rating}
-                content={testimonial.content}
-              />
-            </div>
-          ))
-        }
-      </div>
+      <!-- Utiliser un conteneur pour le lazy loading -->
+      <div id="testimonials-container" class="w-full overflow-hidden">
+        <div class="flex w-full gap-x-4 top-row">
+          {
+            topRowTestimonials.map((testimonial) => (
+              <div class="min-w-[280px] md:min-w-[320px] flex-shrink-0 w-full md:w-[calc(50%-12px)]">
+                <TemoignageCard
+                  name={testimonial.name}
+                  rating={testimonial.rating}
+                  content={testimonial.content}
+                  loading="lazy"
+                />
+              </div>
+            ))
+          }
+        </div>
 
-      <div
-        class="flex w-full gap-x-4 mt-8 [animation-name:scrollRight] [animation-duration:30s] [animation-timing-function:linear] [animation-iteration-count:infinite] bottom-row"
-      >
-        {
-          bottomRowTestimonials.map((testimonial) => (
-            <div class="min-w-[280px] md:min-w-[320px] flex-shrink-0 w-full md:w-[calc(50%-12px)]">
-              <TemoignageCard
-                name={testimonial.name}
-                rating={testimonial.rating}
-                content={testimonial.content}
-              />
-            </div>
-          ))
-        }
+        <div class="flex w-full gap-x-4 mt-8 bottom-row">
+          {
+            bottomRowTestimonials.map((testimonial) => (
+              <div class="min-w-[280px] md:min-w-[320px] flex-shrink-0 w-full md:w-[calc(50%-12px)]">
+                <TemoignageCard
+                  name={testimonial.name}
+                  rating={testimonial.rating}
+                  content={testimonial.content}
+                  loading="lazy"
+                />
+              </div>
+            ))
+          }
+        </div>
       </div>
     </div>
   </section>
+
   <section class="relative py-10 px-4">
-    <!-- AJOUT DE relative ICI -->
     <div class="flex flex-col items-center z-10">
       <h2
         class="relative text-3xl md:text-4xl font-bold font-secondary text-center z-10 bg-white/70 px-4 py-2 rounded-lg"
@@ -272,13 +302,15 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
       </h2>
     </div>
 
-    <!-- Image de l'homme DERRIÈRE LES CARDS -->
+    <!-- Image optimisée -->
     <div class="absolute right-0 md:right-30 -top-15 w-40 z-0">
-      <!-- -top-15 remplacé par top-10 -->
       <img
         src="/src/assets/homme-FAQ.webp"
-        alt="Homme sécurité"
+        alt="FAQ"
         class="w-full h-auto object-cover"
+        loading="lazy"
+        width="160"
+        height="240"
       />
     </div>
 
@@ -286,26 +318,25 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
       <FAQItem />
     </div>
   </section>
+
+  <!-- Banner de cookies (masquée par défaut, chargée uniquement si nécessaire) -->
   <div
     id="cookie-banner"
-    class="fixed bottom-0 left-0 right-0 bg-white p-6 md:p-10 shadow-2xl max-h-[90vh] overflow-y-auto z-50 w-full md:max-w-4xl md:mx-auto md:left-1/2 md:transform md:-translate-x-1/2 md:rounded-t-2xl"
-    style=""
+    class="fixed bottom-0 left-0 right-0 bg-white p-6 md:p-10 shadow-2xl max-h-[90vh] overflow-y-auto z-50 w-full md:max-w-4xl md:mx-auto md:left-1/2 md:transform md:-translate-x-1/2 md:rounded-t-2xl hidden"
   >
     <h2 class="text-2xl font-semibold mb-4">Paramètres de confidentialité</h2>
 
     <p class="mb-4 text-sm">
-      Nous respectons votre vie privée. Cette application utilise des cookies et
-      technologies similaires pour différentes finalités.
+      Cette application utilise des cookies pour différentes finalités.
     </p>
 
-    <!-- Cookies essentiels - toujours activés -->
+    <!-- Cookies essentiels -->
     <div class="mb-4 p-3 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="font-semibold">Cookies strictement nécessaires</h3>
+          <h3 class="font-semibold">Cookies nécessaires</h3>
           <p class="text-sm text-gray-600">
-            Ces cookies sont indispensables au fonctionnement du site et ne
-            peuvent pas être désactivés.
+            Indispensables au fonctionnement du site.
           </p>
         </div>
         <div class="ml-4">
@@ -316,14 +347,13 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
       </div>
     </div>
 
-    <!-- Cookies fonctionnels - peuvent être activés/désactivés -->
+    <!-- Cookies fonctionnels -->
     <div class="mb-4 p-3 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between">
         <div>
           <h3 class="font-semibold">Cookies fonctionnels</h3>
           <p class="text-sm text-gray-600">
-            Permettent les fonctionnalités personnalisées comme le Moodtracker,
-            les Streaks et le système de récompenses.
+            Pour les fonctionnalités personnalisées.
           </p>
         </div>
         <div class="ml-4">
@@ -335,7 +365,7 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
               checked
             />
             <div
-              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
             >
             </div>
           </label>
@@ -343,15 +373,12 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
       </div>
     </div>
 
-    <!-- Cookies analytiques - peuvent être activés/désactivés -->
+    <!-- Cookies analytiques -->
     <div class="mb-4 p-3 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between">
         <div>
           <h3 class="font-semibold">Cookies analytiques</h3>
-          <p class="text-sm text-gray-600">
-            Nous aident à comprendre comment vous utilisez l'application pour
-            l'améliorer.
-          </p>
+          <p class="text-sm text-gray-600">Pour améliorer l'application.</p>
         </div>
         <div class="ml-4">
           <label class="relative inline-flex items-center cursor-pointer">
@@ -361,7 +388,7 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
               class="sr-only peer"
             />
             <div
-              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
             >
             </div>
           </label>
@@ -370,10 +397,9 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
     </div>
 
     <p class="mb-6 text-sm">
-      En savoir plus sur notre utilisation des cookies dans notre
       <a href="/politique-cookies" class="text-blue-600 underline"
         >Politique de confidentialité</a
-      >.
+      >
     </p>
 
     <div class="flex flex-col sm:flex-row gap-3 justify-center">
@@ -397,82 +423,140 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
       </button>
     </div>
   </div>
-
-  <script is:inline>
-    // Définir l'utilitaire de cookies d'abord
-    window.CookieUtils = {
-      savePreferences: function (essential, functional, analytics) {
-        // Créer un cookie qui expire dans 365 jours
-        const expiryDate = new Date();
-        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-
-        // Enregistrer les préférences dans les cookies
-        document.cookie = `cookies-preferences-set=true; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
-        document.cookie = `cookies-essential=${essential}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
-        document.cookie = `cookies-functional=${functional}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
-        document.cookie = `cookies-analytics=${analytics}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
-      },
-    };
-
-    document.addEventListener("DOMContentLoaded", function () {
-      const cookieBanner = document.getElementById("cookie-banner");
-      const acceptAllButton = document.getElementById("accept-all-cookies");
-      const acceptSelectedButton = document.getElementById(
-        "accept-selected-cookies"
-      );
-      const rejectAllButton = document.getElementById("reject-all-cookies");
-      const functionalCheckbox = document.getElementById("functional-cookies");
-      const analyticsCheckbox = document.getElementById("analytics-cookies");
-
-      // Vérifier si l'utilisateur a déjà fait son choix
-      if (document.cookie.includes("cookies-preferences-set=true")) {
-        cookieBanner.style.display = "none";
-      } else {
-        cookieBanner.style.display = "block";
-      }
-
-      // Gérer le clic sur "Tout accepter"
-      if (acceptAllButton) {
-        acceptAllButton.addEventListener("click", function () {
-          window.CookieUtils.savePreferences(true, true, true);
-          cookieBanner.style.display = "none";
-        });
-      }
-
-      // Gérer le clic sur "Accepter la sélection"
-      if (acceptSelectedButton) {
-        acceptSelectedButton.addEventListener("click", function () {
-          window.CookieUtils.savePreferences(
-            true,
-            functionalCheckbox.checked,
-            analyticsCheckbox.checked
-          );
-          cookieBanner.style.display = "none";
-        });
-      }
-
-      // Gérer le clic sur "Tout refuser"
-      if (rejectAllButton) {
-        rejectAllButton.addEventListener("click", function () {
-          window.CookieUtils.savePreferences(true, false, false);
-          cookieBanner.style.display = "none";
-        });
-      }
-    });
-
-    // Script pour dupliquer les témoignages pour l'effet de boucle continue
-    document.addEventListener("DOMContentLoaded", () => {
-      const topRow = document.querySelector(".top-row");
-      const bottomRow = document.querySelector(".bottom-row");
-
-      if (topRow && bottomRow) {
-        // Dupliquer les cartes pour créer l'effet de boucle continue
-        const topCards = topRow.innerHTML;
-        const bottomCards = bottomRow.innerHTML;
-
-        topRow.innerHTML = topCards + topCards;
-        bottomRow.innerHTML = bottomCards + bottomCards;
-      }
-    });
-  </script>
 </Layout>
+
+<!-- Script optimisé avec chargement conditionnel -->
+<script is:inline>
+  // Utilitaire de cookies optimisé
+  const CookieUtils = {
+    savePreferences: function (essential, functional, analytics) {
+      const expiryDate = new Date();
+      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+      const expires = "; expires=" + expiryDate.toUTCString();
+
+      document.cookie =
+        "cookies-preferences-set=true" + expires + "; path=/; SameSite=Lax";
+      document.cookie =
+        "cookies-essential=" + essential + expires + "; path=/; SameSite=Lax";
+      document.cookie =
+        "cookies-functional=" + functional + expires + "; path=/; SameSite=Lax";
+      document.cookie =
+        "cookies-analytics=" + analytics + expires + "; path=/; SameSite=Lax";
+    },
+    hasMadeChoice: function () {
+      return document.cookie.indexOf("cookies-preferences-set=true") > -1;
+    },
+  };
+
+  // Fonction pour gérer les animations de témoignages avec IntersectionObserver
+  function setupTestimonialsAnimation() {
+    const container = document.getElementById("testimonials-container");
+    if (!container) return;
+
+    // Observer pour déclencher l'animation uniquement quand visible
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const topRow = container.querySelector(".top-row");
+            const bottomRow = container.querySelector(".bottom-row");
+
+            if (topRow && !topRow.classList.contains("animated")) {
+              topRow.classList.add("animated");
+              topRow.style.animation = "scrollLeft 30s linear infinite";
+              // Dupliquer pour créer l'effet de boucle infinie, mais seulement à l'affichage
+              const content = topRow.innerHTML;
+              topRow.innerHTML = content + content;
+            }
+
+            if (bottomRow && !bottomRow.classList.contains("animated")) {
+              bottomRow.classList.add("animated");
+              bottomRow.style.animation = "scrollRight 30s linear infinite";
+              const content = bottomRow.innerHTML;
+              bottomRow.innerHTML = content + content;
+            }
+
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(container);
+  }
+
+  // Fonction pour gérer le bandeau de cookies
+  function setupCookieBanner() {
+    // Ne charger le bandeau que si nécessaire
+    if (!CookieUtils.hasMadeChoice()) {
+      const cookieBanner = document.getElementById("cookie-banner");
+      if (cookieBanner) {
+        cookieBanner.classList.remove("hidden");
+
+        // Ajouter les gestionnaires d'événements
+        document
+          .getElementById("accept-all-cookies")
+          ?.addEventListener("click", () => {
+            CookieUtils.savePreferences(true, true, true);
+            cookieBanner.classList.add("hidden");
+          });
+
+        document
+          .getElementById("accept-selected-cookies")
+          ?.addEventListener("click", () => {
+            const functional =
+              document.getElementById("functional-cookies")?.checked || false;
+            const analytics =
+              document.getElementById("analytics-cookies")?.checked || false;
+            CookieUtils.savePreferences(true, functional, analytics);
+            cookieBanner.classList.add("hidden");
+          });
+
+        document
+          .getElementById("reject-all-cookies")
+          ?.addEventListener("click", () => {
+            CookieUtils.savePreferences(true, false, false);
+            cookieBanner.classList.add("hidden");
+          });
+      }
+    }
+  }
+
+  // Initialisation différée pour améliorer les performances
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      // Retarder légèrement le chargement des éléments non critiques
+      setTimeout(() => {
+        setupTestimonialsAnimation();
+        setupCookieBanner();
+      }, 100);
+    });
+  } else {
+    // Si le DOM est déjà chargé
+    setTimeout(() => {
+      setupTestimonialsAnimation();
+      setupCookieBanner();
+    }, 100);
+  }
+</script>
+
+<style>
+  @keyframes scrollLeft {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes scrollRight {
+    0% {
+      transform: translateX(-50%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+</style>
