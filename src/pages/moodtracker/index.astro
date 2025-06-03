@@ -1,0 +1,718 @@
+---
+import Layoutapp from "../../layouts/Layoutapp.astro";
+import PocketBase from "pocketbase";
+import { Image } from "astro:assets";
+
+// Importation des images SVG en utilisant des URL publiques
+const moodSVGs = {
+  "Très heureux": "/src/assets/moodtracker/tres_heureux.svg",
+  "Heureux": "/src/assets/moodtracker/heureux.svg",
+  "Blasé": "/src/assets/moodtracker/blase.svg",
+  "Anxieux": "/src/assets/moodtracker/anxieux.svg",
+  "Triste": "/src/assets/moodtracker/triste.svg",
+  "Colère": "/src/assets/moodtracker/colere.svg",
+  "Au bord des larmes": "/src/assets/moodtracker/au-bord-des-larmes.svg",
+};
+
+// Initialiser PocketBase et vérifier l'authentification
+const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const authCookie = Astro.request.headers.get("cookie");
+if (authCookie) {
+  pb.authStore.loadFromCookie(authCookie);
+}
+
+// Rediriger si non connecté
+if (!pb.authStore.isValid) {
+  return Astro.redirect("/auth/connexion");
+}
+
+// Obtenir la date actuelle au format YYYY-MM-DD
+const today = new Date();
+const todayFormatted = today.toISOString().split("T")[0];
+
+// Gérer la soumission du formulaire
+let message = "";
+let messageType = "";
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const nomMoodtracker = formData.get("nom_moodtracker") || "";
+    const humeurMoodtracker = formData.get("humeur_moodtracker");
+    const dateMoodtracker = formData.get("date_moodtracker") || todayFormatted;
+
+    // Vérifier si les valeurs sont correctes
+    console.log("Données du formulaire:", {
+      nom: nomMoodtracker,
+      humeur: humeurMoodtracker,
+      date: dateMoodtracker,
+      user: pb.authStore.model?.id,
+    });
+
+    if (humeurMoodtracker) {
+      // Vérifier que l'utilisateur est toujours authentifié
+      if (!pb.authStore.isValid) {
+        message = "Votre session a expiré, veuillez vous reconnecter.";
+        messageType = "error";
+        return;
+      }
+
+      // Vérifier si une entrée existe déjà pour cette date
+      const existingEntries = await pb.collection("moodtracker").getList(1, 1, {
+        filter: `user = "${pb.authStore.model?.id}" && date_moodtracker = "${dateMoodtracker}"`,
+      });
+
+      // Créer l'entrée moodtracker - stocker l'humeur dans le nom car humeur_moodtracker est un champ image
+      const data = {
+        // Stocker l'humeur dans le nom avec la description
+        nom_moodtracker: nomMoodtracker
+          ? `${nomMoodtracker} [humeur:${humeurMoodtracker}]`
+          : `[humeur:${humeurMoodtracker}]`,
+        // On omet le champ humeur_moodtracker car c'est un champ image
+        date_moodtracker: dateMoodtracker,
+        user: pb.authStore.model?.id,
+        created: new Date().toISOString(),
+      };
+
+      // Afficher les données à envoyer pour débogage
+      console.log("Données à enregistrer:", data);
+
+      if (existingEntries.items.length > 0) {
+        // Mettre à jour l'entrée existante
+        await pb
+          .collection("moodtracker")
+          .update(existingEntries.items[0].id, data);
+        message = "Votre humeur a été mise à jour avec succès !";
+      } else {
+        // Créer une nouvelle entrée
+        await pb.collection("moodtracker").create(data);
+        message = "Votre humeur a été enregistrée avec succès !";
+      }
+      messageType = "success";
+    } else {
+      message = "Veuillez sélectionner une humeur.";
+      messageType = "error";
+    }
+  } catch (error) {
+    // Afficher l'erreur complète pour mieux comprendre le problème
+    console.error("Erreur détaillée:", error);
+    message = "Une erreur s'est produite lors de l'enregistrement.";
+    messageType = "error";
+  }
+}
+
+// Récupérer les entrées pour le calendrier mensuel
+const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+const firstDayFormatted = firstDayOfMonth.toISOString().split("T")[0];
+const lastDayFormatted = lastDayOfMonth.toISOString().split("T")[0];
+
+let monthlyEntries = [];
+try {
+  const records = await pb.collection("moodtracker").getList(1, 100, {
+    filter: `user = "${pb.authStore.model?.id}" && date_moodtracker >= "${firstDayFormatted}" && date_moodtracker <= "${lastDayFormatted}"`,
+    sort: "date_moodtracker",
+  });
+  monthlyEntries = records.items;
+} catch (error) {
+  console.error(
+    "Erreur lors de la récupération des données mensuelles:",
+    error
+  );
+}
+
+// Créer un mapping des dates aux humeurs pour le calendrier
+const moodsByDate = {};
+monthlyEntries.forEach((entry) => {
+  const dateParts = entry.date_moodtracker.split("-");
+  const day = parseInt(dateParts[2], 10);
+
+  // Extraire l'humeur du nom_moodtracker
+  let mood = "";
+  let description = entry.nom_moodtracker || "";
+
+  // Chercher le pattern [humeur:XXX] dans le nom
+  const humeurMatch = description.match(/\[humeur:(.*?)\]/);
+  if (humeurMatch && humeurMatch[1]) {
+    mood = humeurMatch[1];
+    // Retirer la partie [humeur:XXX] pour afficher seulement la description
+    description = description.replace(/\[humeur:.*?\]/, "").trim();
+  }
+
+  moodsByDate[day] = {
+    mood: mood,
+    description: description,
+  };
+});
+
+// Configuration des humeurs avec emojis (gardés pour le calendrier)
+const moodEmojis = {
+  "Très heureux": "😄",
+  Heureux: "🙂",
+  Blasé: "😐",
+  Anxieux: "😰",
+  Triste: "😢",
+  Colère: "😡",
+  "Au bord des larmes": "😭",
+};
+
+// Configuration des humeurs
+const moodNames = [
+  "Très heureux",
+  "Heureux",
+  "Blasé",
+  "Anxieux",
+  "Triste",
+  "Colère",
+  "Au bord des larmes",
+];
+
+const moodColors = {
+  "Très heureux": {
+    color: "text-green-500",
+    bgColor: "bg-green-100",
+    textColor: "text-green-700",
+    lightBg: "bg-green-50",
+  },
+  Heureux: {
+    color: "text-green-400",
+    bgColor: "bg-green-50",
+    textColor: "text-green-600",
+    lightBg: "bg-green-50",
+  },
+  Blasé: {
+    color: "text-gray-400",
+    bgColor: "bg-gray-50",
+    textColor: "text-gray-600",
+    lightBg: "bg-gray-50",
+  },
+  Anxieux: {
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-50",
+    textColor: "text-yellow-700",
+    lightBg: "bg-yellow-50",
+  },
+  Triste: {
+    color: "text-blue-500",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    lightBg: "bg-blue-50",
+  },
+  Colère: {
+    color: "text-red-500",
+    bgColor: "bg-red-50",
+    textColor: "text-red-700",
+    lightBg: "bg-red-50",
+  },
+  "Au bord des larmes": {
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+    textColor: "text-purple-700",
+    lightBg: "bg-purple-50",
+  },
+};
+
+// Construire le tableau des humeurs
+const moods = moodNames.map((name) => {
+  return {
+    value: name,
+    svg: moodSVGs[name],
+    emoji: moodEmojis[name], // Gardé pour le calendrier
+    ...moodColors[name],
+  };
+});
+
+// Générer le calendrier
+const monthNames = [
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre",
+];
+const currentMonth = monthNames[today.getMonth()];
+const daysInMonth = lastDayOfMonth.getDate();
+const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; // Lundi = 0, Dimanche = 6
+---
+
+<Layoutapp title="Mood Tracker">
+  <div
+    class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 pb-28"
+  >
+    <div class="max-w-4xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">🌈 Mood Tracker</h1>
+        <p class="text-lg text-gray-600">Suivez votre humeur au quotidien</p>
+      </div>
+
+      <!-- Messages de feedback -->
+      {
+        message && (
+          <div
+            id="feedback-message"
+            class={`mb-6 p-4 rounded-lg ${
+              messageType === "success"
+                ? "bg-green-100 border border-green-400 text-green-700"
+                : "bg-red-100 border border-red-400 text-red-700"
+            }`}
+          >
+            {message}
+          </div>
+        )
+      }
+
+      <!-- Formulaire d'ajout -->
+      <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6">
+          Comment vous sentez-vous aujourd'hui ?
+        </h2>
+
+        <form method="POST" class="space-y-6" id="moodForm">
+          <!-- Carrousel d'humeurs -->
+          <div class="mb-8">
+            <label class="block text-sm font-medium text-gray-700 mb-4">
+              Faites glisser pour choisir votre humeur *
+            </label>
+
+            <div class="relative">
+              <!-- Boutons de navigation -->
+              <button
+                type="button"
+                id="prevMood"
+                class="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md text-gray-600 hover:text-primary focus:outline-none"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 19l-7-7 7-7"></path>
+                </svg>
+              </button>
+
+              <div class="overflow-hidden px-10" id="moodCarousel">
+                <div
+                  class="flex transition-transform duration-300 ease-in-out"
+                  id="moodSlider"
+                >
+                  {
+                    moods.map((mood, index) => (
+                      <div
+                        class="mood-slide flex-shrink-0 w-full flex flex-col items-center"
+                        data-index={index}
+                      >
+                        <div
+                          class="w-35 h-35 rounded-full flex items-center justify-center mx-auto mb-4 bg-white shadow-md"
+                        >
+                          <img 
+                            src={mood.svg} 
+                            alt={mood.value}
+                            class="w-20 h-20 object-contain" 
+                            onerror={`this.onerror=null; this.parentNode.innerHTML='<span class="text-6xl">${mood.emoji}</span>'`}
+                          />
+                        </div>
+                        <div
+                          class={`text-xl font-semibold text-center ${mood.textColor}`}
+                        >
+                          {mood.value}
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+
+              <button
+                type="button"
+                id="nextMood"
+                class="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md text-gray-600 hover:text-primary focus:outline-none"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+
+              <!-- Indicateurs -->
+              <div
+                class="flex justify-center mt-4 space-x-2"
+                id="moodIndicators"
+              >
+                {
+                  moods.map((_, index) => (
+                    <button
+                      type="button"
+                      class="w-3 h-3 rounded-full bg-gray-300 transition-colors duration-200"
+                      data-index={index}
+                      aria-label={`Sélectionner l'humeur ${index + 1}`}
+                    />
+                  ))
+                }
+              </div>
+
+              <!-- Input caché pour stocker la valeur sélectionnée -->
+              <input
+                type="hidden"
+                name="humeur_moodtracker"
+                id="selectedMood"
+                required
+              />
+            </div>
+
+            <!-- Bouton de validation de l'humeur -->
+            <div class="text-center mt-6">
+              <button
+                type="button"
+                id="validateMood"
+                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled
+              >
+                <span id="validateText">Choisir cette humeur</span>
+                <svg
+                  id="validateCheck"
+                  class="ml-2 h-5 w-5 hidden"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Nom/Description -->
+          <div>
+            <label
+              for="nom_moodtracker"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Décrivez votre journée (optionnel)
+            </label>
+            <input
+              type="text"
+              id="nom_moodtracker"
+              name="nom_moodtracker"
+              placeholder="Ex: Journée au travail, sortie entre amis..."
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          <!-- Date -->
+          <div>
+            <label
+              for="date_moodtracker"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Date
+            </label>
+            <input
+              type="date"
+              id="date_moodtracker"
+              name="date_moodtracker"
+              value={todayFormatted}
+              max={todayFormatted}
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          <!-- Bouton de soumission -->
+          <button
+            type="submit"
+            id="submitButton"
+            disabled
+            class="w-full bg-indigo-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            ✨ Enregistrer mon humeur
+          </button>
+        </form>
+      </div>
+
+      <!-- Calendrier mensuel -->
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6">
+          📅 {currentMonth}
+          {today.getFullYear()}
+        </h2>
+
+        <div class="mb-6">
+          <div class="grid grid-cols-7 gap-2 mb-2">
+            <div class="text-center font-medium text-gray-500">Lun</div>
+            <div class="text-center font-medium text-gray-500">Mar</div>
+            <div class="text-center font-medium text-gray-500">Mer</div>
+            <div class="text-center font-medium text-gray-500">Jeu</div>
+            <div class="text-center font-medium text-gray-500">Ven</div>
+            <div class="text-center font-medium text-gray-500">Sam</div>
+            <div class="text-center font-medium text-gray-500">Dim</div>
+          </div>
+
+          <div class="grid grid-cols-7 gap-2">
+            {
+              Array.from({ length: firstDayOfWeek }).map(() => (
+                <div class="h-16 p-1 rounded-lg" />
+              ))
+            }
+
+            {
+              Array.from({ length: daysInMonth }).map((_, index) => {
+                const day = index + 1;
+                const isToday = day === today.getDate();
+                const moodData = moodsByDate[day];
+                const mood = moodData?.mood;
+                const hasMood = !!mood;
+                const moodColor = hasMood
+                  ? moodColors[mood]?.lightBg || ""
+                  : "";
+                const moodEmoji = hasMood ? moodEmojis[mood] || "" : "";
+
+                return (
+                  <div
+                    class={`h-16 p-1 rounded-lg ${moodColor} ${
+                      isToday ? "ring-2 ring-indigo-500" : ""
+                    } hover:shadow-md transition-shadow relative group`}
+                  >
+                    <div class="absolute top-1 left-2 text-sm font-medium">
+                      {day}
+                    </div>
+                    {hasMood && (
+                      <div class="flex flex-col items-center justify-center h-full">
+                        <div class="text-2xl mt-2">{moodEmoji}</div>
+                      </div>
+                    )}
+                    {hasMood && moodData.description && (
+                      <div class="absolute inset-0 bg-white bg-opacity-95 rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs text-center">
+                        {moodData.description}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            }
+          </div>
+        </div>
+
+        <div class="mt-4 text-center">
+          <a
+            href="/moodtracker/historique"
+            class="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
+          >
+            Voir l'historique complet →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const slider = document.getElementById("moodSlider");
+      const slides = document.querySelectorAll(".mood-slide");
+      const prevBtn = document.getElementById("prevMood");
+      const nextBtn = document.getElementById("nextMood");
+      const indicators = document
+        .getElementById("moodIndicators")
+        .querySelectorAll("button");
+      const selectedMoodInput = document.getElementById("selectedMood");
+      const validateMoodBtn = document.getElementById("validateMood");
+      const validateText = document.getElementById("validateText");
+      const validateCheck = document.getElementById("validateCheck");
+      const submitButton = document.getElementById("submitButton");
+      const nomInput = document.getElementById("nom_moodtracker");
+      const dateInput = document.getElementById("date_moodtracker");
+      const feedbackMessage = document.getElementById("feedback-message");
+
+      let currentIndex = 0;
+      const moods = [
+        "Très heureux",
+        "Heureux",
+        "Blasé",
+        "Anxieux",
+        "Triste",
+        "Colère",
+        "Au bord des larmes",
+      ];
+      let moodSelected = false;
+
+      // Vérifier si les SVG sont correctement chargés
+      document.querySelectorAll('object[type="image/svg+xml"]').forEach(obj => {
+        obj.addEventListener('error', function() {
+          // Remplacer par l'emoji en cas d'erreur
+          const index = parseInt(this.closest('.mood-slide').dataset.index);
+          const moodName = moods[index];
+          const emoji = {
+            "Très heureux": "😄",
+            "Heureux": "🙂",
+            "Blasé": "😐",
+            "Anxieux": "😰",
+            "Triste": "😢", 
+            "Colère": "😡",
+            "Au bord des larmes": "😭"
+          }[moodName] || "😐";
+          
+          this.parentNode.innerHTML = `<span class="text-4xl">${emoji}</span>`;
+          console.warn(`SVG non chargé pour: ${moodName}, fallback vers emoji`);
+        });
+      });
+
+      // Fonction pour mettre à jour le carrousel
+      function updateCarousel() {
+        const translateValue = -currentIndex * 100 + "%";
+        slider.style.transform = `translateX(${translateValue})`;
+
+        // Mettre à jour les indicateurs
+        indicators.forEach((indicator, index) => {
+          if (index === currentIndex) {
+            indicator.classList.add("bg-indigo-500");
+            indicator.classList.remove("bg-gray-300");
+          } else {
+            indicator.classList.add("bg-gray-300");
+            indicator.classList.remove("bg-indigo-500");
+          }
+        });
+
+        // Si on a déjà sélectionné une humeur, réinitialiser
+        if (moodSelected) {
+          resetMoodSelection();
+        }
+
+        // Mettre à jour le bouton de validation
+        validateMoodBtn.disabled = false;
+        validateText.textContent = `Choisir "${moods[currentIndex]}"`;
+      }
+
+      // Fonction pour réinitialiser la sélection d'humeur
+      function resetMoodSelection() {
+        moodSelected = false;
+        validateMoodBtn.disabled = false;
+        validateText.textContent = `Choisir "${moods[currentIndex]}"`;
+        validateCheck.classList.add("hidden");
+        validateMoodBtn.classList.remove("bg-green-600", "hover:bg-green-700");
+        validateMoodBtn.classList.add("bg-indigo-600", "hover:bg-indigo-700");
+        submitButton.disabled = true;
+      }
+
+      // Gestionnaires d'événements pour les boutons
+      prevBtn.addEventListener("click", () => {
+        currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+        updateCarousel();
+      });
+
+      nextBtn.addEventListener("click", () => {
+        currentIndex = (currentIndex + 1) % slides.length;
+        updateCarousel();
+      });
+
+      // Gestionnaires d'événements pour les indicateurs
+      indicators.forEach((indicator, index) => {
+        indicator.addEventListener("click", () => {
+          currentIndex = index;
+          updateCarousel();
+        });
+      });
+
+      // Swipe gestures for mobile
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      const carousel = document.getElementById("moodCarousel");
+
+      carousel.addEventListener("touchstart", (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      });
+
+      carousel.addEventListener("touchend", (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      });
+
+      function handleSwipe() {
+        const threshold = 50; // Minimum distance for a swipe
+
+        if (touchEndX + threshold < touchStartX) {
+          // Swipe left - show next slide
+          nextBtn.click();
+        } else if (touchEndX > touchStartX + threshold) {
+          // Swipe right - show previous slide
+          prevBtn.click();
+        }
+      }
+
+      // Validation de l'humeur
+      validateMoodBtn.addEventListener("click", () => {
+        selectedMoodInput.value = moods[currentIndex];
+        moodSelected = true;
+
+        // Effet visuel de validation
+        validateText.textContent = "Humeur choisie";
+        validateCheck.classList.remove("hidden");
+        validateMoodBtn.classList.add("bg-green-600");
+        validateMoodBtn.classList.remove(
+          "bg-indigo-600",
+          "hover:bg-indigo-700"
+        );
+        validateMoodBtn.classList.add("hover:bg-green-700");
+
+        // Activer le bouton de soumission
+        submitButton.disabled = false;
+      });
+
+      // Gérer le changement de date
+      dateInput.addEventListener("change", () => {
+        if (moodSelected) {
+          resetMoodSelection();
+        }
+      });
+
+      // Animation d'entrée pour les éléments
+      const elements = document.querySelectorAll(".bg-white");
+      elements.forEach((el, index) => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(20px)";
+        setTimeout(() => {
+          el.style.transition = "all 0.6s ease";
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+        }, index * 200);
+      });
+
+      // Fermer automatiquement le message de feedback après 5 secondes
+      if (feedbackMessage) {
+        setTimeout(() => {
+          feedbackMessage.style.opacity = "0";
+          setTimeout(() => {
+            feedbackMessage.style.display = "none";
+          }, 500);
+        }, 5000);
+      }
+
+      // Initialiser le carrousel
+      updateCarousel();
+    });
+  </script>
+</Layoutapp>

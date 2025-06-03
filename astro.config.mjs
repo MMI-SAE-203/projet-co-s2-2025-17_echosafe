@@ -7,5 +7,6 @@ export default defineConfig({
   output: 'server',
   vite: {
     plugins: [tailwindcss()],
+    assetsInclude: ['**/*.svg'],
   },
 });
