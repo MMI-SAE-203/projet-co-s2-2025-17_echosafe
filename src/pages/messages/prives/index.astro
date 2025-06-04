@@ -11,23 +11,19 @@ import {
   getDoc,
 } from "firebase/firestore";
 
-// Récupérer l'utilisateur connecté (l'authentification reste avec PocketBase)
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
 }
 
-// Rediriger si non connecté
 if (!pb.authStore.isValid) {
   return Astro.redirect("/auth/connexion");
 }
 
 const currentUserId = pb.authStore.model.id;
-// Vérification stricte du statut de bénévole
 const isVolunteer = pb.authStore.model.is_volunteer === true;
 
-// Récupérer la liste des utilisateurs depuis Firestore (exclure l'utilisateur courant)
 let users = [];
 try {
   const usersRef = collection(db, "users");
@@ -43,7 +39,6 @@ try {
   console.error("Erreur lors de la récupération des utilisateurs:", error);
 }
 
-// Récupérer les conversations privées existantes depuis Firestore
 let existingConversations = {};
 try {
   const conversationsRef = collection(db, "conversations");
@@ -55,7 +50,6 @@ try {
 
   const querySnapshot = await getDocs(q);
 
-  // Créer un map des utilisateurs avec qui l'utilisateur a déjà une conversation
   querySnapshot.docs.forEach((doc) => {
     const conversation = doc.data();
     const otherUserId = conversation.participants.find(
@@ -69,10 +63,8 @@ try {
   console.error("Erreur lors de la récupération des conversations:", error);
 }
 
-// Séparer les utilisateurs avec qui on a déjà parlé et les nouveaux
 const recentUsers = users.filter((user) => user.id in existingConversations);
 
-// Séparer les utilisateurs par type (comparaison stricte)
 const volunteers = users.filter(user => 
   user.is_volunteer === true || user.role === "volunteer"
 );
@@ -81,7 +73,6 @@ const regularUsers = users.filter(user =>
   user.is_volunteer !== true && user.role !== "volunteer"
 );
 
-// Nouveaux amis potentiels (utilisateurs normaux avec qui on n'a pas encore parlé)
 const potentialFriends = regularUsers.filter(user => 
   !(user.id in existingConversations)
 );
@@ -89,7 +80,6 @@ const potentialFriends = regularUsers.filter(user =>
 
 <Layout>
   <div class="container mx-auto px-0 sm:px-4 py-0 sm:py-6 max-w-6xl">
-    <!-- En-tête mobile avec navigation (pleine largeur sur mobile) -->
     <div class="bg-white shadow-sm mb-4 sm:mb-6 sm:static sm:shadow-none sm:bg-transparent sm:rounded-lg sm:px-0">
       <div class="flex items-center justify-between p-4 sm:px-0 sm:py-2">
         <div class="flex items-center">
@@ -115,7 +105,6 @@ const potentialFriends = regularUsers.filter(user =>
           <h1 class="text-lg sm:text-2xl font-bold text-primary">Messages privés</h1>
         </div>
         
-        <!-- Barre de recherche plus visible sur desktop -->
         <div class="relative hidden sm:block">
           <input
             type="text"
@@ -141,7 +130,6 @@ const potentialFriends = regularUsers.filter(user =>
         </div>
       </div>
       
-      <!-- Barre de recherche pour mobile -->
       <div class="px-4 pb-3 sm:hidden">
         <div class="relative">
           <input
@@ -168,7 +156,6 @@ const potentialFriends = regularUsers.filter(user =>
         </div>
       </div>
 
-      <!-- Onglets de navigation rapide pour mobile (uniquement pour les utilisateurs standard) -->
       {!isVolunteer && (
         <div class="flex border-t sm:hidden">
           <a href="/messages/prives" class="flex-1 py-3 text-center text-primary border-b-2 border-primary font-medium text-sm">
@@ -181,7 +168,6 @@ const potentialFriends = regularUsers.filter(user =>
       )}
     </div>
 
-    <!-- Navigation d'onglets desktop (visible uniquement sur SM et plus, uniquement pour les utilisateurs standard) -->
     <div class="px-3 sm:px-0">
       {!isVolunteer && (
         <div class="hidden sm:flex mb-6 border-b">
@@ -220,7 +206,6 @@ const potentialFriends = regularUsers.filter(user =>
               Conversations récentes
             </h2>
             
-            <!-- Affichage en liste horizontale sur mobile -->
             <div class="flex overflow-x-auto pb-2 sm:hidden px-3 -mx-3 space-x-3 hide-scrollbar recent-conversations">
               {recentUsers.map((user) => (
                 <a
@@ -256,7 +241,6 @@ const potentialFriends = regularUsers.filter(user =>
               ))}
             </div>
             
-            <!-- Affichage en grille sur desktop -->
             <div class="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {recentUsers.map((user) => (
                 <a
@@ -296,7 +280,6 @@ const potentialFriends = regularUsers.filter(user =>
       }
     </div>
 
-    <!-- Section Trouver des amis (uniquement pour les utilisateurs standards) -->
     {!isVolunteer && potentialFriends.length > 0 && (
       <div class="mb-8 px-3 sm:px-0">
         <div class="flex items-center justify-between mb-3 sm:mb-4">
@@ -318,7 +301,6 @@ const potentialFriends = regularUsers.filter(user =>
           </button>
         </div>
 
-        <!-- Liste des amis potentiels sur mobile (affichage horizontal) -->
         <div class="flex overflow-x-auto pb-2 sm:hidden -mx-3 space-x-3 hide-scrollbar potential-friends">
           {potentialFriends.slice(0, 6).map((user) => (
             <a
@@ -344,7 +326,6 @@ const potentialFriends = regularUsers.filter(user =>
           ))}
         </div>
 
-        <!-- Liste des amis potentiels sur desktop (affichage en grille) -->
         <div class="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 potential-friends-grid">
           {potentialFriends.slice(0, 10).map((user) => (
             <a
@@ -372,9 +353,7 @@ const potentialFriends = regularUsers.filter(user =>
       </div>
     )}
 
-    <!-- Section tous les utilisateurs (pleine largeur sur mobile) -->
     <div class="sm:bg-white sm:rounded-lg sm:shadow-lg sm:overflow-hidden">
-      <!-- En-tête de la section -->
       <div class="border-b px-4 sm:px-6 py-3 sm:py-4 bg-gray-50">
         <h2 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
           <svg
@@ -391,7 +370,6 @@ const potentialFriends = regularUsers.filter(user =>
         </h2>
       </div>
 
-      <!-- Liste des utilisateurs (style différent sur mobile vs desktop) -->
       <div class="user-grid sm:p-0">
         {
           users.length > 0 ? (
@@ -478,7 +456,6 @@ const potentialFriends = regularUsers.filter(user =>
       </div>
     </div>
 
-    <!-- Modal pour voir tous les amis potentiels (caché par défaut) -->
     <div id="all-friends-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
       <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden">
         <div class="p-4 border-b border-gray-200 flex justify-between items-center">
@@ -531,7 +508,6 @@ const potentialFriends = regularUsers.filter(user =>
 </Layout>
 
 <script>
-  // Script pour la recherche d'utilisateurs
   document.addEventListener("DOMContentLoaded", () => {
     const searchInputDesktop = document.getElementById("search-users-desktop");
     const searchInputMobile = document.getElementById("search-users-mobile");
@@ -555,7 +531,6 @@ const potentialFriends = regularUsers.filter(user =>
     if (searchInputDesktop) {
       searchInputDesktop.addEventListener("input", (e) => {
         performSearch(e.target.value);
-        // Synchroniser la recherche mobile
         if (searchInputMobile) searchInputMobile.value = e.target.value;
       });
     }
@@ -563,12 +538,10 @@ const potentialFriends = regularUsers.filter(user =>
     if (searchInputMobile) {
       searchInputMobile.addEventListener("input", (e) => {
         performSearch(e.target.value);
-        // Synchroniser la recherche desktop
         if (searchInputDesktop) searchInputDesktop.value = e.target.value;
       });
     }
 
-    // Gérer la modal "Voir tous les amis"
     const showAllFriendsBtn = document.getElementById("show-all-friends");
     const allFriendsModal = document.getElementById("all-friends-modal");
     const closeModalBtn = document.getElementById("close-modal");
@@ -577,17 +550,16 @@ const potentialFriends = regularUsers.filter(user =>
     if (showAllFriendsBtn && allFriendsModal) {
       showAllFriendsBtn.addEventListener("click", () => {
         allFriendsModal.classList.remove("hidden");
-        document.body.style.overflow = "hidden"; // Empêcher le défilement du corps de page
+        document.body.style.overflow = "hidden"; 
       });
     }
 
     if (closeModalBtn && allFriendsModal) {
       closeModalBtn.addEventListener("click", () => {
         allFriendsModal.classList.add("hidden");
-        document.body.style.overflow = ""; // Restaurer le défilement
+        document.body.style.overflow = ""; 
       });
 
-      // Fermer également en cliquant en dehors de la modal
       allFriendsModal.addEventListener("click", (e) => {
         if (e.target === allFriendsModal) {
           allFriendsModal.classList.add("hidden");
@@ -596,7 +568,6 @@ const potentialFriends = regularUsers.filter(user =>
       });
     }
 
-    // Recherche dans la modal
     if (searchFriendsModal) {
       searchFriendsModal.addEventListener("input", (e) => {
         const searchValue = e.target.value.toLowerCase();
@@ -616,30 +587,26 @@ const potentialFriends = regularUsers.filter(user =>
 </script>
 
 <style>
-  /* Masquer la barre de défilement tout en permettant le défilement */
   .hide-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
   }
   
   .hide-scrollbar::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none; 
   }
   
-  /* Taille de texte extra petite pour mobile */
   .text-xxs {
     font-size: 0.65rem;
     line-height: 1.1;
   }
   
-  /* Animation subtile pour les éléments de la liste de défilement horizontal */
   .recent-conversations > a:active,
   .potential-friends > a:active {
     transform: scale(0.98);
     transition: transform 0.1s;
   }
 
-  /* Animation pour la modal */
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }

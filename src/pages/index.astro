@@ -6,7 +6,6 @@ import Card_accueil from "../components/Card_accueil.astro";
 import TemoignageCard from "../components/TemoignageCard.astro";
 import FAQItem from "../components/FAQItem.astro";
 
-// Version optimisée des témoignages (textes raccourcis tout en préservant le sens)
 const testimonials = [
   {
     name: "Marie D.",
@@ -58,11 +57,9 @@ const testimonials = [
   },
 ];
 
-// Diviser les témoignages en deux rangées
 const topRowTestimonials = testimonials.slice(0, 4);
 const bottomRowTestimonials = testimonials.slice(4, 8);
 
-// Précharger uniquement ce qui est visible initialement
 const preloadTestimonials = testimonials.slice(0, 2);
 ---
 
@@ -77,7 +74,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
       </h2>
     </div>
 
-    <!-- Section 1: Espaces de soutien et de partage -->
     <Card_accueil
       title="Espaces de soutien et de partage"
       description="Rejoignez notre communauté pour échanger anonymement avec des professionnels et d'autres membres dans un environnement sécurisé."
@@ -93,7 +89,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
       height="300"
     />
 
-    <!-- Section 2: Suivi de ton humeur -->
     <Card_accueil
       title="Suivi votre humeur"
       description="Enregistrez vos humeurs avec le Moodtracker et recevez des conseils personnalisés pour améliorer votre bien-être."
@@ -109,7 +104,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
       height="300"
     />
 
-    <!-- Section 3: Kit de secours -->
     <Card_accueil
       title="Kit de secours contre le harcèlement"
       description="Accédez aux ressources essentielles : numéros d'urgence, conseils pratiques et soutien immédiat contre le harcèlement."
@@ -166,7 +160,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
       </h2>
     </div>
 
-    <!-- Image de l'homme optimisée -->
     <div class="absolute right-0 md:right-30 -top-15 w-40 z-0">
       <img
         src="/src/assets/homme-securite.webp"
@@ -220,7 +213,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
 
   <section>
     <div class="flex justify-center items-center gap-2 mb-4">
-      <!-- Remplacer l'image d'étoile par un SVG inline -->
       <svg
         class="w-5 h-5 text-yellow-400"
         viewBox="0 0 24 24"
@@ -234,7 +226,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
     </div>
 
     <div class="relative flex flex-col items-center mb-10">
-      <!-- Image de la femme optimisée -->
       <div
         class="absolute left-0 md:left-30 top-1/2 transform -translate-y-1/2 w-40 z-0"
       >
@@ -258,7 +249,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
     <div
       class="relative bg-gradient-to-b from-[#FFDEDE] to-[#FFB3B3] py-16 overflow-hidden"
     >
-      <!-- Utiliser un conteneur pour le lazy loading -->
       <div id="testimonials-container" class="w-full overflow-hidden">
         <div class="flex w-full gap-x-4 top-row">
           {
@@ -302,7 +292,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
       </h2>
     </div>
 
-    <!-- Image optimisée -->
     <div class="absolute right-0 md:right-30 -top-15 w-40 z-0">
       <img
         src="/src/assets/homme-FAQ.webp"
@@ -319,7 +308,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
     </div>
   </section>
 
-  <!-- Banner de cookies (masquée par défaut, chargée uniquement si nécessaire) -->
   <div
     id="cookie-banner"
     class="fixed bottom-0 left-0 right-0 bg-white p-6 md:p-10 shadow-2xl max-h-[90vh] overflow-y-auto z-50 w-full md:max-w-4xl md:mx-auto md:left-1/2 md:transform md:-translate-x-1/2 md:rounded-t-2xl hidden"
@@ -330,7 +318,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
       Cette application utilise des cookies pour différentes finalités.
     </p>
 
-    <!-- Cookies essentiels -->
     <div class="mb-4 p-3 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between">
         <div>
@@ -347,7 +334,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
       </div>
     </div>
 
-    <!-- Cookies fonctionnels -->
     <div class="mb-4 p-3 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between">
         <div>
@@ -373,7 +359,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
       </div>
     </div>
 
-    <!-- Cookies analytiques -->
     <div class="mb-4 p-3 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between">
         <div>
@@ -425,9 +410,7 @@ const preloadTestimonials = testimonials.slice(0, 2);
   </div>
 </Layout>
 
-<!-- Script optimisé avec chargement conditionnel -->
 <script is:inline>
-  // Utilitaire de cookies optimisé
   const CookieUtils = {
     savePreferences: function (essential, functional, analytics) {
       const expiryDate = new Date();
@@ -448,12 +431,10 @@ const preloadTestimonials = testimonials.slice(0, 2);
     },
   };
 
-  // Fonction pour gérer les animations de témoignages avec IntersectionObserver
   function setupTestimonialsAnimation() {
     const container = document.getElementById("testimonials-container");
     if (!container) return;
 
-    // Observer pour déclencher l'animation uniquement quand visible
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -464,7 +445,6 @@ const preloadTestimonials = testimonials.slice(0, 2);
             if (topRow && !topRow.classList.contains("animated")) {
               topRow.classList.add("animated");
               topRow.style.animation = "scrollLeft 30s linear infinite";
-              // Dupliquer pour créer l'effet de boucle infinie, mais seulement à l'affichage
               const content = topRow.innerHTML;
               topRow.innerHTML = content + content;
             }
@@ -486,15 +466,12 @@ const preloadTestimonials = testimonials.slice(0, 2);
     observer.observe(container);
   }
 
-  // Fonction pour gérer le bandeau de cookies
   function setupCookieBanner() {
-    // Ne charger le bandeau que si nécessaire
     if (!CookieUtils.hasMadeChoice()) {
       const cookieBanner = document.getElementById("cookie-banner");
       if (cookieBanner) {
         cookieBanner.classList.remove("hidden");
 
-        // Ajouter les gestionnaires d'événements
         document
           .getElementById("accept-all-cookies")
           ?.addEventListener("click", () => {
@@ -523,17 +500,14 @@ const preloadTestimonials = testimonials.slice(0, 2);
     }
   }
 
-  // Initialisation différée pour améliorer les performances
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
-      // Retarder légèrement le chargement des éléments non critiques
       setTimeout(() => {
         setupTestimonialsAnimation();
         setupCookieBanner();
       }, 100);
     });
   } else {
-    // Si le DOM est déjà chargé
     setTimeout(() => {
       setupTestimonialsAnimation();
       setupCookieBanner();

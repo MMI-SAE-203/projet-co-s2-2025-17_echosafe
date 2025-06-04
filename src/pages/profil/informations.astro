@@ -2,29 +2,24 @@
 import Layoutapp from "../../layouts/Layoutapp.astro";
 import PocketBase from "pocketbase";
 
-// Variables pour stocker les informations utilisateur
 let userData = null;
 let userAvatar = null;
 
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 
-// Récupérer les données de l'utilisateur depuis les cookies
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
 }
 
-// Rediriger si non connecté
 if (!pb.authStore.isValid) {
   return Astro.redirect("/auth/connexion");
 }
 
-// Récupérer les données complètes de l'utilisateur
 try {
   const userId = pb.authStore.model.id;
   userData = await pb.collection("users").getOne(userId);
   
-  // Récupérer l'URL de l'avatar s'il existe
   if (userData.avatar) {
     userAvatar = `https://echosafe.eloishenry.fr/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`;
   }
@@ -35,8 +30,7 @@ try {
 
 <Layoutapp>
   <div class="max-w-3xl mx-auto px-4 py-12">
-    <!-- En-tête avec bouton retour -->
-    <div class="flex items-center mb-10">
++    <div class="flex items-center mb-10">
       <a href="/profil" class="text-primary mr-3 hover:opacity-80 transition-opacity">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -73,9 +67,7 @@ try {
           </div>
         </div>
 
-        <!-- Sections d'informations -->
         <div class="space-y-10">
-          <!-- Informations de base -->
           <section>
             <h2 class="text-xl font-semibold mb-6 pb-2 border-b">
               Informations de base
@@ -106,7 +98,6 @@ try {
             </div>
           </section>
 
-          <!-- Informations de contact -->
           <section>
             <h2 class="text-xl font-semibold mb-6 pb-2 border-b ">
               Informations de contact
@@ -125,7 +116,6 @@ try {
             </div>
           </section>
 
-          <!-- Biographie -->
           <section>
             <h2 class="text-xl font-semibold mb-6 pb-2 border-b">
               À propos de moi
@@ -137,7 +127,6 @@ try {
           </section>
         </div>
 
-        <!-- Bouton de modification -->
         <div class="mt-10 flex justify-center">
           <button 
             id="edit-profile-btn" 
@@ -169,17 +158,14 @@ try {
     const editProfileBtn = document.getElementById('edit-profile-btn');
     if (editProfileBtn) {
       editProfileBtn.addEventListener('click', () => {
-        // Animation de feedback visuel
         editProfileBtn.classList.add('animate-pulse');
         setTimeout(() => {
           editProfileBtn.classList.remove('animate-pulse');
-          // Cette fonctionnalité sera implémentée plus tard
           const toast = document.createElement('div');
           toast.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300';
           toast.innerHTML = 'La modification du profil sera bientôt disponible';
           document.body.appendChild(toast);
           
-          // Faire disparaître le toast après 3 secondes
           setTimeout(() => {
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 300);
@@ -191,17 +177,14 @@ try {
     const changeAvatarBtn = document.getElementById('change-avatar-btn');
     if (changeAvatarBtn) {
       changeAvatarBtn.addEventListener('click', () => {
-        // Animation de feedback visuel
         changeAvatarBtn.classList.add('animate-pulse');
         setTimeout(() => {
           changeAvatarBtn.classList.remove('animate-pulse');
-          // Cette fonctionnalité sera implémentée plus tard
           const toast = document.createElement('div');
           toast.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300';
           toast.innerHTML = 'Le changement d\'avatar sera bientôt disponible';
           document.body.appendChild(toast);
           
-          // Faire disparaître le toast après 3 secondes
           setTimeout(() => {
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 300);

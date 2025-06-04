@@ -157,7 +157,6 @@ import LegalNav from "../../components/LegalNav.astro";
             ci-dessous ou via le menu "Confidentialité" dans la navigation.
           </p>
 
-          <!-- Gestionnaire de préférences de cookies intégré -->
           <div
             class="mt-8 p-6 border border-primary/20 rounded-lg bg-indigo-50/50"
           >
@@ -165,7 +164,6 @@ import LegalNav from "../../components/LegalNav.astro";
               Vos préférences de cookies
             </h3>
 
-            <!-- Cookies strictement nécessaires - toujours activés -->
             <div
               class="mb-4 p-4 border border-gray-200 rounded-lg bg-white shadow-sm"
             >
@@ -185,7 +183,6 @@ import LegalNav from "../../components/LegalNav.astro";
               </div>
             </div>
 
-            <!-- Cookies fonctionnels - peuvent être activés/désactivés -->
             <div
               class="mb-4 p-4 border border-gray-200 rounded-lg bg-white shadow-sm"
             >
@@ -216,7 +213,6 @@ import LegalNav from "../../components/LegalNav.astro";
               </div>
             </div>
 
-            <!-- Cookies analytiques - peuvent être activés/désactivés -->
             <div
               class="mb-6 p-4 border border-gray-200 rounded-lg bg-white shadow-sm"
             >
@@ -246,7 +242,6 @@ import LegalNav from "../../components/LegalNav.astro";
               </div>
             </div>
 
-            <!-- Bouton pour enregistrer les préférences -->
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 id="reject-all-inline"
@@ -477,23 +472,19 @@ import LegalNav from "../../components/LegalNav.astro";
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      // PARTIE 1: FONCTIONS UTILITAIRES POUR LA GESTION DES COOKIES
 
-      // Fonction pour créer un cookie
       function setCookie(name, value, days) {
         const d = new Date();
         d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
         const expires = "expires=" + d.toUTCString();
         document.cookie = name + "=" + value + ";" + expires + ";path=/";
 
-        // Important: déclencher un événement personnalisé pour informer toutes les pages
         const event = new CustomEvent("cookieChange", {
           detail: { name, value },
         });
         document.dispatchEvent(event);
       }
 
-      // Fonction pour obtenir un cookie
       function getCookie(name) {
         const nameEQ = name + "=";
         const ca = document.cookie.split(";");
@@ -517,21 +508,15 @@ import LegalNav from "../../components/LegalNav.astro";
         });
       }
 
-      // Fonction pour enregistrer les préférences de cookies
       function saveCookiePreferences(essential, functional, analytics) {
-        // On enregistre toujours les cookies essentiels
         setCookie("essential-cookies", "true", 365);
 
-        // On enregistre les autres selon les choix utilisateur
         setCookie("functional-cookies", functional.toString(), 365);
         setCookie("analytics-cookies", analytics.toString(), 365);
 
-        // On enregistre aussi que l'utilisateur a fait son choix
         setCookie("cookies-preferences-set", "true", 365);
 
-        // Si les cookies sont refusés, les désactiver réellement
         if (!functional) {
-          // Supprimer les cookies fonctionnels existants
           document.cookie =
             "mood-tracker=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
           document.cookie =
@@ -539,20 +524,16 @@ import LegalNav from "../../components/LegalNav.astro";
         }
 
         if (!analytics) {
-          // Supprimer les cookies analytiques existants
           document.cookie =
             "_ga=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
           document.cookie =
             "_gid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
 
-        // Mise à jour de tous les toggles de la page
         updateAllToggles();
       }
 
-      // Fonction pour mettre à jour tous les toggles de la page
       function updateAllToggles() {
-        // Mettre à jour tous les toggles fonctionnels
         const allFunctionalToggles = document.querySelectorAll(
           '[id*="functional-cookies"]'
         );
@@ -560,7 +541,6 @@ import LegalNav from "../../components/LegalNav.astro";
           toggle.checked = getCookie("functional-cookies") !== "false";
         });
 
-        // Mettre à jour tous les toggles analytiques
         const allAnalyticsToggles = document.querySelectorAll(
           '[id*="analytics-cookies"]'
         );
@@ -569,7 +549,6 @@ import LegalNav from "../../components/LegalNav.astro";
         });
       }
 
-      // Fonction pour créer un message de confirmation
       function showConfirmationMessage(parentElement, type, message) {
         const confirmationMessage = document.createElement("div");
         confirmationMessage.className = `mt-4 p-3 bg-${type}-100 text-${type}-800 rounded-lg text-center`;
@@ -577,7 +556,6 @@ import LegalNav from "../../components/LegalNav.astro";
 
         parentElement.after(confirmationMessage);
 
-        // Faire disparaître le message après quelques secondes
         setTimeout(function () {
           confirmationMessage.style.opacity = "0";
           confirmationMessage.style.transition = "opacity 1s";
@@ -587,15 +565,11 @@ import LegalNav from "../../components/LegalNav.astro";
         }, 3000);
       }
 
-      // PARTIE 2: INITIALISATION
-
-      // Initialisation des bannières de cookie sur toutes les pages
       const cookieBanner = document.getElementById("cookie-banner");
       if (cookieBanner && getCookie("cookies-preferences-set") !== "true") {
         cookieBanner.style.display = "block";
       }
 
-      // Initialiser l'état des toggles en fonction des cookies existants
       const functionalToggle = document.getElementById(
         "inline-functional-cookies"
       );
@@ -604,32 +578,26 @@ import LegalNav from "../../components/LegalNav.astro";
       );
 
       if (functionalToggle) {
-        functionalToggle.checked = getCookie("functional-cookies") !== "false"; // Par défaut activé
+        functionalToggle.checked = getCookie("functional-cookies") !== "false"; 
       }
 
       if (analyticsToggle) {
-        analyticsToggle.checked = getCookie("analytics-cookies") === "true"; // Par défaut désactivé
+        analyticsToggle.checked = getCookie("analytics-cookies") === "true"; 
       }
 
-      // PARTIE 3: GESTION DES ÉVÉNEMENTS
-
-      // Écouter les modifications de cookies sur l'ensemble du site
       document.addEventListener("cookieChange", function (e) {
-        // Mettre à jour tous les toggles quand un cookie change
         updateAllToggles();
       });
 
-      // Gérer le clic sur "Enregistrer mes préférences"
       const saveButton = document.getElementById("save-preferences-inline");
       if (saveButton) {
         saveButton.addEventListener("click", function () {
           saveCookiePreferences(
-            true, // Toujours vrai pour les essentiels
+            true, 
             functionalToggle.checked,
             analyticsToggle.checked
           );
 
-          // Afficher un message de confirmation
           showConfirmationMessage(
             saveButton.parentNode,
             "green",
@@ -638,18 +606,14 @@ import LegalNav from "../../components/LegalNav.astro";
         });
       }
 
-      // Gérer le clic sur "Tout accepter"
       const acceptAllButton = document.getElementById("accept-all-inline");
       if (acceptAllButton) {
         acceptAllButton.addEventListener("click", function () {
-          // Mettre à jour les toggles visuellement
           if (functionalToggle) functionalToggle.checked = true;
           if (analyticsToggle) analyticsToggle.checked = true;
 
-          // Enregistrer les préférences
           saveCookiePreferences(true, true, true);
 
-          // Afficher confirmation
           showConfirmationMessage(
             acceptAllButton.parentNode,
             "green",
@@ -658,18 +622,14 @@ import LegalNav from "../../components/LegalNav.astro";
         });
       }
 
-      // Gérer le clic sur "Tout refuser"
       const rejectAllButton = document.getElementById("reject-all-inline");
       if (rejectAllButton) {
         rejectAllButton.addEventListener("click", function () {
-          // Mettre à jour les toggles visuellement
           if (functionalToggle) functionalToggle.checked = false;
           if (analyticsToggle) analyticsToggle.checked = false;
 
-          // Enregistrer les préférences
           saveCookiePreferences(true, false, false);
 
-          // Afficher confirmation
           showConfirmationMessage(
             rejectAllButton.parentNode,
             "blue",
@@ -678,13 +638,11 @@ import LegalNav from "../../components/LegalNav.astro";
         });
       }
 
-      // Gestion de la bannière de cookie (boutons dans le header/footer)
       const cookiePreferencesButton = document.getElementById(
         "cookie-preferences-button"
       );
       if (cookiePreferencesButton && cookieBanner) {
         cookiePreferencesButton.addEventListener("click", function () {
-          // Mettre à jour les cases à cocher selon les valeurs actuelles
           const functionalCheckbox =
             document.getElementById("functional-cookies");
           const analyticsCheckbox =
@@ -705,7 +663,6 @@ import LegalNav from "../../components/LegalNav.astro";
         });
       }
 
-      // Également écouter les liens depuis d'autres pages
       const allCookiePreferencesLinks = document.querySelectorAll(
         ".cookie-preferences-link"
       );
@@ -716,19 +673,17 @@ import LegalNav from "../../components/LegalNav.astro";
             cookieBanner.style.display = "block";
             cookieBanner.scrollIntoView({ behavior: "smooth" });
           } else {
-            // Si on est sur une page sans bannière, rediriger vers la politique de cookies
             window.location.href = "/legal/politique-cookies";
           }
         });
       });
 
-      // Exposer ces fonctions globalement pour une utilisation dans d'autres scripts
       if (!(window as any).CookieUtils) {
         (window as any).CookieUtils = {
           setCookie,
           getCookie,
-          savePreferences: saveCookiePreferences, // Noter le changement de nom
-          updateToggles: updateAllToggles, // Noter le changement de nom
+          savePreferences: saveCookiePreferences, 
+          updateToggles: updateAllToggles, 
         };
       }
     });

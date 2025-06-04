@@ -3,15 +3,12 @@ import Layout from "../../layouts/Layout.astro";
 import Formulaire from "../../components/Formulaire.astro";
 import PocketBase from "pocketbase";
 
-// Vérifier si l'utilisateur vient de s'inscrire
 const isNewUser = Astro.url.searchParams.get("new") === "true";
 
-// Si ce n'est pas un nouvel utilisateur, rediriger vers l'accueil
 if (!isNewUser) {
   return Astro.redirect("/accueil-app");
 }
 
-// Récupérer l'utilisateur connecté pour ajouter son ID au formulaire
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 let userId = "";
@@ -23,7 +20,6 @@ if (authCookie) {
   }
 }
 
-// Définir les questions pour le formulaire de harcèlement
 const questions = [
   {
     id: 1,

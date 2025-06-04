@@ -25,8 +25,6 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
     </p>
 
     <form id="donation-form" class="space-y-4">
-      <!-- Preset amounts -->
-      <!-- Preset amounts -->
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-3">
         <button
           type="button"
@@ -50,7 +48,6 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
         >
       </div>
 
-      <!-- Custom amount -->
       <div>
         <label for="custom-amount" class="block text-sm font-medium mb-1"
           >Votre montant</label
@@ -65,7 +62,6 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
         />
       </div>
 
-      <!-- Payment options -->
       <div class="mt-6">
         <div
           class="flex flex-wrap sm:flex-nowrap justify-center sm:justify-between items-center gap-3"
@@ -100,7 +96,6 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
         </div>
       </div>
 
-      <!-- État du processus -->
       <div id="process-status" class="hidden">
         <div class="flex items-center justify-center p-4">
           <div
@@ -111,14 +106,12 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
         </div>
       </div>
 
-      <!-- Message d'erreur -->
       <div
         id="error-message"
         class="hidden text-center text-red-600 bg-red-50 p-3 rounded-md"
       >
       </div>
 
-      <!-- Submit button -->
       <button
         type="submit"
         id="donate-button"
@@ -128,7 +121,6 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
         Faire un don
       </button>
 
-      <!-- Ajout message de sécurité -->
       <div class="text-sm text-gray-500 mt-6 text-center">
         <p class="mb-2">🔒 Paiement sécurisé</p>
         <p>
@@ -139,14 +131,11 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
     </form>
   </div>
 
-  <!-- Inclure Stripe.js -->
   <script is:inline src="https://js.stripe.com/v3/"></script>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Initialiser Stripe avec votre clé publique
 
-      // Assurez-vous d'avoir votre clé disponible dans l'environnement client
       const stripe = Stripe(
         "pk_test_51RJukxQtwwMgubEfinIb9zJist8z3iIAEgAxNMdy2QMVR25f9SrtUN8XEV6t62ysP1dTc6sw44XtrbKZPKH8CgMY00VDwBH9tK"
       );
@@ -166,7 +155,6 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
       let selectedAmount = null;
       let selectedPaymentMethod = null;
 
-      // Function to update donate button state
       const updateDonateButtonState = () => {
         if (selectedAmount && selectedPaymentMethod) {
           donateButton.disabled = false;
@@ -175,18 +163,14 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
         }
       };
 
-      // Handle preset amount buttons
       presetAmountButtons.forEach((button) => {
         button.addEventListener("click", () => {
-          // Reset all buttons
           presetAmountButtons.forEach((btn) => {
             btn.classList.remove("bg-primary", "text-white");
           });
 
-          // Highlight selected button
           button.classList.add("bg-primary", "text-white");
 
-          // Set amount and clear custom input
           selectedAmount = parseInt(button.getAttribute("data-amount"));
           customAmountInput.value = "";
 
@@ -194,11 +178,9 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
         });
       });
 
-      // Handle custom amount input
       customAmountInput.addEventListener("input", (e) => {
         const value = parseInt(e.target.value);
 
-        // Reset preset buttons
         presetAmountButtons.forEach((btn) => {
           btn.classList.remove("bg-indigo-600", "text-white");
           btn.classList.add("text-indigo-600", "bg-white");
@@ -213,38 +195,30 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
         updateDonateButtonState();
       });
 
-      // Handle payment method buttons
       paymentMethodButtons.forEach((button) => {
         button.addEventListener("click", () => {
-          // Reset all buttons
           paymentMethodButtons.forEach((btn) => {
             btn.classList.remove("ring-2", "ring-indigo-500");
           });
 
-          // Highlight selected button
           button.classList.add("ring-2", "ring-indigo-500");
 
-          // Set payment method
           selectedPaymentMethod = button.getAttribute("data-method");
 
           updateDonateButtonState();
         });
       });
 
-      // Handle form submission
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        // Masquer les messages d'erreur précédents
         errorMessage.classList.add("hidden");
 
-        // Désactiver le bouton et afficher l'état du processus
         donateButton.disabled = true;
         processStatus.classList.remove("hidden");
 
         try {
           if (selectedPaymentMethod === "card") {
-            // Communiquer avec l'API pour créer une session de paiement
             const response = await fetch("/api/checkout-session", {
               method: "POST",
               headers: {
@@ -264,7 +238,6 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
 
             const session = await response.json();
 
-            // Rediriger vers Stripe Checkout
             const result = await stripe.redirectToCheckout({
               sessionId: session.id,
             });
@@ -273,24 +246,19 @@ import creditcardIcon from "../../assets/creditcard-icon.png";
               throw new Error(result.error.message);
             }
           } else if (selectedPaymentMethod === "paypal") {
-            // Simuler une redirection vers PayPal
             window.location.href = "/don/remerciement?simulation=paypal";
           } else if (selectedPaymentMethod === "gpay") {
-            // Simuler une redirection vers Google Pay
             window.location.href = "/don/remerciement?simulation=gpay";
           }
         } catch (error) {
           console.error("Erreur:", error);
 
-          // Afficher le message d'erreur
           errorMessage.textContent =
             "Une erreur est survenue lors du traitement du paiement. Veuillez réessayer.";
           errorMessage.classList.remove("hidden");
 
-          // Réactiver le bouton
           donateButton.disabled = false;
         } finally {
-          // Cacher l'état du processus
           processStatus.classList.add("hidden");
         }
       });

@@ -1,6 +1,7 @@
 ---
 import Button from "./Button.astro";
 import PocketBase from "pocketbase";
+import Logo from "../assets/logo_echosafe.svg";
 
 // Vérifier si l'utilisateur est connecté
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
@@ -24,31 +25,40 @@ if (!isLoggedIn) {
   class="px-6 py-4 w-full z-15 flex items-stretch justify-between transition-all duration-300 ease-in-out bg-white shadow-sm"
 >
   <div class="flex items-center gap-2">
-    <a href="/accueil-app" class="text-xl font-bold text-primary">EchoSafe</a>
+    <a href="/accueil-app">
+      <Logo class="w-20 lg:w-32 h-auto" />
+    </a>
     <h1 id="page-title" class="text-lg font-semibold ml-4 hidden md:block"></h1>
   </div>
 
-  <!-- User Menu (visible on desktop) -->
   <div class="hidden md:flex items-center">
     <nav class="mr-4">
       <ul class="flex space-x-6">
         <li>
           <a href="/accueil-app" class="text-gray-700 hover:text-primary"
-            >Accueil</a>
+            >Accueil</a
+          >
         </li>
         <li>
           <a href="/messages" class="text-gray-700 hover:text-primary"
-            >Messagerie</a>
+            >Messagerie</a
+          >
         </li>
         <li>
-          <a href="/ressources" class="text-gray-700 hover:text-primary"
-            >Ressources</a>
+          <a href="/moodtracker" class="text-gray-700 hover:text-primary"
+            >Mood Tracker</a
+          >
+        </li>
+        <li>
+          <a href="/secours-app" class="text-gray-700 hover:text-primary"
+            >Kit de secours</a
+          >
         </li>
       </ul>
     </nav>
 
     <div class="relative group">
-      <button class="flex items-center space-x-2 focus:outline-none">
+      <a href="/profil" class="flex items-center space-x-2 focus:outline-none">
         <div
           class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center"
         >
@@ -61,29 +71,13 @@ if (!isLoggedIn) {
         <span class="hidden md:inline"
           >{userData?.pseudo_utilisateur || userData?.email}</span
         >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clip-rule="evenodd"></path>
-        </svg>
-      </button>
+      </a>
 
       <div
         class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block"
       >
         <a
-          href="/profil"
-          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >Mon profil</a
-        >
-        <a
-          href="/parametres"
+          href="/profil/parametres"
           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >Paramètres</a
         >
@@ -121,10 +115,10 @@ if (!isLoggedIn) {
     aria-hidden="true"
   >
     <!-- User info in mobile menu -->
-    <div class="pt-20 px-6 pb-4 border-b">
-      <div class="flex items-center">
+    <div class="flex justify-between items-center px-6 pt-4 pb-4">
+      <a href="/profil" class="flex items-center">
         <div
-          class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center text-xl"
+          class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg"
         >
           {
             userData?.pseudo_utilisateur?.charAt(0) ||
@@ -133,17 +127,19 @@ if (!isLoggedIn) {
           }
         </div>
         <div class="ml-3">
-          <p class="font-semibold">
+          <p class="font-semibold text-base">
             {userData?.pseudo_utilisateur || userData?.email}
           </p>
-          <p class="text-sm text-gray-500">
+          <p class="text-xs">
             Utilisateur {userData?.is_volunteer ? "bénévole" : ""}
           </p>
         </div>
-      </div>
+      </a>
+      <!-- Placeholder pour aligner avec le bouton de menu qui reste fixe -->
+      <div class="w-8"></div>
     </div>
 
-    <ul class="mt-4 w-full">
+    <ul class="mt-15 w-full">
       <li>
         <a
           class="block pl-28 py-3 mb-8 relative overflow-hidden group"
@@ -175,11 +171,11 @@ if (!isLoggedIn) {
       <li>
         <a
           class="block pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/ressources"
+          href="/moodtracker"
         >
           <span
             class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >Ressources</span
+            >Mood Tracker</span
           >
           <span
             class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
@@ -189,11 +185,11 @@ if (!isLoggedIn) {
       <li>
         <a
           class="block pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/profil"
+          href="/secours-app"
         >
           <span
             class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
-            >Mon profil</span
+            >Kit de secours</span
           >
           <span
             class="absolute inset-0 bg-[var(--color-primary)] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"
@@ -203,7 +199,7 @@ if (!isLoggedIn) {
       <li>
         <a
           class="block pl-28 py-3 mb-8 relative overflow-hidden group"
-          href="/parametres"
+          href="/profil/parametres"
         >
           <span
             class="relative z-10 text-[var(--color-primary)] group-hover:text-white"
@@ -256,8 +252,10 @@ if (!isLoggedIn) {
 
       if (path.includes("/messages")) {
         pageTitle.textContent = "Messagerie";
-      } else if (path.includes("/ressources")) {
-        pageTitle.textContent = "Ressources";
+      } else if (path.includes("/moodtracker")) {
+        pageTitle.textContent = "Mood Tracker";
+      } else if (path.includes("/secours-app")) {
+        pageTitle.textContent = "Kit de secours";
       } else if (path.includes("/profil")) {
         pageTitle.textContent = "Mon profil";
       } else if (path.includes("/parametres")) {

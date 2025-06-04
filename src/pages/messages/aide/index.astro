@@ -12,14 +12,12 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-// Récupérer l'utilisateur connecté (l'authentification reste avec PocketBase)
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
 }
 
-// Rediriger si non connecté
 if (!pb.authStore.isValid) {
   return Astro.redirect("/auth/connexion");
 }
@@ -27,12 +25,10 @@ if (!pb.authStore.isValid) {
 const currentUserId = pb.authStore.model.id;
 const isVolunteer = pb.authStore.model.is_volunteer || false;
 
-// Rediriger les aidants vers les messages privés (ils n'ont pas besoin d'accéder à cette page)
 if (isVolunteer) {
   return Astro.redirect("/messages/prives");
 }
 
-// Assurer que l'utilisateur courant existe dans Firebase
 try {
   const currentUserRef = doc(db, "users", currentUserId);
   const currentUserSnap = await getDoc(currentUserRef);
@@ -53,7 +49,6 @@ try {
   );
 }
 
-// Récupérer d'abord les aidants bénévoles de PocketBase et les synchroniser avec Firebase
 try {
   const pocketBaseVolunteers = await pb.collection("users").getFullList({
     filter: "is_volunteer = true",
@@ -63,23 +58,20 @@ try {
     `${pocketBaseVolunteers.length} aidants bénévoles trouvés dans PocketBase`
   );
 
-  // Synchroniser chaque aidant bénévole avec Firebase
   for (const volunteer of pocketBaseVolunteers) {
     const volunteerRef = doc(db, "users", volunteer.id);
 
-    // Données à synchroniser pour les bénévoles
     const userData = {
       pseudo_utilisateur:
         volunteer.pseudo || volunteer.prenom_utilisateur || "Aidant",
       is_volunteer: true,
-      is_association: false, // Explicitement définir comme non-association
+      is_association: false, 
       role: "volunteer",
       bio: volunteer.bio || "Aidant bénévole disponible pour vous aider.",
       updated_at: new Date().toISOString(),
       volunteer_type: "benevole",
     };
 
-    // Créer ou mettre à jour dans Firebase
     await setDoc(volunteerRef, userData, { merge: true });
   }
 } catch (error) {
@@ -89,16 +81,13 @@ try {
   );
 }
 
-// Récupérer et afficher les détails des associations pour le débogage
 let associations = [];
 try {
-  // Récupérer toutes les associations de PocketBase avec un log détaillé
   associations = await pb.collection("association").getFullList();
   console.log(
     `${associations.length} associations professionnelles trouvées dans PocketBase`
   );
 
-  // Afficher les détails de chaque association pour le débogage
   associations.forEach((association, index) => {
     console.log(`Association ${index + 1} (ID: ${association.id}):`);
     console.log({
@@ -109,19 +98,16 @@ try {
     });
   });
 
-  // Pour chaque association, créer un document dans Firebase
   for (const association of associations) {
     const aidantId = `association-${association.id}`;
     const aidantRef = doc(db, "users", aidantId);
 
-    // Vérifier si l'image existe
     const hasImage = association.Image_du_professionnel ? true : false;
 
-    // Données à synchroniser pour les associations (AJOUT DE is_association: true)
     const userData = {
       pseudo_utilisateur: association.nom_personne || "Professionnel",
       is_volunteer: true,
-      is_association: true, // Nouveau champ pour identifier explicitement les associations
+      is_association: true, 
       role: "volunteer",
       bio:
         association.biographie_association ||
@@ -138,7 +124,6 @@ try {
       volunteer_type: "association",
     };
 
-    // Créer ou mettre à jour l'aidant dans Firebase
     await setDoc(aidantRef, userData, { merge: true });
     console.log(
       `Association ${association.id} synchronisée avec Firebase comme aidant ${aidantId}`
@@ -148,10 +133,8 @@ try {
   console.error("Erreur lors de la synchronisation des associations:", error);
 }
 
-// Ajouter des logs pour le débogage
 console.log("Démarrage de la récupération des aidants depuis Firebase...");
 
-// Récupérer TOUS les aidants depuis Firebase uniquement (centralisé)
 let volunteers = [];
 try {
   const usersRef = collection(db, "users");
@@ -166,7 +149,6 @@ try {
   if (volunteersSnapshot.empty) {
     console.log("Aucun aidant trouvé dans Firebase");
   } else {
-    // Récupérer tous les aidants qui ne sont pas l'utilisateur courant
     volunteers = volunteersSnapshot.docs
       .filter((doc) => doc.id !== currentUserId)
       .map((doc) => ({
@@ -176,7 +158,6 @@ try {
 
     console.log(`${volunteers.length} aidants récupérés depuis Firebase`);
 
-    // Afficher le nombre d'associations et de bénévoles
     const associationCount = volunteers.filter(
       (v) => v.is_association === true || v.id.startsWith("association-")
     ).length;
@@ -186,12 +167,9 @@ try {
     );
   }
 
-  // Créer une liste combinée d'aidants (bénévoles de Firebase + associations de PocketBase)
   let allVolunteers = [...volunteers];
 
-  // Ajouter directement les associations de PocketBase si elles ne sont pas déjà dans la liste
   for (const association of associations) {
-    // Vérifier si cette association est déjà dans la liste des volunteers
     const aidantId = `association-${association.id}`;
     const alreadyExists = allVolunteers.some((v) => v.id === aidantId);
 
@@ -200,7 +178,6 @@ try {
         `Ajout direct de l'association ${association.id} (${association.nom_personne})`
       );
 
-      // Ajouter l'association directement à la liste d'affichage
       allVolunteers.push({
         id: aidantId,
         pseudo_utilisateur: association.nom_personne || "Professionnel",
@@ -223,14 +200,12 @@ try {
     }
   }
 
-  // Remplacer la liste des volunteers par la liste combinée
   volunteers = allVolunteers;
 
   console.log(
     `Liste finale d'aidants: ${volunteers.length} (dont ${associations.length} associations en tout)`
   );
 
-  // Créer un aidant de test si aucun aidant n'est disponible
   if (volunteers.length === 0) {
     console.log("Aucun aidant disponible, création d'un aidant de test");
 
@@ -263,7 +238,6 @@ try {
   );
 }
 
-// Récupérer les conversations existantes
 let existingConversationsMap = {};
 try {
   const conversationsRef = collection(db, "conversations");
@@ -296,7 +270,6 @@ try {
 
 <Layout>
   <div class="container mx-auto px-0 sm:px-4 py-0 sm:py-6 max-w-6xl">
-    <!-- En-tête mobile avec navigation -->
     <div
       class="bg-white shadow-sm mb-4 sm:mb-6 sm:static sm:shadow-none sm:bg-transparent sm:rounded-lg sm:px-0"
     >
@@ -342,7 +315,6 @@ try {
           </h1>
         </div>
 
-        <!-- Barre de recherche pour desktop -->
         <div class="relative hidden sm:block">
           <input
             type="text"
@@ -368,7 +340,6 @@ try {
         </div>
       </div>
 
-      <!-- Barre de recherche pour mobile -->
       <div class="px-4 pb-3 sm:hidden">
         <div class="relative">
           <input
@@ -395,7 +366,6 @@ try {
         </div>
       </div>
 
-      <!-- Onglets de navigation rapide pour mobile -->
       <div class="flex border-t sm:hidden">
         <a
           href="/messages/prives"
@@ -412,7 +382,6 @@ try {
       </div>
     </div>
 
-    <!-- Navigation d'onglets desktop (visible uniquement sur SM et plus) -->
     <div class="px-3 sm:px-0">
       <div class="hidden sm:flex mb-6 border-b">
         <a
@@ -430,7 +399,6 @@ try {
         </a>
       </div>
 
-      <!-- Bannière d'aide -->
       <div
         class="bg-gray-50 p-4 sm:p-5 border-b sm:bg-white sm:rounded-t-lg sm:shadow-lg"
       >
@@ -821,9 +789,7 @@ try {
 </Layout>
 
 <script>
-  // Diagnostic et recherche d'aidants
   document.addEventListener("DOMContentLoaded", () => {
-    // Compter et afficher les types d'aidants
     const totalCards = document.querySelectorAll(".volunteer-card").length;
     const associationCards = document.querySelectorAll(
       ".volunteer-card[data-type='association']"
@@ -836,13 +802,11 @@ try {
       `Total aidants affichés: ${totalCards} (${associationCards} associations, ${volunteerCards} bénévoles)`
     );
 
-    // Vérifier les images des associations
     document
       .querySelectorAll(".volunteer-card[data-type='association'] img")
       .forEach((img, index) => {
         console.log(`Association ${index + 1} image: ${img.src}`);
 
-        // Tester l'URL de l'image
         fetch(img.src)
           .then((response) => {
             if (!response.ok) {
@@ -858,7 +822,6 @@ try {
           });
       });
 
-    // Fonction de recherche d'aidants
     const performSearch = (searchValue) => {
       const searchLower = searchValue.toLowerCase();
       const volunteerCards = document.querySelectorAll(".volunteer-card");
@@ -872,7 +835,6 @@ try {
           ? volunteerBioElem.textContent.toLowerCase()
           : "";
 
-        // Rechercher aussi dans le travail et l'adresse
         const volunteerWorkElem = card.querySelector(
           "div.mb-4 p:not(.italic):not(.font-medium)"
         );
@@ -880,7 +842,6 @@ try {
           ? volunteerWorkElem.textContent.toLowerCase()
           : "";
 
-        // Rechercher dans les modes de consultation
         const consultationModes = Array.from(
           card.querySelectorAll(".bg-blue-100")
         )
@@ -899,14 +860,12 @@ try {
         }
       });
 
-      // Mettre à jour le compteur après la recherche
       const visibleCards = document.querySelectorAll(
         ".volunteer-card:not([style*='display: none'])"
       ).length;
       console.log(`Aidants visibles après recherche: ${visibleCards}`);
     };
 
-    // Brancher les champs de recherche
     const searchInputDesktop = document.getElementById(
       "search-volunteers-desktop"
     );
@@ -931,13 +890,11 @@ try {
 </script>
 
 <style>
-  /* Taille de texte extra petite pour mobile */
   .text-xxs {
     font-size: 0.65rem;
     line-height: 1.1;
   }
 
-  /* Effet de pulsation pour les aidants en ligne */
   @keyframes pulse {
     0% {
       box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
@@ -954,7 +911,6 @@ try {
     animation: pulse 2s infinite;
   }
 
-  /* Effet de transition fluide pour les cartes */
   .volunteer-card:active {
     transform: scale(0.98);
     transition: transform 0.1s;

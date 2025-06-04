@@ -15,29 +15,24 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-// Récupérer l'ID de l'utilisateur dans l'URL
 const { userId } = Astro.params;
 
-// S'assurer que cette page n'est pas accédée directement sans ID d'utilisateur
 if (!userId) {
   return Astro.redirect("/messages/prives");
 }
 
-// Récupérer l'utilisateur connecté (l'authentification reste avec PocketBase)
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
 }
 
-// Rediriger si non connecté
 if (!pb.authStore.isValid) {
   return Astro.redirect("/auth/connexion");
 }
 
 const currentUserId = pb.authStore.model.id;
 
-// Récupérer les informations de l'autre utilisateur depuis Firestore
 let otherUser = null;
 try {
   const userRef = doc(db, "users", userId);
@@ -57,7 +52,6 @@ try {
   return Astro.redirect("/messages/prives");
 }
 
-// Vérifier si une conversation existe déjà dans Firestore
 let conversation = null;
 try {
   const conversationsRef = collection(db, "conversations");
@@ -69,7 +63,6 @@ try {
 
   const querySnapshot = await getDocs(q);
 
-  // Chercher la conversation qui contient l'autre utilisateur
   for (const doc of querySnapshot.docs) {
     const data = doc.data();
     if (data.participants.includes(userId)) {
@@ -81,7 +74,6 @@ try {
     }
   }
 
-  // Si aucune conversation n'existe, en créer une nouvelle
   if (!conversation) {
     const newConversation = await addDoc(collection(db, "conversations"), {
       type: "private",
@@ -104,7 +96,6 @@ try {
   return Astro.redirect("/messages/prives");
 }
 
-// Récupérer les messages de la conversation depuis Firestore
 let messages = [];
 if (conversation) {
   try {
@@ -120,7 +111,6 @@ if (conversation) {
     messages = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      // Convertir les timestamps Firestore en dates JS pour le rendu côté client
       created: doc.data().created_at
         ? doc.data().created_at.toDate()
         : new Date(),
@@ -133,9 +123,8 @@ if (conversation) {
   }
 }
 
-// Préparer les données de l'utilisateur pour le composant
 otherUser = otherUser || {};
-otherUser.avatarUrl = ""; // Firebase n'a pas d'avatar par défaut, on utilise une chaîne vide
+otherUser.avatarUrl = ""; 
 ---
 
 <Layout>

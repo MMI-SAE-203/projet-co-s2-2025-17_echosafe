@@ -1,7 +1,6 @@
 ---
 import PocketBase from "pocketbase";
 
-// Authentification et redirection
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
@@ -12,6 +11,5 @@ if (!pb.authStore.isValid) {
   return Astro.redirect("/auth/connexion");
 }
 
-// Redirection automatique vers les messages privés
 return Astro.redirect("/messages/prives");
 ---

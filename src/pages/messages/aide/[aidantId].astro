@@ -15,30 +15,25 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-// Récupérer l'ID de l'aidant dans l'URL
 const { aidantId } = Astro.params;
 const conversationId = Astro.url.searchParams.get("conv");
 
-// S'assurer que cette page n'est pas accédée directement sans ID d'aidant
 if (!aidantId) {
   return Astro.redirect("/messages/aide");
 }
 
-// Récupérer l'utilisateur connecté (l'authentification reste avec PocketBase)
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
 }
 
-// Rediriger si non connecté
 if (!pb.authStore.isValid) {
   return Astro.redirect("/auth/connexion");
 }
 
 const currentUserId = pb.authStore.model.id;
 
-// Récupérer les informations de l'aidant depuis Firestore
 let aidant = null;
 try {
   const aidantRef = doc(db, "users", aidantId);
@@ -58,11 +53,9 @@ try {
   return Astro.redirect("/messages/aide");
 }
 
-// Vérifier si une conversation existe déjà ou utiliser celle de l'URL
 let conversation = null;
 try {
   if (conversationId) {
-    // Utiliser la conversation de l'URL
     const conversationRef = doc(db, "conversations", conversationId);
     const conversationSnap = await getDoc(conversationRef);
 
@@ -75,8 +68,7 @@ try {
       throw new Error("Conversation non trouvée");
     }
   } else {
-    // Vérifier si une conversation existe déjà
-    const conversationsRef = collection(db, "conversations");
+   const conversationsRef = collection(db, "conversations");
     const q = query(
       conversationsRef,
       where("type", "==", "help"),
@@ -85,7 +77,6 @@ try {
 
     const querySnapshot = await getDocs(q);
 
-    // Chercher la conversation qui contient l'aidant
     for (const doc of querySnapshot.docs) {
       const data = doc.data();
       if (data.participants.includes(aidantId)) {
@@ -97,7 +88,6 @@ try {
       }
     }
 
-    // Si aucune conversation n'existe, en créer une nouvelle
     if (!conversation) {
       const newConversation = await addDoc(collection(db, "conversations"), {
         type: "help",
@@ -121,7 +111,6 @@ try {
   return Astro.redirect("/messages/aide");
 }
 
-// Récupérer les messages de la conversation depuis Firestore
 let messages = [];
 if (conversation) {
   try {
@@ -137,7 +126,6 @@ if (conversation) {
     messages = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      // Convertir les timestamps Firestore en dates JS pour le rendu côté client
       created: doc.data().created_at
         ? doc.data().created_at.toDate()
         : new Date(),
@@ -150,9 +138,8 @@ if (conversation) {
   }
 }
 
-// Préparer les données de l'aidant pour le composant
 aidant = aidant || {};
-aidant.avatarUrl = ""; // Firebase n'a pas d'avatar par défaut, on utilise une chaîne vide
+aidant.avatarUrl = ""; 
 ---
 
 <Layout>

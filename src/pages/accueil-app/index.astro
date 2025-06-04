@@ -1,49 +1,107 @@
 ---
 import AppLayout from "../../layouts/Layoutapp.astro";
 import PocketBase from "pocketbase";
+import Button from "../../components/button.astro";
 
-// Récupérer l'utilisateur connecté
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
 }
 
-// Rediriger si non connecté
 if (!pb.authStore.isValid) {
   return Astro.redirect("/auth/connexion");
 }
 
 const user = pb.authStore.model;
+
+const moodIcons = [
+  { name: "Très heureux", svg: "/src/assets/moodtracker/tres_heureux.svg" },
+  { name: "Heureux", svg: "/src/assets/moodtracker/heureux.svg" },
+  { name: "Blasé", svg: "/src/assets/moodtracker/blase.svg" },
+  { name: "Triste", svg: "/src/assets/moodtracker/triste.svg" },
+  { name: "Colère", svg: "/src/assets/moodtracker/colere.svg" },
+  { name: "Anxieux", svg: "/src/assets/moodtracker/anxieux.svg" },
+  {
+    name: "Au bord des larmes",
+    svg: "/src/assets/moodtracker/au-bord-des-larmes.svg",
+  },
+];
 ---
 
 <AppLayout title="EchoSafe - Accueil">
   <div class="container mx-auto px-4 py-8">
-    <div class="mb-8">
+    <div class="mb-5">
       <h1 class="text-3xl font-bold text-primary">
         Hello, {user.pseudo || "utilisateur"} !
       </h1>
-      <p class="text-gray-600 mt-2">Que souhaitez-vous faire aujourd'hui ?</p>
+      <p class="mt-2">Tu avances à ton rythme, continue !</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Carte Messagerie -->
-      <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <div class="bg-white rounded-lg shadow-md p-6 w-full">
+        <div class="flex items-center mb-4">
+          <h2 class="text-xl font-semibold">
+            Comment te sens-tu aujourd'hui ?
+          </h2>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+          {
+            moodIcons.map((mood) => (
+              <div class="flex flex-col items-center">
+                <img
+                  src={mood.svg}
+                  alt={mood.name}
+                  class="w-10 h-10 object-contain"
+                  onerror="this.onerror=null; this.src='/favicon.svg';"
+                />
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="h-2 w-full rounded-full overflow-hidden mb-2 flex gap-1">
+          <div class="bg-green-400 flex-1"></div>
+          <div class="bg-yellow-400 flex-1"></div>
+          <div class="bg-orange-400 flex-1"></div>
+          <div class="bg-pink-400 flex-1"></div>
+          <div class="bg-red-400 flex-1"></div>
+          <div class="bg-purple-400 flex-1"></div>
+          <div class="bg-blue-400 flex-1"></div>
+        </div>
+
+        <div class="flex justify-center mt-5">
+          <Button
+            variant="dark"
+            size="medium"
+            url="/moodtracker"
+            text="Mon MoodTracker"
+          />
+        </div>
+      </div>
+
+      <div
+        class="bg-white rounded-lg shadow-md hover:shadow-lg transition p-6 w-full"
+      >
         <div class="flex items-center mb-4">
           <div class="bg-primary/10 p-3 rounded-full">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-6 w-6 text-primary"
-              fill="none"
               viewBox="0 0 24 24"
+              fill="none"
               stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
               <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
               ></path>
+              <circle cx="12" cy="12" r="0.2" fill="currentColor"></circle>
+              <circle cx="16" cy="12" r="0.2" fill="currentColor"></circle>
+              <circle cx="8" cy="12" r="0.2" fill="currentColor"></circle>
             </svg>
           </div>
           <h2 class="text-xl font-semibold ml-3">Messagerie</h2>
@@ -51,108 +109,14 @@ const user = pb.authStore.model;
         <p class="text-gray-600 mb-4">
           Discutez avec des aidants bénévoles ou d'autres utilisateurs.
         </p>
-        <a
-          href="/messages"
-          class="block text-center py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
-        >
-          Accéder
-        </a>
-      </div>
-
-      <!-- Carte Ressources -->
-      <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition p-6">
-        <div class="flex items-center mb-4">
-          <div class="bg-primary/10 p-3 rounded-full">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              ></path>
-            </svg>
-          </div>
-          <h2 class="text-xl font-semibold ml-3">Ressources</h2>
+        <div class="flex justify-center">
+          <Button
+            variant="dark"
+            size="medium"
+            url="/messages"
+            text="Ma Messagerie"
+          />
         </div>
-        <p class="text-gray-600 mb-4">
-          Consultez des guides et informations utiles sur le harcèlement.
-        </p>
-        <a
-          href="/ressources"
-          class="block text-center py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
-        >
-          Découvrir
-        </a>
-      </div>
-
-      <!-- Carte Forum -->
-      <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition p-6">
-        <div class="flex items-center mb-4">
-          <div class="bg-primary/10 p-3 rounded-full">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"
-              ></path>
-            </svg>
-          </div>
-          <h2 class="text-xl font-semibold ml-3">Forum</h2>
-        </div>
-        <p class="text-gray-600 mb-4">
-          Partagez votre expérience et entraidez-vous avec d'autres
-          utilisateurs.
-        </p>
-        <a
-          href="/forum"
-          class="block text-center py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
-        >
-          Participer
-        </a>
-      </div>
-    </div>
-
-    <div class="mt-10 bg-white rounded-lg shadow p-6">
-      <h2 class="text-xl font-semibold text-primary mb-4">Votre parcours</h2>
-
-      <div class="border-l-4 border-primary pl-4 py-2">
-        <p class="text-gray-600">
-          Continuez à explorer EchoSafe pour trouver du soutien et des
-          ressources adaptées à vos besoins.
-        </p>
-      </div>
-
-      <div class="mt-6">
-        <a
-          href="/messages/aide"
-          class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 mr-2"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
-              clip-rule="evenodd"></path>
-          </svg>
-          Parler à un aidant
-        </a>
       </div>
     </div>
   </div>
