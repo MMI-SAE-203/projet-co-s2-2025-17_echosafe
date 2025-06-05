@@ -1,7 +1,7 @@
 ---
 import AppLayout from "../../layouts/Layoutapp.astro";
 import PocketBase from "pocketbase";
-import Button from "../../components/button.astro";
+import Button from "../../components/Button.astro";
 
 const pb = new PocketBase("https://echosafe.eloishenry.fr");
 const authCookie = Astro.request.headers.get("cookie");
