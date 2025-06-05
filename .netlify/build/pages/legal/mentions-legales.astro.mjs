@@ -1,0 +1,131 @@
+import { a as createComponent, e as renderComponent, r as renderTemplate, m as maybeRenderHead, d as renderScript } from '../../chunks/astro/server_DviQv69v.mjs';
+import 'kleur/colors';
+import { $ as $$Layout } from '../../chunks/Layout_6NBKjMwL.mjs';
+import { $ as $$LegalNav } from '../../chunks/LegalNav_NKAUErRz.mjs';
+export { r as renderers } from '../../chunks/internal_BsTt5pTQ.mjs';
+
+const $$MentionsLegales = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${renderComponent($$result, "Layout", $$Layout, {}, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8"> <div class="max-w-4xl mx-auto bg-white rounded-lg p-8"> <h1 class="font-secondary text-3xl font-bold text-center text-primary mb-2">
+Mentions Légales
+</h1> <div class="prose prose-slate max-w-none"> <p class="text-sm text-center mb-8">
+Dernière mise à jour : 24 mai 2025
+</p> ${renderComponent($$result2, "LegalNav", $$LegalNav, { "currentPage": "/legal/mentions-legales" })} <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">
+1. Informations légales
+</h2> <p class="mb-4">
+Le site EchoSafe est édité par l'association EchoSafe, association
+            loi 1901.
+</p> <ul class="list-disc pl-5 space-y-2"> <li> <strong>Siège social :</strong> 4 Pl. Lucien Tharradin, 25200 Montbéliard
+</li> <li><strong>Numéro RNA :</strong> W123456789</li> <li><strong>SIRET :</strong> 123 456 789 00010</li> <li> <strong>Représentant légal :</strong> David Malsot, Président
+</li> <li> <strong>Email :</strong> <a href="mailto:contact@echosafe.fr" class="text-primary hover:underline">contact@echosafe.fr</a> </li> <li><strong>Téléphone :</strong> 07 83 94 97 26</li> </ul> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">
+2. Hébergement
+</h2> <p class="mb-4">Le site EchoSafe est hébergé par :</p> <p class="mb-4"> <strong>Infomaniak Network SA</strong><br>
+Rue Eugène-Marziano 25<br>
+1227 Les Acacias (Genève)<br>
+Suisse
+</p> <p> <a href="https://www.infomaniak.com" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">https://www.infomaniak.com</a> </p> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">
+3. Propriété intellectuelle
+</h2> <p class="mb-4">
+L'ensemble du contenu de ce site (structure, textes, logos, images,
+            photographies, illustrations, schémas, etc.) est la propriété
+            d'EchoSafe ou de ses partenaires et est protégé par les lois
+            françaises et internationales relatives à la propriété
+            intellectuelle.
+</p> <p class="mb-4">
+Toute reproduction totale ou partielle de ce contenu est strictement
+            interdite sans autorisation préalable.
+</p> <p>
+Le non-respect de cette interdiction constitue une contrefaçon
+            pouvant engager la responsabilité civile et pénale du contrefacteur.
+</p> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">
+4. Protection des données personnelles
+</h2> <p class="mb-4">
+EchoSafe accorde une importance particulière à la protection de vos
+            données personnelles et s'engage à respecter les dispositions du
+            Règlement Général sur la Protection des Données (RGPD) et de la loi
+            Informatique et Libertés.
+</p> <p class="mb-4">
+Pour en savoir plus sur la façon dont nous collectons, utilisons et
+            protégeons vos données personnelles, veuillez consulter notre <a href="/legal/politique-confidentialite" class="text-primary hover:underline">Politique de Confidentialité</a>.
+</p> <p> <strong>Délégué à la protection des données (DPO) :</strong><br>
+Email : <a href="mailto:privacy@echosafe.fr" class="text-primary hover:underline">privacy@echosafe.fr</a> </p> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">5. Cookies</h2> <p class="mb-4">
+Notre site utilise des cookies pour améliorer votre expérience
+            utilisateur. Pour plus d'informations sur l'utilisation des cookies,
+            veuillez consulter notre <a href="/legal/politique-cookies" class="text-primary hover:underline">Politique de Cookies</a>.
+</p> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">
+6. Conditions d'utilisation
+</h2> <p class="mb-4">
+L'utilisation de notre site est soumise au respect des <a href="/legal/conditions" class="text-primary hover:underline">Conditions Générales d'Utilisation</a>.
+</p> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">
+7. Limitation de responsabilité
+</h2> <p class="mb-4">
+EchoSafe s'efforce d'assurer l'exactitude et la mise à jour des
+            informations diffusées sur son site. Toutefois, EchoSafe ne peut
+            garantir l'exactitude, la précision ou l'exhaustivité des
+            informations mises à disposition sur ce site.
+</p> <p class="mb-4">
+En conséquence, l'utilisateur reconnaît utiliser ces informations
+            sous sa responsabilité exclusive. EchoSafe ne pourra être tenu
+            responsable des dommages directs ou indirects résultant de
+            l'utilisation de ce site.
+</p> <p>
+Le site peut contenir des liens vers des sites tiers. EchoSafe
+            n'exerce aucun contrôle sur ces sites et n'assume aucune
+            responsabilité quant à leur contenu.
+</p> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">8. Crédits</h2> <p class="mb-4"> <strong>Conception et développement :</strong> Équipe EchoSafe
+</p> <p class="mb-4"> <strong>Photographies :</strong> Unsplash, Pexels
+</p> <p> <strong>Icônes :</strong> Font Awesome, Heroicons
+</p> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">
+9. Loi applicable et juridiction compétente
+</h2> <p class="mb-4">
+Les présentes mentions légales sont régies par le droit français. En
+            cas de litige, les tribunaux français seront seuls compétents.
+</p> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">
+10. Médiation de la consommation
+</h2> <p class="mb-4">
+Conformément aux dispositions du Code de la consommation concernant
+            le règlement amiable des litiges, EchoSafe adhère au service de
+            médiation de la consommation. Vous pouvez recourir gratuitement à ce
+            service en contactant :
+</p> <p>[Nom et coordonnées du médiateur]</p> </section> <section class="mb-8"> <h2 class="font-secondary text-2xl font-semibold mb-4">
+11. Accessibilité
+</h2> <p class="mb-4">
+EchoSafe s'engage à rendre son site accessible conformément à
+            l'article 47 de la loi n° 2005-102 du 11 février 2005 pour l'égalité
+            des droits et des chances, la participation et la citoyenneté des
+            personnes handicapées.
+</p> <p>La déclaration d'accessibilité est consultable sur demande.</p> </section> <!-- Nous Contacter --> <section class="py-2"> <div class="container mx-auto px-4"> <div class="text-center mb-10"> <h2 class="text-3xl font-bold font-secondary mb-3">
+Nous Contacter
+</h2> <p class="text-lg max-w-2xl mx-auto">
+Vous avez des questions ou souhaitez en savoir plus sur nos
+                services ? Nous sommes là pour vous aider.
+</p> </div> <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden"> <div class="md:flex"> <div class="md:w-1/2 bg-primary p-8 text-white"> <h3 class="text-white text-2xl font-bold font-secondary mb-6">
+Restons en contact
+</h3> <p class="mb-8 opacity-90">
+Notre équipe est à votre disposition pour vous accompagner
+                    et répondre à toutes vos questions.
+</p> <div class="space-y-6"> <div class="flex items-center"> <div class="bg-white/20 p-3 rounded-full mr-4"> <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path> </svg> </div> <span class="text-lg">07 83 94 97 26</span> </div> <div class="flex items-center"> <div class="bg-white/20 p-3 rounded-full mr-4"> <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path> </svg> </div> <span class="text-lg">contact@echosafe.fr</span> </div> <div class="flex items-center"> <div class="bg-white/20 p-3 rounded-full mr-4"> <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path> </svg> </div> <span class="text-lg">4 Pl. Lucien Tharradin, 25200 Montbéliard</span> </div> </div> <div class="mt-10 flex space-x-4"> <a href="#" class="bg-white/10 hover:bg-white/20 p-3 rounded-full transition-colors"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path> </svg> </a> <a href="#" class="bg-white/10 hover:bg-white/20 p-3 rounded-full transition-colors"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path> </svg> </a> <a href="#" class="bg-white/10 hover:bg-white/20 p-3 rounded-full transition-colors"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"></path> </svg> </a> </div> </div> <div class="md:w-1/2 p-8"> <h3 class="text-2xl font-bold font-secondary mb-6">
+Envoyez-nous un message
+</h3> <form action="https://formspree.io/f/xgvkqdnk" method="POST" class="space-y-5"> <div> <label for="name" class="block text-sm font-medium mb-1">Votre nom</label> <input type="text" id="name" name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" placeholder="Comment vous appelez-vous ?"> </div> <div> <label for="email" class="block text-sm font-medium mb-1">Votre email</label> <input type="email" id="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" placeholder="exemple@email.com"> </div> <div> <label for="message" class="block text-sm font-medium mb-1">Votre message</label> <textarea id="message" name="message" rows="4" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" placeholder="En quoi pouvons-nous vous aider ?"></textarea> </div> <!-- Champ anti-spam caché --> <input type="text" name="_gotcha" style="display:none"> <!-- Redirection vers la page d'accueil après soumission --> <input type="hidden" name="_next" value="https://copie-projet-co-s2-2025-17-echosafe.vercel.app/"> <!-- Sujet du mail --> <input type="hidden" name="_subject" value="Nouveau message depuis le site Echo Safe"> <div> <button type="submit" class="hover:cursor-pointer w-full bg-primary hover:bg-white hover:text-primary text-white border border-primary py-3 px-6 rounded-3xl transition-colors duration-300">
+Envoyer votre message
+</button> </div> </form> </div> </div> </div> </div> </section> </div> <div class="mt-10 text-center"> <div class="flex flex-wrap justify-center gap-3 mb-4"> <a href="/legal/politique-confidentialite" class="inline-block px-4 py-2 border border-primary text-primary rounded-3xl hover:bg-primary hover:text-white transition duration-300 text-sm">
+Politique de confidentialité
+</a> <a href="/legal/conditions" class="inline-block px-4 py-2 border border-primary text-primary rounded-3xl hover:bg-primary hover:text-white transition duration-300 text-sm">
+Conditions d'utilisation
+</a> <a href="/legal/politique-cookies" class="inline-block px-4 py-2 border border-primary text-primary rounded-3xl hover:bg-primary hover:text-white transition duration-300 text-sm">
+Politique de cookies
+</a> </div> <button id="scroll-to-top" class="hover:cursor-pointer inline-flex items-center justify-center p-3 bg-primary text-white rounded-full shadow-lg hover:bg-white hover:text-primary border transition-all duration-300 focus:outline-none" aria-label="Remonter en haut de la page"> <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path> </svg> </button> </div> </div> </div> ${renderScript($$result2, "C:/Users/Utilisateur/GitHub/projet-co-s2-2025-17_echosafe/src/pages/legal/mentions-legales.astro?astro&type=script&index=0&lang.ts")} ` })}`;
+}, "C:/Users/Utilisateur/GitHub/projet-co-s2-2025-17_echosafe/src/pages/legal/mentions-legales.astro", void 0);
+
+const $$file = "C:/Users/Utilisateur/GitHub/projet-co-s2-2025-17_echosafe/src/pages/legal/mentions-legales.astro";
+const $$url = "/legal/mentions-legales";
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  default: $$MentionsLegales,
+  file: $$file,
+  url: $$url
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

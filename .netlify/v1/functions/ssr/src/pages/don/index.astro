@@ -1,0 +1,267 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import paypalLogo from "../../assets/paypal-logo.png";
+import gpayLogo from "../../assets/googlepay-logo.png";
+import creditcardIcon from "../../assets/creditcard-icon.png";
+---
+
+<Layout>
+  <div
+    class="w-full max-w-md mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md my-4 mt-5"
+  >
+    <h1 class="font-secondary text-2xl sm:text-3xl font-bold text-center mb-4">
+      Faire un Don
+    </h1>
+
+    <p class="text-sm sm:text-base mb-4 sm:mb-6">
+      Vos dons nous aident à maintenir Echo Safe gratuite et sécurisée pour
+      tous.
+    </p>
+
+    <p class="text-sm sm:text-base mb-4 sm:mb-6">
+      Ils nous permettent de développer de nouvelles fonctionnalités,
+      d'améliorer la sécurité et de garantir une expérience utilisateur
+      optimale.
+    </p>
+
+    <form id="donation-form" class="space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-3">
+        <button
+          type="button"
+          class="hover:cursor-pointer donation-amount-btn border border-primary text-primary py-2 rounded-md transition-colors hover:bg-primary hover:text-white active:bg-primary active:text-white focus:bg-primary focus:text-white"
+          data-amount="2">2€</button
+        >
+        <button
+          type="button"
+          class="hover:cursor-pointer donation-amount-btn border border-primary text-primary py-2 rounded-md transition-colors hover:bg-primary hover:text-white active:bg-primary active:text-white focus:bg-primary focus:text-white"
+          data-amount="5">5€</button
+        >
+        <button
+          type="button"
+          class="hover:cursor-pointer donation-amount-btn border border-primary text-primary py-2 rounded-md transition-colors hover:bg-primary hover:text-white active:bg-primary active:text-white focus:bg-primary focus:text-white"
+          data-amount="10">10€</button
+        >
+        <button
+          type="button"
+          class="hover:cursor-pointer donation-amount-btn border border-primary text-primary py-2 rounded-md transition-colors hover:bg-primary hover:text-white active:bg-primary active:text-white focus:bg-primary focus:text-white"
+          data-amount="20">20€</button
+        >
+      </div>
+
+      <div>
+        <label for="custom-amount" class="block text-sm font-medium mb-1"
+          >Votre montant</label
+        >
+        <input
+          type="number"
+          id="custom-amount"
+          name="custom-amount"
+          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          min="1"
+          step="1"
+        />
+      </div>
+
+      <div class="mt-6">
+        <div
+          class="flex flex-wrap sm:flex-nowrap justify-center sm:justify-between items-center gap-3"
+        >
+          <button
+            type="button"
+            class="hover:cursor-pointer payment-method-btn flex-1 flex items-center justify-center bg-white border border-gray-300 rounded-md p-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            data-method="paypal"
+          >
+            <img src={paypalLogo.src} alt="PayPal" class="h-5 sm:h-6" />
+          </button>
+
+          <button
+            type="button"
+            class="hover:cursor-pointer payment-method-btn flex-1 flex items-center justify-center bg-white border border-gray-300 rounded-md p-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            data-method="gpay"
+          >
+            <img src={gpayLogo.src} alt="Google Pay" class="h-5 sm:h-6" />
+          </button>
+
+          <button
+            type="button"
+            class="hover:cursor-pointer payment-method-btn flex-1 flex items-center justify-center bg-white border border-gray-300 rounded-md p-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            data-method="card"
+          >
+            <img
+              src={creditcardIcon.src}
+              alt="Credit Card"
+              class="h-5 sm:h-6"
+            />
+          </button>
+        </div>
+      </div>
+
+      <div id="process-status" class="hidden">
+        <div class="flex items-center justify-center p-4">
+          <div
+            class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-indigo-600 mr-2"
+          >
+          </div>
+          <span class="">Traitement en cours...</span>
+        </div>
+      </div>
+
+      <div
+        id="error-message"
+        class="hidden text-center text-red-600 bg-red-50 p-3 rounded-md"
+      >
+      </div>
+
+      <button
+        type="submit"
+        id="donate-button"
+        class="hover:cursor-pointer w-full bg-primary text-white py-2 sm:py-3 rounded-3xl hover:bg-white hover:text-primary hover:border-1 transition-colors mt-6 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm sm:text-base font-medium"
+        disabled
+      >
+        Faire un don
+      </button>
+
+      <div class="text-sm text-gray-500 mt-6 text-center">
+        <p class="mb-2">🔒 Paiement sécurisé</p>
+        <p>
+          Toutes les transactions sont sécurisées et chiffrées.<br />
+          Vos informations sont traitées en toute confidentialité.
+        </p>
+      </div>
+    </form>
+  </div>
+
+  <script is:inline src="https://js.stripe.com/v3/"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const stripe = Stripe(
+        "pk_test_51RJukxQtwwMgubEfinIb9zJist8z3iIAEgAxNMdy2QMVR25f9SrtUN8XEV6t62ysP1dTc6sw44XtrbKZPKH8CgMY00VDwBH9tK"
+      );
+
+      const form = document.getElementById("donation-form");
+      const donateButton = document.getElementById("donate-button");
+      const processStatus = document.getElementById("process-status");
+      const errorMessage = document.getElementById("error-message");
+      const customAmountInput = document.getElementById("custom-amount");
+      const presetAmountButtons = document.querySelectorAll(
+        ".donation-amount-btn"
+      );
+      const paymentMethodButtons = document.querySelectorAll(
+        ".payment-method-btn"
+      );
+
+      let selectedAmount = null;
+      let selectedPaymentMethod = null;
+
+      const updateDonateButtonState = () => {
+        if (selectedAmount && selectedPaymentMethod) {
+          donateButton.disabled = false;
+        } else {
+          donateButton.disabled = true;
+        }
+      };
+
+      presetAmountButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          presetAmountButtons.forEach((btn) => {
+            btn.classList.remove("bg-primary", "text-white");
+          });
+
+          button.classList.add("bg-primary", "text-white");
+
+          selectedAmount = parseInt(button.getAttribute("data-amount"));
+          customAmountInput.value = "";
+
+          updateDonateButtonState();
+        });
+      });
+
+      customAmountInput.addEventListener("input", (e) => {
+        const value = parseInt(e.target.value);
+
+        presetAmountButtons.forEach((btn) => {
+          btn.classList.remove("bg-indigo-600", "text-white");
+          btn.classList.add("text-indigo-600", "bg-white");
+        });
+
+        if (value && value > 0) {
+          selectedAmount = value;
+        } else {
+          selectedAmount = null;
+        }
+
+        updateDonateButtonState();
+      });
+
+      paymentMethodButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          paymentMethodButtons.forEach((btn) => {
+            btn.classList.remove("ring-2", "ring-indigo-500");
+          });
+
+          button.classList.add("ring-2", "ring-indigo-500");
+
+          selectedPaymentMethod = button.getAttribute("data-method");
+
+          updateDonateButtonState();
+        });
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        errorMessage.classList.add("hidden");
+
+        donateButton.disabled = true;
+        processStatus.classList.remove("hidden");
+
+        try {
+          if (selectedPaymentMethod === "card") {
+            const response = await fetch("/api/checkout-session", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                amount: selectedAmount,
+                currency: "eur",
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error(
+                "Problème lors de la création de la session de paiement"
+              );
+            }
+
+            const session = await response.json();
+
+            const result = await stripe.redirectToCheckout({
+              sessionId: session.id,
+            });
+
+            if (result.error) {
+              throw new Error(result.error.message);
+            }
+          } else if (selectedPaymentMethod === "paypal") {
+            window.location.href = "/don/remerciement?simulation=paypal";
+          } else if (selectedPaymentMethod === "gpay") {
+            window.location.href = "/don/remerciement?simulation=gpay";
+          }
+        } catch (error) {
+          console.error("Erreur:", error);
+
+          errorMessage.textContent =
+            "Une erreur est survenue lors du traitement du paiement. Veuillez réessayer.";
+          errorMessage.classList.remove("hidden");
+
+          donateButton.disabled = false;
+        } finally {
+          processStatus.classList.add("hidden");
+        }
+      });
+    });
+  </script>
+</Layout>

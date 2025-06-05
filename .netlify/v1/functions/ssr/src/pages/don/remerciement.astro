@@ -1,0 +1,107 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <div
+    class="min-h-[80vh] flex flex-col items-center justify-center px-4 py-12"
+  >
+    <div
+      class="w-full max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg border border-gray-100 text-center"
+    >
+      <div
+        class="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-12 w-12 text-primary"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+
+      <h1 class="text-3xl font-bold text-primary mb-6 font-secondary">
+        Merci pour votre don !
+      </h1>
+
+      <p class="text-gray-600 mb-4 text-lg">
+        Votre générosité nous permet de continuer à développer EchoSafe et à
+        offrir un soutien aux personnes qui en ont besoin.
+      </p>
+
+      <p class="text-gray-600 mb-8 text-lg">
+        Votre contribution fait une réelle différence dans notre mission d'aide
+        et de soutien.
+      </p>
+
+      <div class="mt-8">
+        <a
+          href="/"
+          class="inline-block w-full px-6 py-3 bg-primary text-white text-center rounded-3xl hover:bg-white hover:text-primary border border-primary transition-colors duration-300"
+        >
+          Retour à l'accueil
+        </a>
+      </div>
+    </div>
+
+    <!-- Animation confettis -->
+    <div id="confetti-container" class="fixed inset-0 pointer-events-none z-50">
+    </div>
+  </div>
+</Layout>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Simple confetti animation
+    const confettiContainer = document.getElementById("confetti-container");
+    const colors = ["#4A6CF7", "#FFC107", "#FF5722", "#E91E63", "#00BCD4"];
+
+    // Create confetti pieces
+    for (let i = 0; i < 100; i++) {
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const size = Math.random() * 10 + 5;
+      const left = Math.random() * 100;
+      const animationDuration = Math.random() * 3 + 2;
+      const animationDelay = Math.random() * 2;
+
+      confetti.style.background = color;
+      confetti.style.width = `${size}px`;
+      confetti.style.height = `${size}px`;
+      confetti.style.left = `${left}vw`;
+      confetti.style.top = "-20px";
+      confetti.style.position = "absolute";
+      confetti.style.borderRadius = Math.random() > 0.5 ? "50%" : "0";
+      confetti.style.opacity = Math.random() + 0.5;
+      confetti.style.animation = `confettiDrop ${animationDuration}s ease-in ${animationDelay}s forwards`;
+
+      confettiContainer.appendChild(confetti);
+    }
+  });
+</script>
+
+<style>
+  @keyframes confettiDrop {
+    0% {
+      transform: translateY(-20px) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(calc(100vh + 20px)) rotate(720deg);
+      opacity: 0;
+    }
+  }
+
+  .confetti {
+    transform-origin: center;
+  }
+</style>

@@ -1,0 +1,123 @@
+---
+import Layoutapp from "../../layouts/Layoutapp.astro";
+import "../../style/global.css";
+import Cardsecour from "../../components/Cardsecour.astro";
+---
+
+<Layoutapp>
+  <div class="mx-5">
+    <div class="container">
+      <h1 class="font-bold justify-center text-center mt-5 text-primary mb-5">
+        Kit de secours
+      </h1>
+      <p class="font-bold text-primary mb-5">Numéros d'urgence vitale</p>
+    </div>
+    <Cardsecour
+      url={`tel:112`}
+      text={`Si urgence vitale, appeler le 112`}
+      imgSrc="src/assets/icone112.svg"
+      alt="girophare pour le 112"
+    />
+    <Cardsecour
+      url={`tel:17`}
+      text={`Police secours, appeler le 17`}
+      imgSrc="src/assets/iconepolice.svg"
+      alt="voiture de police"
+    />
+    <Cardsecour
+      url={`tel:15`}
+      text={`SAMU, appeler le 15`}
+      imgSrc="src/assets/iconeambulance.svg"
+      alt="véhicule de secours et d'assistance aux victimes"
+    />
+    <Cardsecour
+      url={`tel:18`}
+      text={`Pompier, appeler le 18`}
+      imgSrc="src/assets/iconepompier.svg"
+      alt="camion de pompier"
+    />
+
+    <p class="font-bold text-primary mb-5">Numéros d'urgence</p>
+
+    <Cardsecour
+      url={`tel:18`}
+      text={`SOS Amitié : 09 72 39 40 50`}
+      imgSrc="src/assets/iconephone.svg"
+      alt="icone de téléphone"
+    />
+    <Cardsecour
+      url={`tel:18`}
+      text={`Fil Santé Jeunes : 0800 235 236`}
+      imgSrc="src/assets/iconephone.svg"
+      alt="icone de téléphone"
+    />
+    <Cardsecour
+      url={`tel:3919`}
+      text={`Violences Femmes Info : 3919`}
+      imgSrc="src/assets/iconephone.svg"
+      alt="icone de téléphone"
+    />
+    <Cardsecour
+      url={`tel:119`}
+      text={`Enfance en Danger : 119`}
+      imgSrc="src/assets/iconephone.svg"
+      alt="icone de téléphone"
+    />
+    <Cardsecour
+      url={`tel:31140`}
+      text={`Prévention suicide : 31140`}
+      imgSrc="src/assets/iconephone.svg"
+      alt="icone de téléphone"
+    />
+    <div>
+      <h2 class="font-bold font-primary text-xl mb-3 text-primary">
+        Conseils Pratiques
+      </h2>
+      <ul class="text-primary font-primary text-lg mb-3">
+        <li class="mb-3">
+          <strong>En cas de harcèlement : </strong>Notez les incidents et
+          contactez un adulte de confiance.
+        </li>
+        <li class="mb-3">
+          <strong>Pour aider quelqu'un : </strong>Écoutez sans juger et
+          encouragez à chercher de l'aide.
+        </li>
+        <li class="mb-3">
+          <strong>Sécurité en ligne :</strong> Utilisez des mots de passe forts et
+          signalez tout comportement inapproprié.
+        </li>
+      </ul>
+    </div>
+    <div class="mb-22">
+      <h2 class="font-bold
+    font-primary
+    text-xl mb-4 mt-4 text-primary">
+        Ressources en ligne
+      </h2>
+      <Cardsecour
+        url={`tel:3018`}
+        text={`Net écoute : \n 3018`}
+        imgSrc="src/assets/iconemonde.svg"
+        bgColor="#E2EEFF"
+        borderClass="transparent"
+        alt="icone de planète pour parler de la communication dans le monde"
+      />
+      <Cardsecour
+        url={`https://e-enfance.org/`}
+        text={`e-Enfance : Protection des enfants en ligne `}
+        imgSrc="src/assets/iconemonde.svg"
+        bgColor="#E6E2FF"
+        borderClass="transparent"
+        alt="icone de planète pour parler de la communication dans le monde"
+      />
+      <Cardsecour
+        url={`https://www.education.gouv.fr/non-au-harcelement`}
+        text={`Stop Harcèlement : Ressource harcèlement scolaire `}
+        imgSrc="src/assets/iconemonde.svg"
+        bgColor="#FFDEDE"
+        borderClass="transparent"
+        alt="icone de planète pour parler de la communication dans le monde"
+      />
+    </div>
+  </div>
+</Layoutapp>

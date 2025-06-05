@@ -1,0 +1,284 @@
+---
+import Layoutapp from "../../layouts/Layoutapp.astro";
+import Button from "../../components/Button-v2.astro";
+import InfoPersoIcon from "../../assets/info-perso_icon.svg";
+import ParametreIcon from "../../assets/parametre_icon.svg";
+import PocketBase from "pocketbase";
+
+let userInitials = "U"; 
+let userName = "Utilisateur";
+let userAge = "";
+let userBirthDate = "";
+let userAvatar = null;
+
+const pb = new PocketBase("https://echosafe.eloishenry.fr");
+
+const authCookie = Astro.request.headers.get("cookie");
+if (authCookie) {
+  pb.authStore.loadFromCookie(authCookie);
+}
+
+try {
+  if (pb.authStore.isValid) {
+    const user = pb.authStore.model;
+    console.log("Utilisateur connecté:", user);
+
+    const userId = user.id;
+    const userData = await pb.collection("users").getOne(userId);
+    console.log("Données utilisateur complètes:", userData);
+
+    if (userData.prenom_utilisateur && userData.nom_utilisateur) {
+      userInitials =
+        userData.prenom_utilisateur.charAt(0).toUpperCase() +
+        userData.nom_utilisateur.charAt(0).toUpperCase();
+    } else if (userData.pseudo) {
+      userInitials = userData.pseudo.charAt(0).toUpperCase();
+    }
+
+    userName = userData.prenom_utilisateur || userData.pseudo || "Utilisateur";
+
+    if (userData.date_naissance_utilisateur) {
+      try {
+        const birthDate = new Date(userData.date_naissance_utilisateur);
+
+        if (!isNaN(birthDate.getTime())) {
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+
+          if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birthDate.getDate())
+          ) {
+            age--;
+          }
+
+          userAge = age;
+
+          userBirthDate = `${birthDate.getDate().toString().padStart(2, "0")}/${(birthDate.getMonth() + 1).toString().padStart(2, "0")}/${birthDate.getFullYear()}`;
+        }
+      } catch (dateError) {
+        console.error(
+          "Erreur lors du traitement de la date de naissance:",
+          dateError
+        );
+      }
+    }
+
+    if (userData.avatar) {
+      userAvatar = `https://echosafe.eloishenry.fr/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`;
+      console.log("URL de l'avatar:", userAvatar);
+    }
+  }
+} catch (error) {
+  console.error(
+    "Erreur lors de la récupération des données utilisateur:",
+    error
+  );
+}
+---
+
+<Layoutapp removeContainerPadding={true}>
+  <div class="screen w-full overflow-hidden bg-gray-50 flex flex-col">
+    <div
+      class="relative w-full bg-gradient-to-b from-indigo-600 via-indigo-500 to-indigo-400 pt-14 pb-24"
+    >
+      <div class="absolute inset-0 overflow-hidden">
+        <div
+          class="absolute top-12 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-indigo-400 opacity-30 rounded-full"
+        >
+        </div>
+        <div
+          class="absolute top-20 left-1/2 transform -translate-x-1/2 w-80 h-80 bg-indigo-300 opacity-20 rounded-full"
+        >
+        </div>
+      </div>
+
+      <div
+        class="relative z-1 flex flex-col items-center justify-center h-28 mt-4"
+      >
+        <div class="relative mb-4">
+          {
+            userAvatar ? (
+              <div
+                id="avatar-container"
+                class="w-24 h-24 bg-white rounded-full overflow-hidden flex items-center justify-center shadow-lg"
+              >
+                <img
+                  src={userAvatar}
+                  alt="Photo de profil"
+                  class="w-full h-full object-cover"
+                  style="width: 100%; height: 100%; object-fit: cover;"
+                />
+              </div>
+            ) : (
+              <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
+                <span class="text-3xl font-bold">
+                  {userInitials}
+                </span>
+              </div>
+            )
+          }
+
+          <div
+            id="change-avatar-badge"
+            class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-indigo-700 transition-colors"
+            title="Changer la photo de profil"
+          >
+            <svg
+              class="w-5 h-5 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
+                clip-rule="evenodd"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="bg-white -mt-20 w-full rounded-t-4xl shadow-md relative z-2 pt-8 pb-6 flex-grow"
+    >
+      <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold mb-1">{userName}</h1>
+        <p id="birth-date-display" class= text-sm">
+          {userBirthDate ? userBirthDate : ""}
+          {
+            userAge && userBirthDate
+              ? ` - ${userAge} ans`
+              : userAge
+                ? `${userAge} ans`
+                : ""
+          }
+        </p>
+      </div>
+
+      <div class="px-6 space-y-3">
+        <Button
+          text="Informations personnelles"
+          fullWidth
+          withArrow
+          url="/profil/informations"
+        >
+          <InfoPersoIcon class="w-7 h-7" />
+        </Button>
+        <Button text="Paramètres" fullWidth withArrow url="/profil/parametres">
+          <ParametreIcon class="w-7 h-7" />
+        </Button>
+      </div>
+    </div>
+  </div>
+</Layoutapp>
+
+<script is:inline>
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/pocketbase@0.15.2/dist/pocketbase.umd.js";
+      script.onload = async function () {
+        const pb = new PocketBase("https://echosafe.eloishenry.fr");
+
+        if (pb.authStore.isValid) {
+          console.log("Client: Utilisateur connecté");
+
+          try {
+            const userData = await pb
+              .collection("users")
+              .getOne(pb.authStore.model.id);
+            console.log("Client: Informations utilisateur complètes", userData);
+
+            console.log("Client: Test date_naissance_utilisateur", {
+              exists: "date_naissance_utilisateur" in userData,
+              value: userData.date_naissance_utilisateur,
+              asDate: userData.date_naissance_utilisateur
+                ? new Date(userData.date_naissance_utilisateur)
+                : null,
+            });
+
+            console.log("Client: Test avatar", {
+              exists: "avatar" in userData,
+              value: userData.avatar,
+              url: userData.avatar
+                ? `https://echosafe.eloishenry.fr/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`
+                : null,
+            });
+
+            if (userData.avatar) {
+              const avatarUrl = `https://echosafe.eloishenry.fr/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`;
+              const avatarContainer =
+                document.getElementById("avatar-container");
+
+              if (avatarContainer) {
+                const newImg = new Image();
+                newImg.className = "w-full h-full object-cover";
+                newImg.style.width = "100%";
+                newImg.style.height = "100%";
+                newImg.style.objectFit = "cover";
+                newImg.alt = "Photo de profil";
+
+                newImg.onerror = function () {
+                  let initials = "";
+                  if (userData.prenom_utilisateur && userData.nom_utilisateur) {
+                    initials =
+                      userData.prenom_utilisateur.charAt(0).toUpperCase() +
+                      userData.nom_utilisateur.charAt(0).toUpperCase();
+                  } else if (userData.pseudo) {
+                    initials = userData.pseudo.charAt(0).toUpperCase();
+                  } else {
+                    initials = "U";
+                  }
+
+                  avatarContainer.innerHTML = `<span class="text-3xl font-bold text-indigo-600">${initials}</span>`;
+                };
+
+                newImg.onload = function () {
+                  avatarContainer.innerHTML = "";
+                  avatarContainer.appendChild(newImg);
+                };
+
+                newImg.src = avatarUrl;
+              }
+            }
+
+            if (userData.date_naissance_utilisateur) {
+              const birthDate = new Date(userData.date_naissance_utilisateur);
+              if (!isNaN(birthDate.getTime())) {
+                const formattedDate = `${birthDate.getDate().toString().padStart(2, "0")}/${(birthDate.getMonth() + 1).toString().padStart(2, "0")}/${birthDate.getFullYear()}`;
+
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (
+                  monthDiff < 0 ||
+                  (monthDiff === 0 && today.getDate() < birthDate.getDate())
+                ) {
+                  age--;
+                }
+
+                const birthDateDisplay =
+                  document.getElementById("birth-date-display");
+                if (birthDateDisplay) {
+                  birthDateDisplay.textContent = `${formattedDate} - ${age} ans`;
+                }
+              }
+            }
+          } catch (error) {
+            console.error(
+              "Client: Erreur lors de la récupération des données",
+              error
+            );
+          }
+        } else {
+          console.log("Client: Utilisateur non connecté");
+        }
+      };
+      document.head.appendChild(script);
+    } catch (error) {
+      console.error("Client: Erreur globale", error);
+    }
+  });
+</script>
