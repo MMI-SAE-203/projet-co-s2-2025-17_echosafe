@@ -1,28 +1,42 @@
 ---
 import "../style/global.css";
+import { Image } from "astro:assets";
+
+// Importez directement les images plutôt que d'utiliser des chemins relatifs
+import logoAvf from "../assets/logo-avf.webp";
+import logoFrance from "../assets/logo-france.webp";
+import logo3 from "../assets/logo-3.webp";
+import logo4 from "../assets/logo4.webp";
+import logoUnicef from "../assets/logo_unicef.webp";
+import logoTf1 from "../assets/logo_tf1.webp";
+import logoRadioFrance from "../assets/logo_radiofrance.webp";
+
+// Stockez les images importées dans un tableau
 const logos = [
-  "/src/assets/logo-avf.webp",
-  "/src/assets/logo-france.webp",
-  "/src/assets/logo-3.webp",
-  "/src/assets/logo4.webp",
-  "/src/assets/logo_unicef.webp",
-  "/src/assets/logo_tf1.webp",
-  "/src/assets/logo_radiofrance.webp",
+  logoAvf,
+  logoFrance,
+  logo3,
+  logo4,
+  logoUnicef,
+  logoTf1,
+  logoRadioFrance,
 ];
 ---
 
 <div class="w-full relative bg-[#323F92] overflow-hidden py-4">
   <div class="w-max animate-[scroll_30s_linear_infinite] flex gap-12">
     {
-      logos
-        .concat(logos)
-        .map((logo, index) => (
-          <img
-            src={logo}
-            alt={`Logo Partenaire ${index + 1}`}
-            class="h-8 lg:h-12 inline-block"
-          />
-        ))
+      // Dupliquer le tableau pour l'animation continue
+      [...logos, ...logos].map((logo, index) => (
+        <Image
+          src={logo}
+          alt={`Logo Partenaire ${(index % logos.length) + 1}`}
+          class="h-8 lg:h-12 inline-block w-auto"
+          width={120}
+          height={48}
+          loading={index < logos.length ? "eager" : "lazy"}
+        />
+      ))
     }
   </div>
 </div>
