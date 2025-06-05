@@ -2,6 +2,12 @@
 import "../style/global.css";
 import Button from "./Button.astro";
 import Partenaire from "./Partenaire.astro";
+import { Image } from "astro:assets";
+
+// Importez vos images directement
+import ondeImage from "../assets/onde.webp";
+import femmeHeroImage from "../assets/femme_hero.webp";
+import humeursImage from "../assets/humeurs.webp";
 ---
 
 <section class="min-h-screen flex items-center -mt-18">
@@ -21,27 +27,38 @@ import Partenaire from "./Partenaire.astro";
         professionnels.
       </h3>
       <div class="flex flex-col md:flex-row gap-4 items-center md:items-start">
-        <Button variant="dark" url={`/accueil-app`} text={`Accéder à Echo Safe`} />
+        <Button
+          variant="dark"
+          url={`/accueil-app`}
+          text={`Accéder à Echo Safe`}
+        />
         <Button url={`/auth/inscription`} text={`S'inscrire`} />
       </div>
     </div>
 
     <!-- Images (cachées sur mobile) -->
     <div class="relative hidden md:block md:w-1/2">
-      <img
-        class="w-120 absolute -translate-y-45 z-0 translate-x-10"
-        src="/src/assets/onde.webp"
+      <!-- Utilisez le composant Image d'Astro -->
+      <Image
+        src={ondeImage}
         alt="fond en forme d'onde"
+        class="w-120 absolute -translate-y-45 z-0 translate-x-10"
+        width={480}
+        height={300}
       />
-      <img
-        src="/src/assets/femme_hero.webp"
+      <Image
+        src={femmeHeroImage}
         alt="femme discute"
         class="absolute top-1/2 left-1/2 transform -translate-x-55 -translate-y-50 w-80"
+        width={320}
+        height={400}
       />
-      <img
-        src="/src/assets/humeurs.webp"
+      <Image
+        src={humeursImage}
         alt="cadrant d'humeurs"
         class="absolute transform left-1/2 -top-10 w-65"
+        width={260}
+        height={260}
       />
     </div>
   </div>

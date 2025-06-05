@@ -5,6 +5,15 @@ import Hero from "../components/Hero.astro";
 import Card_accueil from "../components/Card_accueil.astro";
 import TemoignageCard from "../components/TemoignageCard.astro";
 import FAQItem from "../components/FAQItem.astro";
+import { Image } from "astro:assets";
+
+// Importation des images
+import maquetteMessage from "../assets/maquette_accueil/maquette_message.webp";
+import maquetteHumeur from "../assets/maquette_accueil/maquette_humeur.webp";
+import maquetteKitSecours from "../assets/maquette_accueil/maquette_kit-de-secours.webp";
+import hommeSecurite from "../assets/homme-securite.webp";
+import femmeTemoignage from "../assets/femme-temoignage.webp";
+import hommeFAQ from "../assets/homme-FAQ.webp";
 
 const testimonials = [
   {
@@ -79,7 +88,7 @@ const preloadTestimonials = testimonials.slice(0, 2);
       description="Rejoignez notre communauté pour échanger anonymement avec des professionnels et d'autres membres dans un environnement sécurisé."
       buttonText="Découvrir l'outil"
       buttonLink="#"
-      imageUrl="/src/assets/maquette_accueil/maquette_message.webp"
+      imageUrl={maquetteMessage.src}
       bgColor="bg-pink-100"
       imagePosition="right"
       layout="horizontal"
@@ -94,7 +103,7 @@ const preloadTestimonials = testimonials.slice(0, 2);
       description="Enregistrez vos humeurs avec le Moodtracker et recevez des conseils personnalisés pour améliorer votre bien-être."
       buttonText="Suivre votre humeur"
       buttonLink="#"
-      imageUrl="/src/assets/maquette_accueil/maquette_humeur.webp"
+      imageUrl={maquetteHumeur.src}
       bgColor="bg-orange-200"
       bgGradient="bg-gradient-to-r from-[#FFDEDE] to-[#EDA8A8]"
       imagePosition="left"
@@ -109,7 +118,7 @@ const preloadTestimonials = testimonials.slice(0, 2);
       description="Accédez aux ressources essentielles : numéros d'urgence, conseils pratiques et soutien immédiat contre le harcèlement."
       buttonText="Découvrir le kit"
       buttonLink="#"
-      imageUrl="/src/assets/maquette_accueil/maquette_kit-de-secours.webp"
+      imageUrl={maquetteKitSecours.src}
       bgColor="bg-blue-100"
       bgGradient="bg-gradient-to-r from-[#E2EEFF] to-[#7CA7E5]"
       imagePosition="right"
@@ -161,13 +170,13 @@ const preloadTestimonials = testimonials.slice(0, 2);
     </div>
 
     <div class="absolute right-0 md:right-30 -top-15 w-40 z-0">
-      <img
-        src="/src/assets/homme-securite.webp"
+      <Image
+        src={hommeSecurite}
         alt="Sécurité"
         class="w-full h-auto object-cover"
         loading="lazy"
-        width="160"
-        height="240"
+        width={160}
+        height={240}
       />
     </div>
 
@@ -229,13 +238,13 @@ const preloadTestimonials = testimonials.slice(0, 2);
       <div
         class="absolute left-0 md:left-30 top-1/2 transform -translate-y-1/2 w-40 z-0"
       >
-        <img
-          src="/src/assets/femme-temoignage.webp"
+        <Image
+          src={femmeTemoignage}
           alt="Témoignage"
           class="w-full h-auto object-cover"
           loading="lazy"
-          width="160"
-          height="240"
+          width={160}
+          height={240}
         />
       </div>
 
@@ -293,13 +302,13 @@ const preloadTestimonials = testimonials.slice(0, 2);
     </div>
 
     <div class="absolute right-0 md:right-30 -top-15 w-40 z-0">
-      <img
-        src="/src/assets/homme-FAQ.webp"
+      <Image
+        src={hommeFAQ}
         alt="FAQ"
         class="w-full h-auto object-cover"
         loading="lazy"
-        width="160"
-        height="240"
+        width={160}
+        height={240}
       />
     </div>
 

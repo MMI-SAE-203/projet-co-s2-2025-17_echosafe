@@ -3,20 +3,20 @@
 
 Éléménts à renseigner pour la soutenance :
 
-- [ ] Nom du projet :
-- [ ] URL de la landing page :
-- [ ] URL de l'application finale :
-- [ ] URL de connexion au back office :
+- [ ] Nom du projet : Echo Safe
+- [ ] URL de la landing page : https://echo-safe1.netlify.app/
+- [ ] URL de l'application finale : 
+- [ ] URL de connexion au back office : 
 - [ ] Identifiant de connexion au backoffice :
 - [ ] Mot de passe de connexion au backoffice :
-- [ ] URL de la maquette FIGMA :
+- [ ] URL de la maquette FIGMA : https://www.figma.com/design/cNFbeYZzvVpxwq3GZyHVJ1/maquette_projet-co_bryan-thierry_mathilde-gatefait_elois-henry_TDB2?node-id=1379-3480&t=64ns2x8x7xIVScTW-1
 - [ ] Description du projet :
 
 ## 🚀 Équipe
 
 | Étudiants    | Prénom NOM  |
 | :----------- | :---------- |
-| Étudiant 1   | à compléter |
-| Étudiant 2   | à compléter |
-| Étudiant 3   | à compléter |
-| (Étudiant 4) | à compléter |
+| Étudiant 1   | Elois HENRY |
+| Étudiant 2   | Mathilde GATEFAIT |
+| Étudiant 3   | Bryan THIERRY |
+
