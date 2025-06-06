@@ -5,7 +5,7 @@
 
 - [ ] Nom du projet : Echo Safe
 - [ ] URL de la landing page : https://echo-safe1.netlify.app/
-- [ ] URL de l'application finale : 
+- [ ] URL de l'application finale : https://echo-safe1.netlify.app/
 - [ ] URL de connexion au back office : 
 - [ ] Identifiant de connexion au backoffice :
 - [ ] Mot de passe de connexion au backoffice :
