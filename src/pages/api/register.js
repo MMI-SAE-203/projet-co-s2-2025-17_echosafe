@@ -1,7 +1,7 @@
 import PocketBase from 'pocketbase';
 
 export async function POST({ request }) {
-  const pb = new PocketBase("https://echosafe.eloishenry.fr");
+  const pb = new PocketBase("http://127.0.0.1:8090");
   
   try {
     const formData = await request.formData();
@@ -68,17 +68,31 @@ export async function POST({ request }) {
         // Ne pas échouer l'inscription si l'upload de l'avatar échoue
       }
     }
+
+    // Connecter automatiquement l'utilisateur
+    await pb.collection("users").authWithPassword(email, password);
+    
+    // Générer le cookie d'authentification
+    const authCookie = pb.authStore.exportToCookie({
+      secure: true,
+      sameSite: "Lax",
+      path: "/"
+    });
     
     return new Response(JSON.stringify({
       status: "success",
       message: "Inscription réussie !",
+      redirect: "/formulaire?new=true",
       user: {
         id: user.id,
         email: user.email
       }
     }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Set-Cookie": authCookie
+      },
     });
     
   } catch (error) {

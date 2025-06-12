@@ -1,23 +1,40 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import Formulaire from "../../components/Formulaire.astro";
 import PocketBase from "pocketbase";
 
 const isNewUser = Astro.url.searchParams.get("new") === "true";
 
-if (!isNewUser) {
-  return Astro.redirect("/accueil-app");
-}
-
-const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const pb = new PocketBase("http://127.0.0.1:8090");
 const authCookie = Astro.request.headers.get("cookie");
 let userId = "";
+let userEmail = "";
 
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
   if (pb.authStore.isValid) {
     userId = pb.authStore.model.id;
+    userEmail = pb.authStore.model.email;
+  } else {
+    return Astro.redirect("/auth/connexion?redirect=/formulaire?new=true");
   }
+} else {
+  return Astro.redirect("/auth/connexion?redirect=/formulaire?new=true");
+}
+
+// Vérifier si l'utilisateur a déjà répondu au formulaire
+let hasCompletedForm = false;
+try {
+  const formResponses = await pb.collection("form_responses").getList(1, 1, {
+    filter: `user="${userId}"`,
+  });
+  hasCompletedForm = formResponses.items.length > 0;
+} catch (error) {
+  console.error("Erreur lors de la vérification du formulaire:", error);
+}
+
+// Si l'utilisateur a déjà répondu et n'est pas explicitement marqué comme nouveau, rediriger vers l'accueil
+if (hasCompletedForm && !isNewUser) {
+  return Astro.redirect("/accueil-app");
 }
 
 const questions = [
@@ -74,12 +91,354 @@ const questions = [
     ],
   },
 ];
+
+const totalQuestions = questions.length;
 ---
 
 <Layout>
-  <div class="min-h-screen py-8">
-    <div class="max-w-4xl mx-auto">
-      <Formulaire questions={questions} userId={userId} />
+  <div class="min-h-screen bg-white flex items-center justify-center p-5">
+    <div
+      class="bg-white rounded-3xl shadow-2xl p-8 md:p-10 w-full max-w-2xl text-center relative"
+    >
+      <!-- Bouton retour -->
+      <button
+        id="backBtn"
+        class="absolute top-6 left-6 md:top-8 md:left-8 text-3xl text-primary hover:scale-110 transition-transform duration-200 hidden"
+        aria-label="Question précédente"
+      >
+        ‹
+      </button>
+
+      <!-- Vue de la question -->
+      <div id="questionView" class="min-h-[65vh] flex flex-col">
+        <!-- Compteur et progression -->
+        <div class="mb-8">
+          <div id="questionCounter" class="text-gray-500 text-sm mb-3">
+            Question 1 sur {totalQuestions}
+          </div>
+
+          <div class="w-full h-2 bg-gray-200 rounded-full">
+            <div
+              id="progressBar"
+              class="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+              style={`width: ${(1 / totalQuestions) * 100}%`}
+            >
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenu de la question -->
+        <div class="flex-grow flex flex-col">
+          <!-- Titre de la question -->
+          <h2
+            id="questionTitle"
+            class="text-primary text-2xl md:text-3xl font-semibold mb-8 md:mb-10 leading-tight px-2"
+          >
+            {questions[0].title}
+          </h2>
+
+          <!-- Options -->
+          <div
+            id="optionsContainer"
+            class="flex-grow flex flex-col gap-4 mb-8 md:mb-10"
+          >
+            {
+              questions[0].options.map((option) => (
+                <div
+                  class="option group flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5 text-left"
+                  data-value={option}
+                  role="radio"
+                  tabindex="0"
+                  aria-checked="false"
+                >
+                  <div class="radio-button w-5 h-5 border-2 border-gray-300 rounded-full mr-4 relative transition-all duration-300 group-hover:border-primary">
+                    <div class="radio-dot w-2 h-2 bg-primary rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-0 transition-all duration-300" />
+                  </div>
+                  <span class="text-base md:text-lg font-medium select-none">
+                    {option}
+                  </span>
+                </div>
+              ))
+            }
+          </div>
+
+          <!-- Bouton suivant -->
+          <div class="mt-auto">
+            <button
+              id="nextBtn"
+              class="w-full md:w-auto bg-primary text-white px-8 md:px-10 py-3 md:py-4 rounded-full text-base font-semibold hover:bg-white hover:text-primary border border-primary transition-all duration-300 opacity-50 cursor-not-allowed"
+              disabled
+            >
+              Suivant
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message de complétion -->
+      <div
+        id="completionView"
+        class="hidden min-h-[50vh] flex flex-col justify-center items-center"
+      >
+        <div class="text-6xl mb-6">🎉</div>
+        <h2 class="text-primary text-2xl md:text-3xl font-semibold mb-6">
+          Merci pour vos réponses !
+        </h2>
+        <p class="text-gray-600 mb-8 px-4 max-w-lg">
+          Vos réponses nous aideront à vous offrir un soutien personnalisé. Vous
+          allez être redirigé vers la page de connexion dans quelques instants.
+        </p>
+        <div class="flex justify-center">
+          <div
+            id="loader"
+            class="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"
+          >
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <style>
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .option {
+      transition: all 0.3s ease;
+    }
+
+    .option:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    .option.selected {
+      border-color: var(--color-primary) !important;
+      background-color: rgba(50, 63, 146, 0.05) !important;
+    }
+
+    .option.selected .radio-button {
+      border-color: var(--color-primary) !important;
+    }
+
+    .option.selected .radio-dot {
+      opacity: 1 !important;
+      transform: translate(-50%, -50%) scale(1) !important;
+    }
+
+    #nextBtn:not([disabled]) {
+      opacity: 1;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+
+  <script define:vars={{ questions, userId, userEmail }}>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Éléments du DOM
+      const questionView = document.getElementById("questionView");
+      const completionView = document.getElementById("completionView");
+      const questionCounter = document.getElementById("questionCounter");
+      const progressBar = document.getElementById("progressBar");
+      const questionTitle = document.getElementById("questionTitle");
+      const optionsContainer = document.getElementById("optionsContainer");
+      const nextBtn = document.getElementById("nextBtn");
+      const backBtn = document.getElementById("backBtn");
+
+      // Variables d'état
+      const totalQuestions = questions.length;
+      let currentQuestionIndex = 0;
+      let answers = Array(totalQuestions).fill(null);
+
+      // Sélectionner une option
+      function selectOption(optionElement) {
+        if (!optionElement) return;
+
+        const selectedValue = optionElement.dataset.value;
+
+        // Désélectionner toutes les options
+        optionsContainer.querySelectorAll(".option").forEach((opt) => {
+          opt.classList.remove("selected");
+          opt.setAttribute("aria-checked", "false");
+        });
+
+        // Sélectionner l'option cliquée
+        optionElement.classList.add("selected");
+        optionElement.setAttribute("aria-checked", "true");
+
+        // Activer le bouton suivant
+        nextBtn.disabled = false;
+        nextBtn.classList.remove("opacity-50", "cursor-not-allowed");
+
+        // Enregistrer la réponse
+        answers[currentQuestionIndex] = selectedValue;
+      }
+
+      // Mettre à jour l'affichage de la question
+      function updateQuestionView() {
+        const currentQuestion = questions[currentQuestionIndex];
+
+        // Mettre à jour le compteur
+        questionCounter.textContent = `Question ${
+          currentQuestionIndex + 1
+        } sur ${totalQuestions}`;
+
+        // Mettre à jour la barre de progression
+        const progressPercentage =
+          ((currentQuestionIndex + 1) / totalQuestions) * 100;
+        progressBar.style.width = `${progressPercentage}%`;
+
+        // Mettre à jour le titre
+        questionTitle.textContent = currentQuestion.title;
+
+        // Mettre à jour les options
+        optionsContainer.innerHTML = "";
+        currentQuestion.options.forEach((option) => {
+          const optionElement = document.createElement("div");
+          optionElement.className =
+            "option group flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5 text-left";
+          optionElement.dataset.value = option;
+          optionElement.setAttribute("role", "radio");
+          optionElement.setAttribute("tabindex", "0");
+          optionElement.setAttribute("aria-checked", "false");
+
+          optionElement.innerHTML = `
+            <div class="radio-button w-5 h-5 border-2 border-gray-300 rounded-full mr-4 relative transition-all duration-300 group-hover:border-primary">
+              <div class="radio-dot w-2 h-2 bg-primary rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-0 transition-all duration-300"></div>
+            </div>
+            <span class="text-base md:text-lg font-medium select-none">${option}</span>
+          `;
+
+          optionsContainer.appendChild(optionElement);
+        });
+
+        // Gérer la visibilité du bouton retour
+        if (currentQuestionIndex === 0) {
+          backBtn.classList.add("hidden");
+        } else {
+          backBtn.classList.remove("hidden");
+        }
+
+        // Désactiver le bouton suivant (jusqu'à sélection d'une option)
+        nextBtn.disabled = true;
+        nextBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+        // Restaurer la réponse si elle existe
+        if (answers[currentQuestionIndex] !== null) {
+          const savedOption = optionsContainer.querySelector(
+            `.option[data-value="${answers[currentQuestionIndex]}"]`
+          );
+          if (savedOption) {
+            selectOption(savedOption);
+          }
+        }
+
+        // Ajouter une animation de transition
+        questionView.classList.add("fade-in");
+        setTimeout(() => {
+          questionView.classList.remove("fade-in");
+        }, 400);
+
+        // Ajouter les gestionnaires d'événements pour les nouvelles options
+        optionsContainer.querySelectorAll(".option").forEach((option) => {
+          option.addEventListener("click", () => selectOption(option));
+          option.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              selectOption(option);
+            }
+          });
+        });
+      }
+
+      // Passer à la question suivante
+      function goToNextQuestion() {
+        if (currentQuestionIndex < totalQuestions - 1) {
+          currentQuestionIndex++;
+          updateQuestionView();
+        } else {
+          completeForm();
+        }
+      }
+
+      // Revenir à la question précédente
+      function goToPreviousQuestion() {
+        if (currentQuestionIndex > 0) {
+          currentQuestionIndex--;
+          updateQuestionView();
+        }
+      }
+
+      // Terminer le formulaire
+      async function completeForm() {
+        // Afficher la vue de complétion
+        questionView.classList.add("hidden");
+        completionView.classList.remove("hidden");
+        completionView.classList.add("fade-in");
+
+        try {
+          // Envoyer les données à l'API
+          const formData = {
+            user: userId,
+            responses: answers,
+            questions: questions,
+            completed_at: new Date().toISOString(),
+          };
+
+          const response = await fetch("/api/form_responses", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              result.message || "Erreur lors de l'enregistrement des réponses"
+            );
+          }
+
+          // Rediriger vers la page de connexion avec email prérempli après 2 secondes
+          setTimeout(() => {
+            const encodedEmail = encodeURIComponent(userEmail);
+            window.location.href = `/auth/connexion?email=${encodedEmail}`;
+          }, 2000);
+        } catch (error) {
+          console.error("Erreur:", error);
+          alert(
+            "Une erreur est survenue. Vous allez être redirigé vers la page de connexion."
+          );
+          setTimeout(() => {
+            const encodedEmail = encodeURIComponent(userEmail);
+            window.location.href = `/auth/connexion?email=${encodedEmail}`;
+          }, 2000);
+        }
+      }
+
+      // Ajouter les gestionnaires d'événements
+      nextBtn.addEventListener("click", goToNextQuestion);
+      backBtn.addEventListener("click", goToPreviousQuestion);
+
+      // Initialiser l'affichage de la première question
+      updateQuestionView();
+    });
+  </script>
 </Layout>
