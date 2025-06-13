@@ -2,7 +2,7 @@
 import Layoutapp from "../../layouts/Layoutapp.astro";
 import PocketBase from "pocketbase";
 
-const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
@@ -136,7 +136,6 @@ if (!pb.authStore.isValid) {
         console.log(
           `Paramètre "${settingName}" est maintenant ${isEnabled ? "activé" : "désactivé"}`
         );
-
       });
     });
   });

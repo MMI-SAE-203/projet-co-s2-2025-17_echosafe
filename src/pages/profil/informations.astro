@@ -5,7 +5,7 @@ import PocketBase from "pocketbase";
 let userData = null;
 let userAvatar = null;
 
-const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
@@ -21,7 +21,7 @@ try {
   userData = await pb.collection("users").getOne(userId);
   
   if (userData.avatar) {
-    userAvatar = `https://echosafe.eloishenry.fr/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`;
+    userAvatar = `https://pocketbase-echo-safe.fly.dev/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`;
   }
 } catch (error) {
   console.error("Erreur lors de la récupération des données utilisateur:", error);

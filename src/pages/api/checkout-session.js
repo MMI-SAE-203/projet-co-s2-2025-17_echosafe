@@ -22,7 +22,7 @@ export async function POST({ request }) {
               name: 'Don à EchoSafe',
               description: 'Merci pour votre soutien!',
               // Utilisez votre propre logo si disponible
-              images: ['https://echosafe.eloishenry.fr/images/logo.png'],
+              images: ['https://pocketbase-echo-safe.fly.dev/images/logo.png'],
             },
             unit_amount: data.amount * 100,  // En centimes
           },
