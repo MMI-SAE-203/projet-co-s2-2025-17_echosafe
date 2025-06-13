@@ -66,7 +66,7 @@ try {
     }
 
     if (userData.avatar) {
-      userAvatar = `https://echosafe.eloishenry.fr/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`;
+      userAvatar = `https://pocketbase-echo-safe.fly.dev/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`;
       console.log("URL de l'avatar:", userAvatar);
     }
   }
@@ -178,7 +178,7 @@ try {
       const script = document.createElement("script");
       script.src = "https://unpkg.com/pocketbase@0.15.2/dist/pocketbase.umd.js";
       script.onload = async function () {
-        const pb = new PocketBase("https://echosafe.eloishenry.fr");
+        const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 
         if (pb.authStore.isValid) {
           console.log("Client: Utilisateur connecté");
@@ -201,12 +201,12 @@ try {
               exists: "avatar" in userData,
               value: userData.avatar,
               url: userData.avatar
-                ? `https://echosafe.eloishenry.fr/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`
+                ? `https://pocketbase-echo-safe.fly.dev/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`
                 : null,
             });
 
             if (userData.avatar) {
-              const avatarUrl = `https://echosafe.eloishenry.fr/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`;
+              const avatarUrl = `https://pocketbase-echo-safe.fly.dev/api/files/${userData.collectionId}/${userData.id}/${userData.avatar}`;
               const avatarContainer =
                 document.getElementById("avatar-container");
 
