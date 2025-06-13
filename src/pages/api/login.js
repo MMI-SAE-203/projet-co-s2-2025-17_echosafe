@@ -17,7 +17,7 @@ export async function POST({ request }) {
       });
     }
 
-    const pb = new PocketBase("http://127.0.0.1:8090");
+    const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
     
     // Authentification avec PocketBase
     await pb.collection("users").authWithPassword(email, password);

@@ -19,7 +19,7 @@ export async function POST({ request }) {
       );
     }
     
-    const pb = new PocketBase('http://127.0.0.1:8090'); // Ajustez l'URL de votre instance PocketBase
+    const pb = new PocketBase('https://pocketbase-echo-safe.fly.dev/'); // Ajustez l'URL de votre instance PocketBase
     
     // Pour des raisons de sécurité, ne révélez pas si l'email existe ou non
     // Nous simulons toujours un succès

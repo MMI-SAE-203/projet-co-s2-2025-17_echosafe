@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Initialiser PocketBase
-const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 
 // Fonction pour nettoyer les objets (remplacer undefined par null ou "")
 function cleanObjectForFirestore(obj) {

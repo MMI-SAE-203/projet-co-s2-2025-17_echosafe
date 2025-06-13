@@ -1,7 +1,7 @@
 import PocketBase from 'pocketbase';
 
 export async function POST({ request }) {
-  const pb = new PocketBase("http://127.0.0.1:8090");
+  const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
   
   try {
     const formData = await request.formData();
