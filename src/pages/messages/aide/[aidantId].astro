@@ -22,7 +22,7 @@ if (!aidantId) {
   return Astro.redirect("/messages/aide");
 }
 
-const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
@@ -68,7 +68,7 @@ try {
       throw new Error("Conversation non trouvée");
     }
   } else {
-   const conversationsRef = collection(db, "conversations");
+    const conversationsRef = collection(db, "conversations");
     const q = query(
       conversationsRef,
       where("type", "==", "help"),
@@ -139,7 +139,7 @@ if (conversation) {
 }
 
 aidant = aidant || {};
-aidant.avatarUrl = ""; 
+aidant.avatarUrl = "";
 ---
 
 <Layout>

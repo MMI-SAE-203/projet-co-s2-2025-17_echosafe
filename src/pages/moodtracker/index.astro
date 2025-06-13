@@ -24,7 +24,7 @@ const calendarMoodSVGs = {
     "/src/assets/moodtracker/au-bord-des-larmes_calendar.svg",
 };
 
-const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
@@ -284,7 +284,7 @@ const moods = moodNames.map((name) => {
   return {
     value: name,
     svg: moodSVGs[name],
-    emoji: moodEmojis[name], 
+    emoji: moodEmojis[name],
     ...moodColors[name],
   };
 });
@@ -305,7 +305,7 @@ const monthNames = [
 ];
 const currentMonth = monthNames[today.getMonth()];
 const daysInMonth = lastDayOfMonth.getDate();
-const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; 
+const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
 ---
 
 <Layoutapp title="Mood Tracker">
@@ -318,7 +318,7 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
 
       <div class="bg-white rounded-2xl p-8 mb-8">
         <div class="relative">
-*          <button
+          * <button
             type="button"
             id="prevMood"
             class="absolute left-0 top-1/2 transform -translate-y-1/2 z-[5] bg-white rounded-full p-2 shadow-md hover:text-primary focus:outline-none"
@@ -696,7 +696,7 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
     });
 
     function handleSwipe() {
-      const threshold = 50; 
+      const threshold = 50;
 
       if (touchEndX + threshold < touchStartX) {
         nextBtn.click();
@@ -712,7 +712,7 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
     const form = document.getElementById("moodForm");
 
     form.addEventListener("submit", async function (e) {
-      e.preventDefault(); 
+      e.preventDefault();
 
       selectedMoodInput.value = moods[currentIndex];
 

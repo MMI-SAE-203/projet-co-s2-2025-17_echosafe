@@ -11,7 +11,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 
-const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
@@ -65,22 +65,24 @@ try {
 
 const recentUsers = users.filter((user) => user.id in existingConversations);
 
-const volunteers = users.filter(user => 
-  user.is_volunteer === true || user.role === "volunteer"
+const volunteers = users.filter(
+  (user) => user.is_volunteer === true || user.role === "volunteer"
 );
 
-const regularUsers = users.filter(user => 
-  user.is_volunteer !== true && user.role !== "volunteer"
+const regularUsers = users.filter(
+  (user) => user.is_volunteer !== true && user.role !== "volunteer"
 );
 
-const potentialFriends = regularUsers.filter(user => 
-  !(user.id in existingConversations)
+const potentialFriends = regularUsers.filter(
+  (user) => !(user.id in existingConversations)
 );
 ---
 
 <Layout>
   <div class="container mx-auto px-0 sm:px-4 py-0 sm:py-6 max-w-6xl">
-    <div class="bg-white shadow-sm mb-4 sm:mb-6 sm:static sm:shadow-none sm:bg-transparent sm:rounded-lg sm:px-0">
+    <div
+      class="bg-white shadow-sm mb-4 sm:mb-6 sm:static sm:shadow-none sm:bg-transparent sm:rounded-lg sm:px-0"
+    >
       <div class="flex items-center justify-between p-4 sm:px-0 sm:py-2">
         <div class="flex items-center">
           <a
@@ -102,9 +104,11 @@ const potentialFriends = regularUsers.filter(user =>
             </svg>
             <span class="text-sm sm:text-base">Retour</span>
           </a>
-          <h1 class="text-lg sm:text-2xl font-bold text-primary">Messages privés</h1>
+          <h1 class="text-lg sm:text-2xl font-bold text-primary">
+            Messages privés
+          </h1>
         </div>
-        
+
         <div class="relative hidden sm:block">
           <input
             type="text"
@@ -129,7 +133,7 @@ const potentialFriends = regularUsers.filter(user =>
           </div>
         </div>
       </div>
-      
+
       <div class="px-4 pb-3 sm:hidden">
         <div class="relative">
           <input
@@ -156,36 +160,46 @@ const potentialFriends = regularUsers.filter(user =>
         </div>
       </div>
 
-      {!isVolunteer && (
-        <div class="flex border-t sm:hidden">
-          <a href="/messages/prives" class="flex-1 py-3 text-center text-primary border-b-2 border-primary font-medium text-sm">
-            Messages privés
-          </a>
-          <a href="/messages/aide" class="flex-1 py-3 text-center text-gray-500 hover:text-secondary font-medium text-sm">
-            Aide
-          </a>
-        </div>
-      )}
+      {
+        !isVolunteer && (
+          <div class="flex border-t sm:hidden">
+            <a
+              href="/messages/prives"
+              class="flex-1 py-3 text-center text-primary border-b-2 border-primary font-medium text-sm"
+            >
+              Messages privés
+            </a>
+            <a
+              href="/messages/aide"
+              class="flex-1 py-3 text-center text-gray-500 hover:text-secondary font-medium text-sm"
+            >
+              Aide
+            </a>
+          </div>
+        )
+      }
     </div>
 
     <div class="px-3 sm:px-0">
-      {!isVolunteer && (
-        <div class="hidden sm:flex mb-6 border-b">
-          <a 
-            href="/messages/prives" 
-            class="px-6 py-3 text-primary border-b-2 border-primary font-medium"
-            aria-current="page"
-          >
-            Messages privés
-          </a>
-          <a 
-            href="/messages/aide" 
-            class="px-6 py-3 text-gray-500 hover:text-secondary hover:border-b-2 hover:border-secondary font-medium"
-          >
-            Trouver de l'aide
-          </a>
-        </div>
-      )}
+      {
+        !isVolunteer && (
+          <div class="hidden sm:flex mb-6 border-b">
+            <a
+              href="/messages/prives"
+              class="px-6 py-3 text-primary border-b-2 border-primary font-medium"
+              aria-current="page"
+            >
+              Messages privés
+            </a>
+            <a
+              href="/messages/aide"
+              class="px-6 py-3 text-gray-500 hover:text-secondary hover:border-b-2 hover:border-secondary font-medium"
+            >
+              Trouver de l'aide
+            </a>
+          </div>
+        )
+      }
 
       {
         recentUsers.length > 0 && (
@@ -205,7 +219,7 @@ const potentialFriends = regularUsers.filter(user =>
               </svg>
               Conversations récentes
             </h2>
-            
+
             <div class="flex overflow-x-auto pb-2 sm:hidden px-3 -mx-3 space-x-3 hide-scrollbar recent-conversations">
               {recentUsers.map((user) => (
                 <a
@@ -240,7 +254,7 @@ const potentialFriends = regularUsers.filter(user =>
                 </a>
               ))}
             </div>
-            
+
             <div class="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {recentUsers.map((user) => (
                 <a
@@ -280,82 +294,87 @@ const potentialFriends = regularUsers.filter(user =>
       }
     </div>
 
-    {!isVolunteer && potentialFriends.length > 0 && (
-      <div class="mb-8 px-3 sm:px-0">
-        <div class="flex items-center justify-between mb-3 sm:mb-4">
-          <h2 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 mr-2 text-blue-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+    {
+      !isVolunteer && potentialFriends.length > 0 && (
+        <div class="mb-8 px-3 sm:px-0">
+          <div class="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 mr-2 text-blue-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+              </svg>
+              Trouver des amis
+            </h2>
+            <button
+              id="show-all-friends"
+              class="text-primary text-sm font-medium hover:underline"
             >
-              <path
-                d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"
-              ></path>
-            </svg>
-            Trouver des amis
-          </h2>
-          <button id="show-all-friends" class="text-primary text-sm font-medium hover:underline">
-            Voir tous
-          </button>
-        </div>
+              Voir tous
+            </button>
+          </div>
 
-        <div class="flex overflow-x-auto pb-2 sm:hidden -mx-3 space-x-3 hide-scrollbar potential-friends">
-          {potentialFriends.slice(0, 6).map((user) => (
-            <a
-              href={`/messages/prives/${user.id}`}
-              class="flex-shrink-0 w-40 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
-            >
-              <div class="h-24 bg-blue-50 flex items-center justify-center">
-                <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden border-2 border-blue-400">
-                  <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
-                    {user.pseudo_utilisateur?.charAt(0) || "?"}
+          <div class="flex overflow-x-auto pb-2 sm:hidden -mx-3 space-x-3 hide-scrollbar potential-friends">
+            {potentialFriends.slice(0, 6).map((user) => (
+              <a
+                href={`/messages/prives/${user.id}`}
+                class="flex-shrink-0 w-40 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
+              >
+                <div class="h-24 bg-blue-50 flex items-center justify-center">
+                  <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden border-2 border-blue-400">
+                    <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
+                      {user.pseudo_utilisateur?.charAt(0) || "?"}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="p-3">
-                <p class="font-semibold text-gray-800 truncate text-sm text-center">
-                  {user.pseudo_utilisateur || "Utilisateur"}
-                </p>
-                <div class="w-full mt-2 py-1.5 px-2 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors text-center">
-                  Envoyer un message
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-
-        <div class="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 potential-friends-grid">
-          {potentialFriends.slice(0, 10).map((user) => (
-            <a
-              href={`/messages/prives/${user.id}`}
-              class="bg-white rounded-lg border border-gray-200 hover:shadow-md transition overflow-hidden group"
-            >
-              <div class="h-28 bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden border-2 border-blue-400">
-                  <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
-                    {user.pseudo_utilisateur?.charAt(0) || "?"}
+                <div class="p-3">
+                  <p class="font-semibold text-gray-800 truncate text-sm text-center">
+                    {user.pseudo_utilisateur || "Utilisateur"}
+                  </p>
+                  <div class="w-full mt-2 py-1.5 px-2 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors text-center">
+                    Envoyer un message
                   </div>
                 </div>
-              </div>
-              <div class="p-3">
-                <p class="font-semibold text-gray-800 truncate text-center">
-                  {user.pseudo_utilisateur || "Utilisateur"}
-                </p>
-                <div class="w-full mt-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center">
-                  Envoyer un message
+              </a>
+            ))}
+          </div>
+
+          <div class="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 potential-friends-grid">
+            {potentialFriends.slice(0, 10).map((user) => (
+              <a
+                href={`/messages/prives/${user.id}`}
+                class="bg-white rounded-lg border border-gray-200 hover:shadow-md transition overflow-hidden group"
+              >
+                <div class="h-28 bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                  <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden border-2 border-blue-400">
+                    <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
+                      {user.pseudo_utilisateur?.charAt(0) || "?"}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </a>
-          ))}
+                <div class="p-3">
+                  <p class="font-semibold text-gray-800 truncate text-center">
+                    {user.pseudo_utilisateur || "Utilisateur"}
+                  </p>
+                  <div class="w-full mt-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center">
+                    Envoyer un message
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
-    )}
+      )
+    }
 
     <div class="sm:bg-white sm:rounded-lg sm:shadow-lg sm:overflow-hidden">
       <div class="border-b px-4 sm:px-6 py-3 sm:py-4 bg-gray-50">
-        <h2 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+        <h2
+          class="text-base sm:text-lg font-semibold text-gray-800 flex items-center"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-5 w-5 mr-2 text-primary"
@@ -375,7 +394,8 @@ const potentialFriends = regularUsers.filter(user =>
           users.length > 0 ? (
             <div class="divide-y divide-gray-100">
               {users.map((user) => {
-                const hasExistingConversation = user.id in existingConversations;
+                const hasExistingConversation =
+                  user.id in existingConversations;
 
                 return (
                   <a
@@ -392,7 +412,8 @@ const potentialFriends = regularUsers.filter(user =>
                         {user.pseudo_utilisateur || "Utilisateur"}
                       </p>
                       <p class="text-sm text-gray-500 mt-1">
-                        {user.is_volunteer === true || user.role === "volunteer" ? (
+                        {user.is_volunteer === true ||
+                        user.role === "volunteer" ? (
                           <span class="inline-flex items-center bg-secondary/10 text-secondary px-2 py-0.5 rounded-full text-xs">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -456,13 +477,30 @@ const potentialFriends = regularUsers.filter(user =>
       </div>
     </div>
 
-    <div id="all-friends-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-      <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden">
-        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+    <div
+      id="all-friends-modal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden"
+      >
+        <div
+          class="p-4 border-b border-gray-200 flex justify-between items-center"
+        >
           <h3 class="text-lg font-semibold text-gray-800">Trouver des amis</h3>
           <button id="close-modal" class="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
@@ -474,32 +512,46 @@ const potentialFriends = regularUsers.filter(user =>
               placeholder="Rechercher un ami..."
               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
             />
-            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+            <div
+              class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                  clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 modal-friend-grid">
-            {potentialFriends.map((user) => (
-              <a
-                href={`/messages/prives/${user.id}`}
-                class="flex flex-col items-center p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
-                data-name={user.pseudo_utilisateur || "Utilisateur"}
-              >
-                <div class="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border-2 border-blue-400">
-                  <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
-                    {user.pseudo_utilisateur?.charAt(0) || "?"}
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 modal-friend-grid"
+          >
+            {
+              potentialFriends.map((user) => (
+                <a
+                  href={`/messages/prives/${user.id}`}
+                  class="flex flex-col items-center p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
+                  data-name={user.pseudo_utilisateur || "Utilisateur"}
+                >
+                  <div class="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border-2 border-blue-400">
+                    <div class="w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl">
+                      {user.pseudo_utilisateur?.charAt(0) || "?"}
+                    </div>
                   </div>
-                </div>
-                <p class="font-semibold text-gray-800 text-center mt-2">
-                  {user.pseudo_utilisateur || "Utilisateur"}
-                </p>
-                <div class="w-full mt-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center">
-                  Envoyer un message
-                </div>
-              </a>
-            ))}
+                  <p class="font-semibold text-gray-800 text-center mt-2">
+                    {user.pseudo_utilisateur || "Utilisateur"}
+                  </p>
+                  <div class="w-full mt-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center">
+                    Envoyer un message
+                  </div>
+                </a>
+              ))
+            }
           </div>
         </div>
       </div>
@@ -511,7 +563,7 @@ const potentialFriends = regularUsers.filter(user =>
   document.addEventListener("DOMContentLoaded", () => {
     const searchInputDesktop = document.getElementById("search-users-desktop");
     const searchInputMobile = document.getElementById("search-users-mobile");
-    
+
     const performSearch = (searchValue) => {
       const searchLower = searchValue.toLowerCase();
       const userCards = document.querySelectorAll(".user-grid a");
@@ -534,7 +586,7 @@ const potentialFriends = regularUsers.filter(user =>
         if (searchInputMobile) searchInputMobile.value = e.target.value;
       });
     }
-    
+
     if (searchInputMobile) {
       searchInputMobile.addEventListener("input", (e) => {
         performSearch(e.target.value);
@@ -550,14 +602,14 @@ const potentialFriends = regularUsers.filter(user =>
     if (showAllFriendsBtn && allFriendsModal) {
       showAllFriendsBtn.addEventListener("click", () => {
         allFriendsModal.classList.remove("hidden");
-        document.body.style.overflow = "hidden"; 
+        document.body.style.overflow = "hidden";
       });
     }
 
     if (closeModalBtn && allFriendsModal) {
       closeModalBtn.addEventListener("click", () => {
         allFriendsModal.classList.add("hidden");
-        document.body.style.overflow = ""; 
+        document.body.style.overflow = "";
       });
 
       allFriendsModal.addEventListener("click", (e) => {
@@ -588,19 +640,19 @@ const potentialFriends = regularUsers.filter(user =>
 
 <style>
   .hide-scrollbar {
-    -ms-overflow-style: none;  
-    scrollbar-width: none;  
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  
+
   .hide-scrollbar::-webkit-scrollbar {
-    display: none; 
+    display: none;
   }
-  
+
   .text-xxs {
     font-size: 0.65rem;
     line-height: 1.1;
   }
-  
+
   .recent-conversations > a:active,
   .potential-friends > a:active {
     transform: scale(0.98);
@@ -608,8 +660,12 @@ const potentialFriends = regularUsers.filter(user =>
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   #all-friends-modal:not(.hidden) {

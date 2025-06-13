@@ -21,7 +21,7 @@ if (!userId) {
   return Astro.redirect("/messages/prives");
 }
 
-const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
@@ -124,7 +124,7 @@ if (conversation) {
 }
 
 otherUser = otherUser || {};
-otherUser.avatarUrl = ""; 
+otherUser.avatarUrl = "";
 ---
 
 <Layout>
