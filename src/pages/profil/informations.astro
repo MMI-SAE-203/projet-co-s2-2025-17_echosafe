@@ -4,6 +4,8 @@ import PocketBase from "pocketbase";
 
 let userData = null;
 let userAvatar = null;
+let updateMessage = null;
+let updateSuccess = false;
 
 const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 
@@ -16,7 +18,94 @@ if (!pb.authStore.isValid) {
   return Astro.redirect("/auth/connexion");
 }
 
+// Traitement des modifications (POST)
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    
+    // Debug: Afficher toutes les données reçues
+    console.log("=== DONNÉES REÇUES ===");
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    
+    // Vérifier que l'utilisateur est connecté
+    if (!pb.authStore.model?.id) {
+      throw new Error("Utilisateur non connecté");
+    }
+    
+    const userId = pb.authStore.model.id;
+    console.log("User ID:", userId);
+    
+    // Construire l'objet de mise à jour avec seulement les champs fournis
+    const updateData: Record<string, string> = {};
+    
+    // Récupérer tous les champs du formulaire
+    const fields = [
+      'pseudo', 'name', 'date_naissance_utilisateur', 'telephone_utilisateur', 'bio'
+    ];
+    
+    fields.forEach(field => {
+      const value = formData.get(field);
+      if (value !== null) {
+        // Accepter tous les champs, même s'ils sont vides
+        updateData[field] = value.toString().trim();
+      }
+    });
+    
+    console.log("=== DONNÉES À METTRE À JOUR ===", updateData);
+    
+    // Mettre à jour les données utilisateur
+    const updatedUser = await pb.collection("users").update(userId, updateData);
+    console.log("=== UTILISATEUR MIS À JOUR ===", updatedUser);
+    
+    updateMessage = "Vos informations ont été mises à jour avec succès !";
+    updateSuccess = true;
+    
+    // Si c'est une requête AJAX, retourner une réponse JSON
+    if (Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest") {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: updateMessage,
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour:", error);
+    updateMessage = "Une erreur est survenue lors de la mise à jour de vos informations.";
+    updateSuccess = false;
+    
+    // Si c'est une requête AJAX, retourner une réponse JSON d'erreur
+    if (Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest") {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: updateMessage,
+        }),
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+  }
+}
+
+// Récupération des données utilisateur
 try {
+  if (!pb.authStore.model?.id) {
+    throw new Error("Utilisateur non connecté");
+  }
+  
   const userId = pb.authStore.model.id;
   userData = await pb.collection("users").getOne(userId);
   
@@ -34,13 +123,25 @@ try {
   keywords="profil personnel, informations utilisateur, compte EchoSafe, modification profil"
 >
   <div class="max-w-3xl mx-auto px-4 py-12">
-+    <div class="flex items-center mb-10">
-      <a href="/profil" class="text-primary mr-3 hover:opacity-80 transition-opacity">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    <div class="flex items-center justify-between mb-10">
+      <div class="flex items-center">
+        <a href="/profil" class="text-primary mr-3 hover:opacity-80 transition-opacity">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+        <h1 class="text-2xl font-bold">Informations personnelles</h1>
+      </div>
+      
+      <button 
+        id="edit-profile-btn" 
+        class="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-6 rounded-full transition duration-300 flex items-center gap-2 shadow-md"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
         </svg>
-      </a>
-      <h1 class="text-2xl font-bold">Informations personnelles</h1>
+        <span id="edit-btn-text">Modifier</span>
+      </button>
     </div>
 
     {userData ? (
@@ -54,7 +155,7 @@ try {
               ) : (
                 <div class="bg-gradient-to-br from-primary/80 to-primary w-full h-full flex items-center justify-center">
                   <span class="text-4xl font-bold text-white">
-                    {userData.prenom_utilisateur?.charAt(0).toUpperCase() || userData.pseudo?.charAt(0).toUpperCase() || "U"}
+                    {userData.name?.charAt(0).toUpperCase() || userData.pseudo?.charAt(0).toUpperCase() || "U"}
                   </span>
                 </div>
               )}
@@ -77,47 +178,80 @@ try {
               Informations de base
             </h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form id="basic-info-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="bg-gray-50 p-4 rounded-lg">
                 <h3 class="text-sm uppercase tracking-wider mb-1">Pseudo</h3>
-                <p class="font-medium">{userData.pseudo || "Non défini"}</p>
+                <div class="field-display">
+                  <p class="font-medium">{userData.pseudo || "Non défini"}</p>
+                </div>
+                <div class="field-edit hidden">
+                  <input 
+                    type="text" 
+                    name="pseudo" 
+                    value={userData.pseudo || ""} 
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Votre pseudo"
+                  />
+                </div>
               </div>
               
               <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-sm uppercase tracking-wider mb-1">Prénom</h3>
-                <p class="font-medium">{userData.prenom_utilisateur || "Non défini"}</p>
-              </div>
-              
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-sm uppercase tracking-wider mb-1">Nom</h3>
-                <p class="font-medium">{userData.nom_utilisateur || "Non défini"}</p>
+                <h3 class="text-sm uppercase tracking-wider mb-1">Nom complet</h3>
+                <div class="field-display">
+                  <p class="font-medium">{userData.name || "Non défini"}</p>
+                </div>
+                <div class="field-edit hidden">
+                  <input 
+                    type="text" 
+                    name="name" 
+                    value={userData.name || ""} 
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Votre nom complet"
+                  />
+                </div>
               </div>
               
               <div class="bg-gray-50 p-4 rounded-lg">
                 <h3 class="text-sm uppercase tracking-wider mb-1">Date de naissance</h3>
-                <p class="font-medium">
-                  {userData.date_naissance_utilisateur ? new Date(userData.date_naissance_utilisateur).toLocaleDateString('fr-FR') : "Non définie"}
-                </p>
+                <div class="field-display">
+                  <p class="font-medium">
+                    {userData.date_naissance_utilisateur ? new Date(userData.date_naissance_utilisateur).toLocaleDateString('fr-FR') : "Non définie"}
+                  </p>
+                </div>
+                <div class="field-edit hidden">
+                  <input 
+                    type="date" 
+                    name="date_naissance_utilisateur" 
+                    value={userData.date_naissance_utilisateur || ""} 
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
               </div>
-            </div>
+            </form>
           </section>
 
           <section>
-            <h2 class="text-xl font-semibold mb-6 pb-2 border-b ">
+            <h2 class="text-xl font-semibold mb-6 pb-2 border-b">
               Informations de contact
             </h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-sm uppercase tracking-wider mb-1">Email</h3>
-                <p class="font-medium">{userData.email || "Non défini"}</p>
-              </div>
-              
+            <form id="contact-info-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="bg-gray-50 p-4 rounded-lg">
                 <h3 class="text-sm uppercase tracking-wider mb-1">Téléphone</h3>
-                <p class="font-medium">{userData.telephone_utilisateur || "Non défini"}</p>
+                <div class="field-display">
+                  <p class="font-medium">{userData.telephone_utilisateur || "Non défini"}</p>
+                </div>
+                <div class="field-edit hidden">
+                  <input 
+                    type="tel" 
+                    name="telephone_utilisateur" 
+                    value={userData.telephone_utilisateur || ""} 
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="06 12 34 56 78"
+                  />
+                </div>
               </div>
-            </div>
+            </form>
           </section>
 
           <section>
@@ -125,22 +259,45 @@ try {
               À propos de moi
             </h2>
             
-            <div class="bg-gray-50 p-5 rounded-lg">
-              <p class="whitespace-pre-line">{userData.bio || "Aucune biographie renseignée"}</p>
-            </div>
+            <form id="bio-form">
+              <div class="bg-gray-50 p-5 rounded-lg">
+                <div class="field-display">
+                  <p class="whitespace-pre-line">{userData.bio || "Aucune biographie renseignée"}</p>
+                </div>
+                <div class="field-edit hidden">
+                  <textarea 
+                    name="bio" 
+                    rows="4"
+                    class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent resize-vertical"
+                    placeholder="Parlez-nous de vous..."
+                  >{userData.bio || ""}</textarea>
+                </div>
+              </div>
+            </form>
           </section>
-        </div>
 
-        <div class="mt-10 flex justify-center">
-          <button 
-            id="edit-profile-btn" 
-            class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-full transition duration-300 flex items-center gap-2 shadow-md"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            Modifier mes informations
-          </button>
+          <!-- Boutons d'action en mode édition -->
+          <div id="edit-actions" class="hidden justify-center gap-4 pt-6 border-t">
+            <button 
+              id="cancel-edit-btn" 
+              class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-8 rounded-full transition duration-300 flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Annuler
+            </button>
+            
+            <button 
+              id="save-changes-btn" 
+              class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-8 rounded-full transition duration-300 flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Sauvegarder
+            </button>
+          </div>
         </div>
       </div>
     ) : (
@@ -159,41 +316,184 @@ try {
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    let isEditMode = false;
+    
     const editProfileBtn = document.getElementById('edit-profile-btn');
+    const editBtnText = document.getElementById('edit-btn-text');
+    const editActions = document.getElementById('edit-actions');
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    const saveChangesBtn = document.getElementById('save-changes-btn');
+    const changeAvatarBtn = document.getElementById('change-avatar-btn');
+    
+    const fieldDisplays = document.querySelectorAll('.field-display');
+    const fieldEdits = document.querySelectorAll('.field-edit');
+    
+    // Fonction pour basculer en mode édition
+    function toggleEditMode() {
+      isEditMode = !isEditMode;
+      
+      const editActions = document.getElementById('edit-actions');
+      const editBtnText = document.getElementById('edit-btn-text');
+      const editProfileBtn = document.getElementById('edit-profile-btn');
+      
+      if (isEditMode) {
+        // Passer en mode édition
+        fieldDisplays.forEach(display => display.classList.add('hidden'));
+        fieldEdits.forEach(edit => edit.classList.remove('hidden'));
+        if (editActions) {
+          editActions.classList.remove('hidden');
+          editActions.classList.add('flex');
+        }
+        if (editBtnText) {
+          editBtnText.textContent = 'Annuler';
+        }
+        if (editProfileBtn) {
+          editProfileBtn.classList.remove('bg-primary', 'hover:bg-primary/90');
+          editProfileBtn.classList.add('bg-gray-500', 'hover:bg-gray-600');
+        }
+      } else {
+        // Retour en mode lecture
+        fieldDisplays.forEach(display => display.classList.remove('hidden'));
+        fieldEdits.forEach(edit => edit.classList.add('hidden'));
+        if (editActions) {
+          editActions.classList.add('hidden');
+          editActions.classList.remove('flex');
+        }
+        if (editBtnText) {
+          editBtnText.textContent = 'Modifier';
+        }
+        if (editProfileBtn) {
+          editProfileBtn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
+          editProfileBtn.classList.add('bg-primary', 'hover:bg-primary/90');
+        }
+      }
+    }
+    
+    // Fonction pour afficher un toast
+    function showToast(message: string, type: string = 'success') {
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-primary';
+      toast.className = `fixed bottom-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
+      toast.innerHTML = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // Fonction pour collecter les données du formulaire
+    function collectFormData() {
+      const formData = new FormData();
+      
+      // Informations de base
+      const basicForm = document.getElementById('basic-info-form') as HTMLFormElement | null;
+      if (basicForm) {
+        const basicInputs = basicForm.querySelectorAll('input');
+        basicInputs.forEach(input => {
+          console.log(`Input trouvé: ${input.name} = "${input.value}"`);
+          // Envoyer TOUS les champs, même vides
+          formData.append(input.name, input.value);
+        });
+      }
+      
+      // Informations de contact
+      const contactForm = document.getElementById('contact-info-form') as HTMLFormElement | null;
+      if (contactForm) {
+        const contactInputs = contactForm.querySelectorAll('input');
+        contactInputs.forEach(input => {
+          console.log(`Input contact trouvé: ${input.name} = "${input.value}"`);
+          // Envoyer TOUS les champs, même vides
+          formData.append(input.name, input.value);
+        });
+      }
+      
+      // Biographie
+      const bioForm = document.getElementById('bio-form') as HTMLFormElement | null;
+      if (bioForm) {
+        const bioTextarea = bioForm.querySelector('textarea');
+        if (bioTextarea) {
+          console.log(`Bio trouvée: ${bioTextarea.name} = "${bioTextarea.value}"`);
+          formData.append('bio', bioTextarea.value);
+        }
+      }
+      
+      // Debug: Afficher tout ce qui a été collecté
+      console.log("=== DONNÉES COLLECTÉES CÔTÉ CLIENT ===");
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}: "${value}"`);
+      }
+      
+      return formData;
+    }
+    
+    // Fonction pour sauvegarder les modifications
+    async function saveChanges() {
+      try {
+        const saveChangesBtn = document.getElementById('save-changes-btn') as HTMLButtonElement | null;
+        if (saveChangesBtn) {
+          saveChangesBtn.classList.add('animate-pulse');
+          saveChangesBtn.disabled = true;
+        }
+        
+        const formData = collectFormData();
+        
+        const response = await fetch(window.location.href, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            showToast('Informations mises à jour avec succès !', 'success');
+            // Recharger la page pour afficher les nouvelles données
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          } else {
+            showToast(result.message || 'Erreur lors de la mise à jour', 'error');
+          }
+        } else {
+          showToast('Erreur de connexion', 'error');
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Une erreur est survenue', 'error');
+      } finally {
+        const saveChangesBtn = document.getElementById('save-changes-btn') as HTMLButtonElement | null;
+        if (saveChangesBtn) {
+          saveChangesBtn.classList.remove('animate-pulse');
+          saveChangesBtn.disabled = false;
+        }
+      }
+    }
+    
+    // Event listeners
     if (editProfileBtn) {
-      editProfileBtn.addEventListener('click', () => {
-        editProfileBtn.classList.add('animate-pulse');
-        setTimeout(() => {
-          editProfileBtn.classList.remove('animate-pulse');
-          const toast = document.createElement('div');
-          toast.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300';
-          toast.innerHTML = 'La modification du profil sera bientôt disponible';
-          document.body.appendChild(toast);
-          
-          setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-          }, 3000);
-        }, 300);
+      editProfileBtn.addEventListener('click', toggleEditMode);
+    }
+    
+    if (cancelEditBtn) {
+      cancelEditBtn.addEventListener('click', () => {
+        if (confirm('Êtes-vous sûr de vouloir annuler vos modifications ?')) {
+          window.location.reload();
+        }
       });
     }
-
-    const changeAvatarBtn = document.getElementById('change-avatar-btn');
+    
+    if (saveChangesBtn) {
+      saveChangesBtn.addEventListener('click', saveChanges);
+    }
+    
+    // Gestion du changement d'avatar (pour plus tard)
     if (changeAvatarBtn) {
       changeAvatarBtn.addEventListener('click', () => {
-        changeAvatarBtn.classList.add('animate-pulse');
-        setTimeout(() => {
-          changeAvatarBtn.classList.remove('animate-pulse');
-          const toast = document.createElement('div');
-          toast.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300';
-          toast.innerHTML = 'Le changement d\'avatar sera bientôt disponible';
-          document.body.appendChild(toast);
-          
-          setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-          }, 3000);
-        }, 300);
+        showToast('Le changement d\'avatar sera bientôt disponible', 'info');
       });
     }
   });
