@@ -7,62 +7,72 @@ import Youtube_icon from "../assets/youtube_icon.svg";
 ---
 
 <footer class="bg-[#323F92] text-white text-sm">
-  <div class="max-w mx-auto px-6 py-10">
-    <div class="mb-8">
-      <Logo class="w-24 lg:w-32 h-auto" />
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+    <!-- Logo Section -->
+    <div class="mb-6 sm:mb-8 text-center sm:text-left">
+      <Logo class="w-20 sm:w-24 lg:w-32 h-auto mx-auto sm:mx-0" />
     </div>
 
-    <div class="grid grid-cols-2 gap-6 sm:grid-cols-4 pl-30">
-      <div>
-        <h5 class="font-bold mb-2 uppercase">Menu</h5>
-        <ul class="space-y-1">
-          <li><a href="#">Accueil</a></li>
-          <li><a href="/nos-offres">Nos offres</a></li>
-          <li><a href="#">Accéder à Echo Safe</a></li>
+    <!-- Links Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
+      <div class="text-center sm:text-left">
+        <h5 class="font-bold mb-3 sm:mb-2 uppercase text-base sm:text-sm">Menu</h5>
+        <ul class="space-y-2 sm:space-y-1">
+          <li><a href="/" class="hover:text-blue-200 transition-colors">Accueil</a></li>
+          <li><a href="/nos-offres" class="hover:text-blue-200 transition-colors">Nos offres</a></li>
+          <li><a href="/auth/connexion" class="hover:text-blue-200 transition-colors">Accéder à Echo Safe</a></li>
         </ul>
       </div>
 
-      <div>
-        <h5 class="font-bold mb-2 uppercase">Légal</h5>
-        <ul class="space-y-1">
-          <li><a href="/legal/mentions-legales">Mentions légales</a></li>
+      <div class="text-center sm:text-left">
+        <h5 class="font-bold mb-3 sm:mb-2 uppercase text-base sm:text-sm">Légal</h5>
+        <ul class="space-y-2 sm:space-y-1">
+          <li><a href="/legal/mentions-legales" class="hover:text-blue-200 transition-colors">Mentions légales</a></li>
           <li>
-            <a href="/legal/politique-confidentialite"
-              >Politique de confidentialité</a>
+            <a href="/legal/politique-confidentialite" class="hover:text-blue-200 transition-colors">
+              Politique de confidentialité
+            </a>
           </li>
-          <li><a href="/legal/conditions">CGU</a></li>
-          <li><a href="/legal/politique-cookies">Politique de cookies</a></li>
+          <li><a href="/legal/conditions" class="hover:text-blue-200 transition-colors">CGU</a></li>
+          <li><a href="/legal/politique-cookies" class="hover:text-blue-200 transition-colors">Politique de cookies</a></li>
         </ul>
       </div>
 
-      <div>
-        <h5 class="font-bold mb-2 uppercase">À propos d'Echo Safe</h5>
-        <ul class="space-y-1">
-          <li><a href="/a-propos">À propos</a></li>
+      <div class="text-center sm:text-left">
+        <h5 class="font-bold mb-3 sm:mb-2 uppercase text-base sm:text-sm">À propos d'Echo Safe</h5>
+        <ul class="space-y-2 sm:space-y-1">
+          <li><a href="/a-propos" class="hover:text-blue-200 transition-colors">À propos</a></li>
         </ul>
       </div>
-      <div>
-        <h5 class="font-bold mb-2 uppercase">Contact</h5>
-        <ul class="space-y-1">
-          <li><a href="/a-propos#contact">Nous contacter</a></li>
+      
+      <div class="text-center sm:text-left">
+        <h5 class="font-bold mb-3 sm:mb-2 uppercase text-base sm:text-sm">Contact</h5>
+        <ul class="space-y-2 sm:space-y-1">
+          <li><a href="/a-propos#contact" class="hover:text-blue-200 transition-colors">Nous contacter</a></li>
         </ul>
       </div>
     </div>
+
     <hr class="my-6 border-white/20" />
 
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-      <p>Copyright ©2025 Echo Safe, Tous droits réservés</p>
-      <div class="flex gap-4 mt-4 sm:mt-0">
-        <a href="#">
+    <!-- Copyright and Social Media -->
+    <div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+      <p class="text-center sm:text-left text-xs sm:text-sm">
+        Copyright ©2025 Echo Safe, Tous droits réservés
+      </p>
+      
+      <!-- Social Media Icons -->
+      <div class="flex gap-4">
+        <a href="#" class="hover:scale-110 transition-transform" aria-label="Facebook">
           <Facebook_icon class="w-6 h-6" />
         </a>
-        <a href="#">
+        <a href="#" class="hover:scale-110 transition-transform" aria-label="Instagram">
           <Instagram_icon class="w-6 h-6" />
         </a>
-        <a href="#">
+        <a href="#" class="hover:scale-110 transition-transform" aria-label="LinkedIn">
           <Linkedin_icon class="w-6 h-6" />
         </a>
-        <a href="#">
+        <a href="#" class="hover:scale-110 transition-transform" aria-label="YouTube">
           <Youtube_icon class="w-6 h-6" />
         </a>
       </div>
