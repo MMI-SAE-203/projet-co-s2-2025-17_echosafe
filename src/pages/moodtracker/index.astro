@@ -309,174 +309,114 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
 ---
 
 <Layoutapp title="Mood Tracker">
-  <form method="POST" id="moodForm" class="min-h-screen py-8 px-4 pb-28">
+  <form method="POST" id="moodForm" class="min-h-screen py-6 px-4 pb-28">
     <div class="max-w-4xl mx-auto">
-      <div class="text-center">
-        <h1 class="text-4xl font-bold mb-2">Mood Tracker</h1>
-        <p class="text-lg">Suivez votre humeur au quotidien</p>
+      <div class="text-center mb-6">
+        <h1 class="text-3xl font-bold mb-1">Mood Tracker</h1>
       </div>
 
-      <div class="bg-white rounded-2xl p-8 mb-8">
-        <div class="relative">
-          * <button
-            type="button"
-            id="prevMood"
-            class="absolute left-0 top-1/2 transform -translate-y-1/2 z-[5] bg-white rounded-full p-2 shadow-md hover:text-primary focus:outline-none"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"></path>
-            </svg>
-          </button>
+      <div class="bg-white rounded-2xl p-4 mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+          {
+            moods.map((mood, index) => (
+              <button
+                type="button"
+                class="mood-option flex flex-col items-center p-4 rounded-xl border-2 border-gray-300 hover:border-primary hover:bg-blue-50 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-offset-2 min-h-[80px] min-w-[80px]"
+                data-mood={mood.value}
+                data-index={index}
+                aria-label={`Sélectionner l'humeur ${mood.value}`}
+              >
+                <div class="w-14 h-14 mb-2 flex items-center justify-center">
+                  <img
+                    src={mood.svg}
+                    alt={mood.value}
+                    class="w-full h-full object-contain"
+                    onerror={`this.onerror=null; this.parentNode.innerHTML='<span class="text-4xl" aria-hidden="true">${mood.emoji}</span>'`}
+                  />
+                </div>
+                <span class="text-sm font-semibold text-center leading-tight">{mood.value}</span>
+              </button>
+            ))
+          }
+        </div>
 
-          <div class="overflow-hidden px-10" id="moodCarousel">
-            <div
-              class="flex transition-transform duration-300 ease-in-out"
-              id="moodSlider"
-            >
-              {
-                moods.map((mood, index) => (
-                  <div
-                    class="mood-slide flex-shrink-0 w-full flex flex-col items-center"
-                    data-index={index}
-                    data-mood={mood.value}
-                  >
-                    <div class="w-35 h-35 rounded-full flex items-center justify-center mx-auto mb-4 bg-white shadow-md">
-                      <img
-                        src={mood.svg}
-                        alt={mood.value}
-                        class="w-20 h-20 object-contain"
-                        onerror={`this.onerror=null; this.parentNode.innerHTML='<span class="text-6xl">${mood.emoji}</span>'`}
-                      />
-                    </div>
-                    <div
-                      class={`text-xl font-semibold text-center ${mood.textColor}`}
-                    >
-                      {mood.value}
-                    </div>
-                  </div>
-                ))
-              }
+        <input type="hidden" name="humeur_moodtracker" id="selectedMood" required />
+
+        <div class="text-center mb-4">
+          <div id="selectedMoodConfirmation" class="text-sm text-gray-500">
+            <span id="selectedMoodName" class="font-medium text-primary"></span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label for="nom_moodtracker" class="block text-sm font-medium mb-2 text-gray-700">
+              Description (optionnel)
+            </label>
+            <input
+              type="text"
+              id="nom_moodtracker"
+              name="nom_moodtracker"
+              placeholder="Décrivez votre journée..."
+              class="w-full px-4 py-4 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-base font-medium"
+              aria-describedby="description-help"
+            />
+            <div id="description-help" class="text-xs text-gray-500 mt-1">
+              Ajoutez une note sur votre journée si vous le souhaitez
             </div>
           </div>
-
-          <button
-            type="button"
-            id="nextMood"
-            class="absolute right-0 top-1/2 transform -translate-y-1/2 z-[5] bg-white rounded-full p-2 shadow-md hover:text-primary focus:outline-none"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"></path>
-            </svg>
-          </button>
-
-          <div class="flex justify-center mt-4 space-x-2" id="moodIndicators">
-            {
-              moods.map((_, index) => (
-                <button
-                  type="button"
-                  class="w-3 h-3 rounded-full bg-gray-300 transition-colors duration-200"
-                  data-index={index}
-                  aria-label={`Sélectionner l'humeur ${index + 1}`}
-                />
-              ))
-            }
-          </div>
-
-          <input
-            type="hidden"
-            name="humeur_moodtracker"
-            id="selectedMood"
-            required
-          />
-
-          <div class="text-center mt-4">
-            <div id="selectedMoodConfirmation" class="text-sm text-primary">
-              Humeur sélectionnée: <span
-                id="selectedMoodName"
-                class="font-medium"></span>
+          <div>
+            <label for="date_moodtracker" class="block text-sm font-medium mb-2 text-gray-700">
+              Date
+            </label>
+            <input
+              type="date"
+              id="date_moodtracker"
+              name="date_moodtracker"
+              value={todayFormatted}
+              max={todayFormatted}
+              class="w-full px-4 py-4 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-base font-medium"
+              aria-describedby="date-help"
+            />
+            <div id="date-help" class="text-xs text-gray-500 mt-1">
+              Choisissez la date pour cette humeur
             </div>
           </div>
         </div>
+
+        <button
+          type="submit"
+          id="submitButton"
+          class="w-full bg-[var(--color-primary)] text-white py-4 px-6 rounded-lg hover:bg-opacity-90 focus:ring-4 focus:ring-blue-300 focus:outline-none transition-all font-semibold text-lg min-h-[56px]"
+          aria-describedby="submit-help"
+        >
+          Enregistrer mon humeur
+        </button>
+        <div id="submit-help" class="text-xs text-gray-500 mt-2 text-center">
+          Appuyez pour sauvegarder votre humeur du jour
+        </div>
       </div>
 
-      <div class="mb-6">
-        <label for="nom_moodtracker" class="block text-sm font-medium mb-2">
-          Décrivez votre journée (optionnel)
-        </label>
-        <input
-          type="text"
-          id="nom_moodtracker"
-          name="nom_moodtracker"
-          placeholder="Ex: Journée au travail, sortie entre amis..."
-          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-        />
-      </div>
-
-      <div class="mb-6">
-        <label for="date_moodtracker" class="block text-sm font-medium mb-2">
-          Date
-        </label>
-        <input
-          type="date"
-          id="date_moodtracker"
-          name="date_moodtracker"
-          value={todayFormatted}
-          max={todayFormatted}
-          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-        />
-      </div>
-
-      <button
-        type="submit"
-        id="submitButton"
-        class="inline-flex items-center justify-center gap-2 text-white border-1 border-[var(--color-primary)] font-normal rounded-3xl transition duration-300 ease-in-out px-8 py-4 text-base bg-[var(--color-primary)] hover:bg-white hover:text-[var(--color-primary)] w-full"
-      >
-        Enregistrer mon humeur
-      </button>
-    </div>
-
-    <div class="max-w-4xl mx-auto mt-15">
-      <div class="bg-white rounded-2xl p-1">
-        <h2 class="text-2xl font-semibold mb-6 text-center">
-          {currentMonth}
-          {today.getFullYear()}
+      <div class="bg-white rounded-2xl p-4">
+        <h2 class="text-xl font-semibold mb-4 text-center">
+          {currentMonth} {today.getFullYear()}
         </h2>
 
-        <div class="mb-6">
-          <div class="grid grid-cols-7 gap-3 mb-3">
-            <div class="text-center font-medium text-lg">Lun</div>
-            <div class="text-center font-medium text-lg">Mar</div>
-            <div class="text-center font-medium text-lg">Mer</div>
-            <div class="text-center font-medium text-lg">Jeu</div>
-            <div class="text-center font-medium text-lg">Ven</div>
-            <div class="text-center font-medium text-lg">Sam</div>
-            <div class="text-center font-medium text-lg">Dim</div>
+        <div class="mb-4">
+          <div class="grid grid-cols-7 gap-2 mb-2">
+            <div class="text-center font-bold text-gray-700 py-2 bg-gray-100 rounded-lg text-sm">Lun</div>
+            <div class="text-center font-bold text-gray-700 py-2 bg-gray-100 rounded-lg text-sm">Mar</div>
+            <div class="text-center font-bold text-gray-700 py-2 bg-gray-100 rounded-lg text-sm">Mer</div>
+            <div class="text-center font-bold text-gray-700 py-2 bg-gray-100 rounded-lg text-sm">Jeu</div>
+            <div class="text-center font-bold text-gray-700 py-2 bg-gray-100 rounded-lg text-sm">Ven</div>
+            <div class="text-center font-bold text-gray-700 py-2 bg-gray-100 rounded-lg text-sm">Sam</div>
+            <div class="text-center font-bold text-gray-700 py-2 bg-gray-100 rounded-lg text-sm">Dim</div>
           </div>
 
-          <div class="grid grid-cols-7 gap-2">
+          <div class="grid grid-cols-7 gap-2" role="grid" aria-label="Calendrier des humeurs">
             {
               Array.from({ length: firstDayOfWeek }).map(() => (
-                <div class="h-16 p-1 rounded-lg" />
+                <div class="h-20 p-1 rounded-lg" role="gridcell" aria-hidden="true" />
               ))
             }
 
@@ -490,30 +430,34 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
                 const moodColor = hasMood
                   ? moodColors[mood]?.lightBg || ""
                   : "";
-                const moodEmoji = hasMood ? moodEmojis[mood] || "" : "";
 
                 return (
                   <div
-                    class={`calendar-day h-24 p-1 rounded-lg ${moodColor} ${isToday ? "ring-2 ring-primary" : ""} relative group`}
+                    class={`calendar-day h-20 p-2 rounded-lg border-2 transition-all duration-200 ${moodColor} ${isToday ? "ring-4 ring-blue-500 border-blue-500 bg-blue-50 shadow-lg" : "border-gray-300 hover:border-gray-400"} relative group cursor-pointer`}
                     data-day={day}
+                    role="gridcell"
+                    tabindex="0"
+                    aria-label={`${day} ${currentMonth} ${today.getFullYear()}${hasMood ? `, humeur: ${mood}` : ', aucune humeur enregistrée'}${isToday ? ' (aujourd\'hui)' : ''}${moodData?.description ? `, note: ${moodData.description}` : ''}`}
                   >
-                    <div class="absolute top-1 left-2 text-lg font-bold">
-                      {" "}
+                    <div class={`absolute top-2 left-2 text-sm font-bold ${isToday ? 'text-blue-700' : 'text-gray-800'}`}>
                       {day}
                     </div>
                     {hasMood && (
                       <div class="mood-content flex flex-col items-center justify-center h-full">
                         <img
                           src={calendarMoodSVGs[mood]}
-                          alt={mood}
-                          class="w-10 h-10 object-contain mt-2"
-                          onerror={`this.onerror=null; this.parentNode.innerHTML='<div class="text-2xl">${moodEmojis[mood]}</div>'`}
+                          alt={`Humeur: ${mood}`}
+                          class="w-8 h-8 object-contain mt-2 drop-shadow-lg"
+                          onerror={`this.onerror=null; this.parentNode.innerHTML='<div class="text-xl font-bold mt-2">${moodEmojis[mood]}</div>'`}
+                          loading="lazy"
                         />
                       </div>
                     )}
                     {hasMood && moodData.description && (
-                      <div class="absolute inset-0 bg-white bg-opacity-95 rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs text-center">
-                        {moodData.description}
+                      <div class="absolute inset-0 bg-white bg-opacity-98 rounded-lg p-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center justify-center text-sm text-center border-2 border-gray-400">
+                        <div class="font-medium text-gray-800">
+                          {moodData.description}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -571,18 +515,36 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
 
 <script define:vars={{ message, messageType, showToast, moodEmojis, calendarMoodSVGs, moodColors }}>
   document.addEventListener("DOMContentLoaded", function () {
-    const slider = document.getElementById("moodSlider");
-    const slides = document.querySelectorAll(".mood-slide");
-    const prevBtn = document.getElementById("prevMood");
-    const nextBtn = document.getElementById("nextMood");
-    const indicators = document
-      .getElementById("moodIndicators")
-      .querySelectorAll("button");
+    const moodOptions = document.querySelectorAll(".mood-option");
     const selectedMoodInput = document.getElementById("selectedMood");
-    const submitButton = document.getElementById("submitButton");
     const selectedMoodName = document.getElementById("selectedMoodName");
-    const nomInput = document.getElementById("nom_moodtracker");
     const dateInput = document.getElementById("date_moodtracker");
+
+    let selectedMood = null;
+
+    // Gestion de la sélection d'humeur
+    moodOptions.forEach((option) => {
+      option.addEventListener("click", function() {
+        // Retirer la sélection des autres options
+        moodOptions.forEach(opt => {
+          opt.classList.remove("border-primary", "bg-blue-50", "ring-2", "ring-primary");
+          opt.classList.add("border-gray-200");
+        });
+
+        // Ajouter la sélection à l'option cliquée
+        this.classList.remove("border-gray-200");
+        this.classList.add("border-primary", "bg-blue-50", "ring-2", "ring-primary");
+
+        // Mettre à jour les valeurs
+        selectedMood = this.dataset.mood;
+        selectedMoodInput.value = selectedMood;
+        selectedMoodName.textContent = selectedMood;
+        
+        // Afficher la confirmation
+        document.getElementById("selectedMoodConfirmation").innerHTML = 
+          `Humeur sélectionnée: <span class="font-medium text-primary">${selectedMood}</span>`;
+      });
+    });
 
     // Fonction pour mettre à jour le calendrier après soumission
     function updateCalendar(mood, date) {
@@ -683,95 +645,16 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
       showToastNotification(message, messageType);
     }
 
-    let currentIndex = 0;
-    const moods = [
-      "Très heureux",
-      "Heureux",
-      "Blasé",
-      "Anxieux",
-      "Triste",
-      "Colère",
-      "Au bord des larmes",
-    ];
-
-    function updateCarousel() {
-      const translateValue = -currentIndex * 100 + "%";
-      slider.style.transform = `translateX(${translateValue})`;
-
-      indicators.forEach((indicator, index) => {
-        if (index === currentIndex) {
-          indicator.classList.add("bg-primary");
-          indicator.classList.remove("bg-gray-300");
-        } else {
-          indicator.classList.add("bg-gray-300");
-          indicator.classList.remove("bg-primary");
-        }
-      });
-
-      const currentMood = moods[currentIndex];
-      selectedMoodInput.value = currentMood;
-      selectedMoodName.textContent = currentMood;
-
-      slides.forEach((slide, index) => {
-        if (index === currentIndex) {
-          slide.classList.add("scale-105", "transition-transform");
-        } else {
-          slide.classList.remove("scale-105", "transition-transform");
-        }
-      });
-    }
-
-    prevBtn.addEventListener("click", () => {
-      currentIndex = (currentIndex - 1 + slides.length) % slides.length;
-      updateCarousel();
-    });
-
-    nextBtn.addEventListener("click", () => {
-      currentIndex = (currentIndex + 1) % slides.length;
-      updateCarousel();
-    });
-
-    indicators.forEach((indicator, index) => {
-      indicator.addEventListener("click", () => {
-        currentIndex = index;
-        updateCarousel();
-      });
-    });
-
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    const carousel = document.getElementById("moodCarousel");
-
-    carousel.addEventListener("touchstart", (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    });
-
-    carousel.addEventListener("touchend", (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    });
-
-    function handleSwipe() {
-      const threshold = 50;
-
-      if (touchEndX + threshold < touchStartX) {
-        nextBtn.click();
-      } else if (touchEndX > touchStartX + threshold) {
-        prevBtn.click();
-      }
-    }
-
-    dateInput.addEventListener("change", () => {
-      selectedMoodInput.value = moods[currentIndex];
-    });
-
+    // Gestion du formulaire
     const form = document.getElementById("moodForm");
 
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
-      selectedMoodInput.value = moods[currentIndex];
+      if (!selectedMood) {
+        showToastNotification("Veuillez sélectionner une humeur", "error");
+        return;
+      }
 
       const formData = new FormData(form);
 
@@ -804,7 +687,5 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
         showToastNotification("Une erreur s'est produite", "error");
       }
     });
-
-    updateCarousel();
   });
 </script>
