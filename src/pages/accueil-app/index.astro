@@ -3,7 +3,7 @@ import AppLayout from "../../layouts/Layoutapp.astro";
 import PocketBase from "pocketbase";
 import Button from "../../components/Button.astro";
 
-const pb = new PocketBase("https://echosafe.eloishenry.fr");
+const pb = new PocketBase("https://pocketbase-echo-safe.fly.dev/");
 const authCookie = Astro.request.headers.get("cookie");
 if (authCookie) {
   pb.authStore.loadFromCookie(authCookie);
@@ -16,15 +16,15 @@ if (!pb.authStore.isValid) {
 const user = pb.authStore.model;
 
 const moodIcons = [
-  { name: "Très heureux", svg: "/src/assets/moodtracker/tres_heureux.svg" },
-  { name: "Heureux", svg: "/src/assets/moodtracker/heureux.svg" },
-  { name: "Blasé", svg: "/src/assets/moodtracker/blase.svg" },
-  { name: "Triste", svg: "/src/assets/moodtracker/triste.svg" },
-  { name: "Colère", svg: "/src/assets/moodtracker/colere.svg" },
-  { name: "Anxieux", svg: "/src/assets/moodtracker/anxieux.svg" },
+  { name: "Très heureux", svg: "/assets/moodtracker/tres_heureux.svg" },
+  { name: "Heureux", svg: "/assets/moodtracker/heureux.svg" },
+  { name: "Blasé", svg: "/assets/moodtracker/blase.svg" },
+  { name: "Triste", svg: "/assets/moodtracker/triste.svg" },
+  { name: "Colère", svg: "/assets/moodtracker/colere.svg" },
+  { name: "Anxieux", svg: "/assets/moodtracker/anxieux.svg" },
   {
     name: "Au bord des larmes",
-    svg: "/src/assets/moodtracker/au-bord-des-larmes.svg",
+    svg: "/assets/moodtracker/au-bord-des-larmes.svg",
   },
 ];
 ---
