@@ -494,14 +494,15 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
 
                 return (
                   <div
-                    class={`h-24 p-1 rounded-lg ${moodColor} ${isToday ? "ring-2 ring-primary" : ""} relative group`}
+                    class={`calendar-day h-24 p-1 rounded-lg ${moodColor} ${isToday ? "ring-2 ring-primary" : ""} relative group`}
+                    data-day={day}
                   >
                     <div class="absolute top-1 left-2 text-lg font-bold">
                       {" "}
                       {day}
                     </div>
                     {hasMood && (
-                      <div class="flex flex-col items-center justify-center h-full">
+                      <div class="mood-content flex flex-col items-center justify-center h-full">
                         <img
                           src={calendarMoodSVGs[mood]}
                           alt={mood}
@@ -568,7 +569,7 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
   </div>
 </Layoutapp>
 
-<script define:vars={{ message, messageType, showToast }}>
+<script define:vars={{ message, messageType, showToast, moodEmojis, calendarMoodSVGs, moodColors }}>
   document.addEventListener("DOMContentLoaded", function () {
     const slider = document.getElementById("moodSlider");
     const slides = document.querySelectorAll(".mood-slide");
@@ -582,6 +583,62 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
     const selectedMoodName = document.getElementById("selectedMoodName");
     const nomInput = document.getElementById("nom_moodtracker");
     const dateInput = document.getElementById("date_moodtracker");
+
+    // Fonction pour mettre à jour le calendrier après soumission
+    function updateCalendar(mood, date) {
+      const selectedDate = new Date(date);
+      const day = selectedDate.getDate();
+      
+      // Trouver la cellule du calendrier pour ce jour
+      const calendarCell = document.querySelector(`[data-day="${day}"]`);
+      
+      if (calendarCell) {
+        // Supprimer les anciennes classes de couleur de fond
+        const bgClasses = ['bg-[#E2EEFF]', 'bg-green-100', 'bg-green-50', 'bg-gray-50', 'bg-yellow-50', 'bg-blue-50', 'bg-red-50', 'bg-purple-50'];
+        bgClasses.forEach(cls => calendarCell.classList.remove(cls));
+        
+        // Ajouter la nouvelle couleur de fond
+        if (moodColors[mood] && moodColors[mood].lightBg) {
+          calendarCell.classList.add(moodColors[mood].lightBg.replace('bg-', ''));
+        }
+        
+        // Supprimer l'ancien contenu d'humeur s'il existe
+        const existingMoodContent = calendarCell.querySelector('.mood-content');
+        if (existingMoodContent) {
+          existingMoodContent.remove();
+        }
+        
+        // Ajouter la nouvelle humeur
+        const moodContainer = document.createElement('div');
+        moodContainer.className = 'mood-content flex flex-col items-center justify-center h-full';
+        
+        if (calendarMoodSVGs[mood]) {
+          const moodImage = document.createElement('img');
+          moodImage.src = calendarMoodSVGs[mood];
+          moodImage.alt = mood;
+          moodImage.className = 'w-10 h-10 object-contain mt-2';
+          moodImage.onerror = function() {
+            this.style.display = 'none';
+            const emojiDiv = document.createElement('div');
+            emojiDiv.className = 'text-2xl';
+            emojiDiv.textContent = moodEmojis[mood] || '😊';
+            this.parentNode.appendChild(emojiDiv);
+          };
+          moodContainer.appendChild(moodImage);
+        } else if (moodEmojis[mood]) {
+          const emojiDiv = document.createElement('div');
+          emojiDiv.className = 'text-2xl';
+          emojiDiv.textContent = moodEmojis[mood];
+          moodContainer.appendChild(emojiDiv);
+        }
+        
+        calendarCell.appendChild(moodContainer);
+        
+        console.log(`Calendrier mis à jour pour le jour ${day} avec l'humeur: ${mood}`);
+      } else {
+        console.error(`Cellule de calendrier non trouvée pour le jour ${day}`);
+      }
+    }
 
     function showToastNotification(message, type = "success") {
       const toast = document.getElementById("toast");
@@ -736,6 +793,8 @@ const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
           );
 
           if (result.success) {
+            // Mettre à jour le calendrier avec la nouvelle humeur
+            updateCalendar(result.mood, result.date);
           }
         } else {
           showToastNotification("Une erreur s'est produite", "error");
