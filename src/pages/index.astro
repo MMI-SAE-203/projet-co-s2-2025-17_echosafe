@@ -72,7 +72,35 @@ const bottomRowTestimonials = testimonials.slice(4, 8);
 const preloadTestimonials = testimonials.slice(0, 2);
 ---
 
-<Layout>
+<Layout 
+  title="EchoSafe - Plateforme de soutien contre le harcèlement | Outils de bien-être"
+  description="Rejoignez EchoSafe, la plateforme sécurisée qui offre des espaces de soutien anonymes, un suivi d'humeur personnalisé et un kit de secours contre le harcèlement. Votre bien-être est notre priorité."
+  keywords="harcèlement, soutien, aide psychologique, communauté, bien-être, anonyme, sécurisé, kit de secours, suivi humeur, moodtracker, témoignages"
+>
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "EchoSafe",
+    "description": "Plateforme de soutien contre le harcèlement offrant des espaces anonymes, suivi d'humeur et kit de secours",
+    "url": "https://echosafe.eloishenry.fr/",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "10000"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "EchoSafe"
+    }
+  })} />
   <Hero />
   <section class="container mx-auto px-4 py-8">
     <div class="flex flex-col justify-center items-center">

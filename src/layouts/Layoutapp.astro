@@ -1,18 +1,61 @@
 ---
 import Headerapp from "../components/Headerapp.astro";
 import Menuapp from "../components/Menuapp.astro";
-
 import "../style/global.css";
+
+export interface Props {
+  title?: string;
+  description?: string;
+  keywords?: string;
+  ogImage?: string;
+}
+
+const { 
+  title = "EchoSafe - Votre espace personnel de bien-être", 
+  description = "Accédez à votre espace personnel EchoSafe : gérez votre profil, suivez votre humeur, participez aux discussions communautaires et accédez au kit de secours.",
+  keywords = "profil utilisateur, espace personnel, bien-être, EchoSafe, gestion humeur, communauté",
+  ogImage = "/images/logo.png"
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/images/logo.png" />
+    <link rel="apple-touch-icon" href="/images/logo.png" />
+    
+    <!-- SEO Meta Tags -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <meta name="author" content="EchoSafe" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href={canonicalURL} />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="EchoSafe" />
+    <meta property="og:locale" content="fr_FR" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    
+    <!-- Additional Meta Tags -->
+    <meta name="theme-color" content="#323F92" />
     <meta name="generator" content={Astro.generator} />
-    <title>Astro Basics</title>
   </head>
   <body class="">
     <Headerapp />

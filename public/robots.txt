@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Allow: /a-propos/
+Allow: /nos-offres/
+Allow: /legal/
+
+# Disallow private/user-specific pages
+Disallow: /profil/
+Disallow: /accueil-app/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /messages/
+Disallow: /moodtracker/
+Disallow: /secours-app/
+
+# Sitemap location
+Sitemap: https://echosafe.eloishenry.fr/sitemap.xml
